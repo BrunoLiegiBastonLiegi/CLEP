@@ -7,10 +7,10 @@ class CLIPDataset(Dataset):
     def __init__(self, datafile: str, tokenizer, entity2idx: dict, device: torch.device = torch.device('cpu')):
         with open(datafile, 'rb') as f:
             self.data = list(pickle.load(f).values())
-            self.discard_incomplete()
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
+        self.discard_incomplete()
 
     def __len__(self):
         return len(self.data)
@@ -31,7 +31,13 @@ class CLIPDataset(Dataset):
             else:
                 flag = True
             incomplete_idx.append(flag)
+            if flag:
+                try:
+                    self.e2idx.pop(d['wikidata_id'])
+                except:
+                    continue
         self.data = [ d for d,f in zip(self.data, incomplete_idx) if not f ]
+        self.e2idx = dict(zip(self.e2idx.keys(), range(len(self.e2idx))))
 
     def collate_fn(self, batch: list):
         inputs = {'captions':[], 'entities':[]}

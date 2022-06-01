@@ -68,15 +68,16 @@ class GPT2CaptionEncoder(torch.nn.Module):
 
     def __init__(self, pretrained_model: str = 'gpt2'):
         super().__init__()
-        self.model = GPT2LMHeadModel.from_pretrained(pretrained_model)
-        #self.model = GPT2Model.from_pretrained(pretrained_model)       # which one is better to use? 
+        #self.model = GPT2LMHeadModel.from_pretrained(pretrained_model)
+        self.model = GPT2Model.from_pretrained(pretrained_model)       # which one is better to use? 
 
     def forward(self, x):
-        return self.model(**x).logits[:,-1,:]
+        #return self.model(**x).logits[:,-1,:]
+        return self.model(**x).last_hidden_state[:,-1,:]
 
     @property
     def hdim(self):
-        return self.model.config.vocab_size
-        #return self.model.config.n_embd     
+        #return self.model.config.vocab_size
+        return self.model.config.n_embd     
 
         
