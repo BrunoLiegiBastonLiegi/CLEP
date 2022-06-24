@@ -1,3 +1,7 @@
 *.py~
 *.json
 *.pkl
+*.txt
+*.pt
+*.png
+__pycache__
