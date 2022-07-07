@@ -11,7 +11,7 @@ class CLIPDataset(Dataset):
         self.e2idx = entity2idx
         self.dev = device
         self.discard_incomplete()
-
+        
     def __len__(self):
         return len(self.data)
 
@@ -24,20 +24,20 @@ class CLIPDataset(Dataset):
             flag = False
             if isinstance(d,dict):
                 if 'embedding' in d.keys():
-                    if isinstance(d['embedding'],type(None)) or d['wikidata_id'] == None or d['caption'] == None:
+                    if isinstance(d['embedding'], type(None)) or d['wikidata_id'] == None or d['caption'] == None:
                         flag = True
                 else:
-                    flag = True    
+                    flag = True
             else:
                 flag = True
             incomplete_idx.append(flag)
-            if flag:
-                try:
-                    self.e2idx.pop(d['wikidata_id'])
-                except:
-                    continue
+            #if flag:
+            #    try:
+            #        self.e2idx.pop(d['wikidata_id'])
+            #    except:
+            #        continue
         self.data = [ d for d,f in zip(self.data, incomplete_idx) if not f ]
-        self.e2idx = dict(zip(self.e2idx.keys(), range(len(self.e2idx))))
+        #self.e2idx = dict(zip(self.e2idx.keys(), range(len(self.e2idx))))
 
     def collate_fn(self, batch: list):
         inputs = {'captions':[], 'entities':[]}
@@ -50,3 +50,36 @@ class CLIPDataset(Dataset):
         return inputs, labels
         
 
+class LinkPredictionDataset(Dataset):
+
+    def __init__(self, datafile: str, entity2idx: dict, rel2idx: dict = None, predict: str = 'relation'):
+        assert predict in ('head', 'tail', 'relation')
+        self.predict = predict
+        self.e2idx = entity2idx
+        self.r2idx = rel2idx
+        if predict == 'relation':
+            assert self.ridx != None
+        with open(datafile, 'r') as f:
+            self.triples = []
+            for l in f:
+                t = l.split()
+                h, t = self.e2idx[t[0]], self.e2idx[t[2]]
+                r = self.r2idx[t[1]] if predict == 'relation' else self.e2idx[t[1]]
+                self.triples.append(torch.as_tensor[h,r,t])
+
+    def __len__(self):
+        return len(self.triples)
+
+    def __getitem__(self, idx: int):
+        return self.triples[idx]
+
+    def collate_fn(self, batch: list):
+        t = torch.vstack(batch)
+        if self.predict == 'relation':
+            inputs, labels = t[:,[0,2]], t[:,1]
+        elif self.predict == 'head':
+            inputs, labels = t[:,[2,1]], t[:,0]
+        elif self.predict == 'tail':
+            inputs, labels = t[:,[0,1]], t[:,2]
+        return inputs, labels
+            

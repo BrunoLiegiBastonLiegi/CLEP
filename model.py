@@ -6,7 +6,7 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model
 
 class MLP(torch.nn.Module):
 
-    def __init__(self, n_layers: int, indim: int, hdim: int, activation = ReLU(), normalization = Dropout(0.2)):
+    def __init__(self, n_layers: int, indim: int, hdim: int, activation = ReLU(), normalization = Dropout(0.1)):
         super().__init__()
         self.n_layers = n_layers
         self.indim = indim
@@ -63,6 +63,11 @@ class CLIP_KB(torch.nn.Module):
 
     def forward(self, nodes, captions):
         self.T = min(self.T, 100)
+        in_embs = self.g_encoder(nodes)
+        g_out = self.g_mlp(in_embs)
+        if torch.isnan(g_out).any():
+            print(f'Input graph embs: isnan: {torch.isnan(in_embs).any()}, max val: {torch.max(in_embs)}, min val: {torch.min(in_embs)}, avg: {torch.mean(in_embs)}')
+            print(f'MLP: isnan(parameters): \n weight[0]: {torch.isnan(self.g_mlp.nn[0].weight).any()} \n bias[0]: {torch.isnan(self.g_mlp.nn[0].bias).any()} \n weight[3]: {torch.isnan(self.g_mlp.nn[3].weight).any()} \n bias[3]: {torch.isnan(self.g_mlp.nn[3].bias).any()}')
         return ( normalize(self.g_mlp(self.g_encoder(nodes)), p=2, dim=-1),
                  normalize(self.t_mlp(self.t_encoder(captions)), p=2, dim=-1) )
 
@@ -70,26 +75,35 @@ class PretrainedGraphEncoder(torch.nn.Module):
 
     def __init__(self, node_embeddings: dict, device: torch.device):
         super().__init__()
-        self.node2emb = node_embeddings
+        #self.node2emb = node_embeddings
         self.dev = device
-        self.register_parameter(
-            name='ordered_embs',
-            param=torch.nn.Parameter(
-                torch.vstack(list(zip(
-                    *sorted(node_embeddings.items(),
-                            key=lambda x: x[0])
-                ))[1]),
-                requires_grad = False
-            )
-        )
+        # need to explictly cast to float32
+        self.ordered_embs = torch.as_tensor(np.vstack(list(node_embeddings.values())), dtype=torch.float) 
+        #self.register_parameter(
+        #    name='ordered_embs',
+        #    param=torch.nn.Parameter(
+        #        torch.as_tensor(np.vstack(list(node_embeddings.values()))),
+        #        requires_grad = False
+        #    )
+        #)
+        #self.register_parameter(
+        #    name='ordered_embs',
+        #    param=torch.nn.Parameter(
+        #        torch.as_tensor(list(zip(
+        #            *sorted(node_embeddings.items(),
+        #                    key=lambda x: x[0])
+        #        ))[1]),
+        #        requires_grad = False
+        #    )
+        #)
         #self.ordered_embs = torch.vstack(list(zip(
         #    *sorted(node_embeddings.items(),
         #            key=lambda x: x[0])
         #))[1])
 
     def forward(self, nodes):
-        #return self.ordered_embs[nodes].squeeze(1).float().to(self.dev) # need to explictly cast to float32
-        return self.ordered_embs[nodes].squeeze(1).float()
+        return self.ordered_embs[nodes].squeeze(1).to(self.dev) # dinamically move to device the batch
+        #return self.ordered_embs[nodes].squeeze(1)
     
     @property
     def hdim(self):
@@ -118,4 +132,23 @@ class GPT2CaptionEncoder(torch.nn.Module):
     #def unfreeze_layer(self, i: int):
      #   for p in self.model.
 
+class LinkPredictionModel(torch.nn.Module):
+
+    def __init__(self, graph_embedding_model, predict: str = 'relation', rel2idx: dict = None):
+        self.model = graph_embedding_model
+        self.pred = predict
+        if self.pred == 'relation':
+            assert rel2idx != None
+            hdim, out_dim = self.model.hdim, len(rel2idx)
+            self.bil = torch.nn.Bilinear(hdim, hdim, out_dim)
+            self.lin = torch.nn.Linear(2*hdim, out_dim, bias=False)
+            self.f = lambda x,y: self.bil(x,y) + self.lin(torch.cat((x,y), dim=-1))
+        elif self.pred == 'tail':
+            self.f = lambda x,y: x + y
+        elif self.pred == 'head':
+            self.f = lambda x,y: x - y
+
+    def forward(self, x, y): # x,y can be either head-rel, head-tail, tail-rel depending on the task
+        x, y = self.model(x), self.model(y)
+        return self.f(x,y)
         
