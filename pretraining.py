@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind, mannwhitneyu
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
@@ -66,9 +67,9 @@ text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 # CLIP
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
-def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDataset, device: torch.device = torch.device('cpu')):
+def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDataset, accum_iter: int = 1, device: torch.device = torch.device('cpu')):
 
-    epochs = 32
+    epochs = 11
     batchsize = 128
     optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4)
     loss_f = torch.nn.CrossEntropyLoss()
@@ -89,30 +90,29 @@ def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDat
     )
     print_steps = int(len(train_loader)/5)
     for e in range(epochs):
-        print(f'### EPOCH {e}')
+        print(f'\n### EPOCH {e}')
         running_loss = 0.
         model.train()
-        for i, (batch, label) in enumerate(train_loader):
-            optimizer.zero_grad()
+        for i, (batch, label) in tqdm(enumerate(train_loader), total=len(train_loader)):
+            #optimizer.zero_grad()
             with autocast():
                 graph_out, text_out = model(batch['entities'], batch['captions'])
                 logits = torch.tensordot(graph_out, text_out.T, dims=1) * torch.exp(model.T)
-                if torch.isnan(graph_out).any() or torch.isnan(text_out).any():
-                    print('isnan(graph): ',torch.isnan(graph_out).any())
-                    print('isnan(text): ',torch.isnan(text_out).any())
                 del graph_out
                 del text_out
                 torch.cuda.empty_cache()
                 loss = 0.5 * ( loss_f(logits, label) + loss_f(logits.T, label) )
-                if torch.isnan(loss):
-                    print('isnan(logits): ', torch.isnan(logits).any())
-                    print('e^t: ', torch.exp(model.T))
+                running_loss += loss.item()
+                # normalize loss to account for batch accumulation
+                loss = loss / accum_iter 
                 del logits
                 torch.cuda.empty_cache()
             scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-            running_loss += loss.item()
+            # weights update
+            if ((i + 1) % accum_iter == 0) or (i + 1 == len(train_loader)):
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
             if i % print_steps == print_steps - 1:
                 print(f'[{e}, {i*batchsize}]\t Loss: {running_loss/print_steps:.4f}\t T: {model.T:0.3f} ') # The average is not correct if len(train_loader) % batchsize != 0
                 running_loss = 0.
@@ -126,9 +126,8 @@ def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDat
                 running_loss += loss.item()
         print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
 
-time.sleep(10)
-training_routine(model, train_data, test_data, device = dev)
-#torch.save(model.state_dict(), 'model.pt')
+training_routine(model, train_data, test_data, accum_iter = 1, device = dev)
+torch.save(model.state_dict(), 'tmp.pt')
 
 #model.load_state_dict(torch.load('model.pt'))
 

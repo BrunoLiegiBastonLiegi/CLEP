@@ -58,14 +58,22 @@ class LinkPredictionDataset(Dataset):
         self.e2idx = entity2idx
         self.r2idx = rel2idx
         if predict == 'relation':
-            assert self.ridx != None
+            assert self.r2idx != None
+        self.discarded_triples = []
         with open(datafile, 'r') as f:
             self.triples = []
             for l in f:
-                t = l.split()
-                h, t = self.e2idx[t[0]], self.e2idx[t[2]]
-                r = self.r2idx[t[1]] if predict == 'relation' else self.e2idx[t[1]]
-                self.triples.append(torch.as_tensor[h,r,t])
+                discard = False
+                triple = l.split()
+                try:
+                    h, t = self.e2idx[triple[0]], self.e2idx[triple[2]]
+                    r = self.r2idx[triple[1]] if predict == 'relation' else self.e2idx[triple[1]]
+                except:
+                    discard = True
+                    self.discarded_triples.append(l)
+                if not discard:
+                    self.triples.append(torch.as_tensor([h,r,t]))
+        print(f'> {len(self.discarded_triples)} discarded triples due to missing mapping in the index files.')
 
     def __len__(self):
         return len(self.triples)
