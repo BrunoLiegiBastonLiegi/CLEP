@@ -1,7 +1,7 @@
 import torch, argparse, json, random, time, pickle
 from dataset import CLIPDataset
-from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder
-from transformers import GPT2Tokenizer
+from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder
+from transformers import GPT2Tokenizer, BertTokenizer
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 import matplotlib.pyplot as plt
@@ -23,14 +23,13 @@ else:
 print(f'\n> Setting device {dev} for computation.')
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
-tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+#tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+#tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
 print('> Preparing the data.')
 # Load index mapping
-#with open('data/FB15k-23/wid2idx_new.json', 'r') as f:
 with open('data/wid2idx.json', 'r') as f:
     wid2idx = json.load(f)
-print(len(wid2idx))
 # Train and Test data
 train_data = CLIPDataset(
     datafile = args.train_data, #'data/FB15k-237/train_new.pkl',
@@ -51,19 +50,13 @@ test_data = CLIPDataset(
 #    device = dev
 #)
 print('> Initializing the model.')
-print(f'{len(train_data.data)} + {len(test_data.data)} = {len(train_data.data) + len(test_data.data)}')
 # Graph encoder
-#idx2emb = {wid2idx[d['wikidata_id']]: torch.tensor(d['embedding'], dtype=float) for d in train_data.data + test_data.data + valid_data.data}
-#node_embeddings = dict(zip(list(wid2idx.values()), torch.zeros(len(wid2idx), 200)))
-#idx2emb = {wid2idx[d['wikidata_id']]: torch.tensor(d['embedding'], dtype=float) for d in train_data.data + test_data.data}
-#node_embeddings.update(idx2emb)
-#del idx2emb
 with open(args.graph_embeddings, 'rb') as f:
     node_embeddings = pickle.load(f)
-print(len(node_embeddings))
 graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
 # Caption encoder
-text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
+#text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
+text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
 # CLIP
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
@@ -126,10 +119,10 @@ def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDat
                 running_loss += loss.item()
         print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
 
-training_routine(model, train_data, test_data, accum_iter = 1, device = dev)
-torch.save(model.state_dict(), 'tmp.pt')
+#training_routine(model, train_data, test_data, accum_iter = 1, device = dev)
+#torch.save(model.state_dict(), 'tmp.pt')
 
-#model.load_state_dict(torch.load('model.pt'))
+model.load_state_dict(torch.load('tmp.pt'))
 
 batchsize = 256
 
@@ -144,10 +137,13 @@ with torch.no_grad():
     sm = torch.nn.Softmax(1)
     acc, tot = 0, 0
     distance, off_diag_dist = [], []
+    original_points,points = [], []
     fig, ax = plt.subplots(1,1)
     model.eval()
     for batch, label in test_loader:
         graph_out, text_out = model(batch['entities'], batch['captions'])
+        original_points.append(graph_encoder(batch['entities']).detach().cpu())
+        points.append(graph_out.detach().cpu()) # points for space visualization
         # Distance of correct pairs
         distance.append(((graph_out-text_out)**2).sum(-1).sqrt())
         # Distance of offdiagonal pairs
@@ -176,3 +172,35 @@ with torch.no_grad():
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')
 
     
+    # Latent space visualization
+    from sklearn.manifold import TSNE
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import silhouette_score
+    import numpy as np
+    fig, ax = plt.subplots(1,1, figsize=(16,16))
+    points = torch.vstack(points).numpy()
+    original_points = torch.vstack(original_points).numpy()
+    n_clusters = 52 # 52 appears to be the optimal number
+    sse, sil_coeff = {}, []
+    #for n in range(2,200):
+    #    print(f'k-means {n}/200', end='\r')
+    #    #kmeans = KMeans(n_clusters=n, random_state=0).fit(points)
+    #    kmeans = KMeans(n_clusters=n, random_state=0).fit(original_points)
+    #    sse[n] = kmeans.inertia_
+    #    #sil_coeff.append((n,silhouette_score(points, kmeans.labels_, metric='euclidean')))
+    #    sil_coeff.append((n,silhouette_score(original_points, kmeans.labels_, metric='euclidean')))
+    #sil_coeff = sorted(sil_coeff, key=lambda x: x[1], reverse=True)[:20]
+    #for i in sil_coeff:
+    #    print(i)
+    #plt.plot(list(sse.keys()), list(sse.values()))
+    #plt.show()
+    #kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(points)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(original_points)
+    clusters = {i:[] for i in range(n_clusters)}
+    for j,i in enumerate(kmeans):
+        clusters[i].append(j)
+    transf = TSNE(n_components=2,init='random').fit_transform(points)
+    for k, v in clusters.items():
+        if len(v) != 0:
+            ax.scatter(transf[v,0], transf[v,1])
+    plt.show()

@@ -1,6 +1,6 @@
 import argparse, torch, json, pickle
 from dataset import LinkPredictionDataset
-from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder
+from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
@@ -52,7 +52,8 @@ BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=d
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
 # just the state_dict, that would require more disk space though.
-_ = GPT2CaptionEncoder(pretrained_model='gpt2')
+#_ = GPT2CaptionEncoder(pretrained_model='gpt2')
+_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
 clip = CLIP_KB(graph_encoder=BaselineModel, text_encoder=_, hdim=200).to(dev)
 clip.load_state_dict(torch.load(args.load_model))
 # Stack the pretrained MLP on top of the graph embedding model
@@ -63,7 +64,7 @@ for par in SemanticAugmentedModel.parameters():
 def training_routine(model: LinkPredictionModel, train_data: LinkPredictionDataset, test_data: LinkPredictionDataset, accum_iter: int = 1, device: torch.device = torch.device('cpu')):
 
     epochs = 10
-    batchsize = 8192#1024
+    batchsize = 4096#1024
     optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4)
     loss_f = torch.nn.CrossEntropyLoss()
     scaler = GradScaler()
@@ -148,3 +149,8 @@ for m in (SemanticAugmentedModel, BaselineModel):
     pred = torch.cat(pred).view(-1)
     target = torch.cat(target).view(-1)
     print(microf1(pred, target), macrof1(pred, target))
+    n=0
+    for p,t in zip(pred,target):
+        if p == t:
+            n+=1
+    print(f'{n}/{len(pred)} ({n/len(pred):0.4f})')

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model, BertModel
 
 class MLP(torch.nn.Module):
 
@@ -58,7 +58,7 @@ class CLIP_KB(torch.nn.Module):
         self.t_mlp = MLP(1, self.t_encoder.hdim, hdim) # Switch dropout with BatchNorm!?
         # graph encoding
         self.g_encoder = graph_encoder
-        self.g_mlp = MLP(2, self.g_encoder.hdim, hdim)
+        self.g_mlp = MLP(1, self.g_encoder.hdim, hdim)
         #self.g_mlp = TransformerEncoder(2, self.g_encoder.hdim, hdim)
 
     def forward(self, nodes, captions):
@@ -126,6 +126,26 @@ class GPT2CaptionEncoder(torch.nn.Module):
 
     #def unfreeze_layer(self, i: int):
      #   for p in self.model.
+
+class BertCaptionEncoder(torch.nn.Module):
+
+    def __init__(self, pretrained_model: str = 'bert-base-cased'):
+        super().__init__()
+        self.model = BertModel.from_pretrained(pretrained_model)       
+        for m in self.model.encoder.layer[:-4]: # freezing every layer but the last 4
+            for p in m.parameters():
+                p.requires_grad = False
+        
+    def forward(self, x):
+        return self.model(**x).last_hidden_state[:,0,:]
+
+    @property
+    def hdim(self):
+        return self.model.embeddings.word_embeddings.embedding_dim
+
+    #def unfreeze_layer(self, i: int):
+     #   for p in self.model.
+
 
 class LinkPredictionModel(torch.nn.Module):
 
