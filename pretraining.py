@@ -11,8 +11,8 @@ from tqdm import tqdm
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
-#parser.add_argument('--valid_data', help='Path to validation data file.')
 parser.add_argument('--graph_embeddings', default='data/pretrained_graph_embeddings.pkl', help='Path to the pretrained graph embedding file.')
+parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
 args = parser.parse_args()
 
 # Set device for computation
@@ -23,12 +23,12 @@ else:
 print(f'\n> Setting device {dev} for computation.')
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
-#tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-#tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
-tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+#tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
 print('> Preparing the data.')
 # Load index mapping
-with open('data/wid2idx.json', 'r') as f:
+with open('data/wid2idx_small.json', 'r') as f:
     wid2idx = json.load(f)
 # Train and Test data
 train_data = CLIPDataset(
@@ -55,74 +55,46 @@ with open(args.graph_embeddings, 'rb') as f:
     node_embeddings = pickle.load(f)
 graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
 # Caption encoder
-#text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
-text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
+text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
+#text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
 # CLIP
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
-def training_routine(model: CLIP_KB, train_data: CLIPDataset, test_data: CLIPDataset, accum_iter: int = 1, device: torch.device = torch.device('cpu')):
+# Training
+from utils import training_routine
 
-    epochs = 11
+# Define training step
+def step_f(model, batch, label, dev):
+    label = label.to(dev)
+    graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
+    logits = torch.tensordot(graph_out, text_out.T, dims=1) * torch.exp(model.T)
+    del graph_out
+    del text_out
+    torch.cuda.empty_cache()
+    loss = 0.5 * ( torch.nn.functional.cross_entropy(logits, label) + torch.nn.functional.cross_entropy(logits.T, label) )
+    del logits
+    torch.cuda.empty_cache()
+    return loss
+
+if args.load_model == None:
+    epochs = 10
     batchsize = 128
-    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4)
-    loss_f = torch.nn.CrossEntropyLoss()
-    scaler = GradScaler()
-
-    train_loader = DataLoader(
-        train_data,
-        batch_size = batchsize,
-        shuffle = True,
-        collate_fn = train_data.collate_fn
+    
+    training_routine(
+        model = model,
+        step_f = step_f,
+        train_data = train_data,
+        test_data = test_data,
+        epochs = epochs,
+        batchsize = batchsize,
+        accum_iter = 1,
+        dev = dev
     )
 
-    test_loader = DataLoader(
-        test_data,
-        batch_size = batchsize,
-        shuffle = True,
-        collate_fn = test_data.collate_fn
-    )
-    print_steps = int(len(train_loader)/5)
-    for e in range(epochs):
-        print(f'\n### EPOCH {e}')
-        running_loss = 0.
-        model.train()
-        for i, (batch, label) in tqdm(enumerate(train_loader), total=len(train_loader)):
-            #optimizer.zero_grad()
-            with autocast():
-                graph_out, text_out = model(batch['entities'], batch['captions'])
-                logits = torch.tensordot(graph_out, text_out.T, dims=1) * torch.exp(model.T)
-                del graph_out
-                del text_out
-                torch.cuda.empty_cache()
-                loss = 0.5 * ( loss_f(logits, label) + loss_f(logits.T, label) )
-                running_loss += loss.item()
-                # normalize loss to account for batch accumulation
-                loss = loss / accum_iter 
-                del logits
-                torch.cuda.empty_cache()
-            scaler.scale(loss).backward()
-            # weights update
-            if ((i + 1) % accum_iter == 0) or (i + 1 == len(train_loader)):
-                scaler.step(optimizer)
-                scaler.update()
-                optimizer.zero_grad()
-            if i % print_steps == print_steps - 1:
-                print(f'[{e}, {i*batchsize}]\t Loss: {running_loss/print_steps:.4f}\t T: {model.T:0.3f} ') # The average is not correct if len(train_loader) % batchsize != 0
-                running_loss = 0.
-        running_loss = 0.
-        model.eval()
-        for i, (batch, label) in enumerate(test_loader):
-            with torch.no_grad():
-                graph_out, text_out = model(batch['entities'], batch['captions'])
-                logits = torch.tensordot(graph_out, text_out.T, dims=1) * torch.exp(model.T)
-                loss = 0.5 * ( loss_f(logits, label) + loss_f(logits.T, label) )
-                running_loss += loss.item()
-        print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
+    torch.save(model.state_dict(), 'tmp.pt')
 
-#training_routine(model, train_data, test_data, accum_iter = 1, device = dev)
-#torch.save(model.state_dict(), 'tmp.pt')
-
-model.load_state_dict(torch.load('tmp.pt'))
+else:
+    model.load_state_dict(torch.load(args.load_model))
 
 batchsize = 256
 
@@ -137,13 +109,15 @@ with torch.no_grad():
     sm = torch.nn.Softmax(1)
     acc, tot = 0, 0
     distance, off_diag_dist = [], []
-    original_points,points = [], []
+    original_points, points, entities, captions = [], [], [], []
     fig, ax = plt.subplots(1,1)
     model.eval()
     for batch, label in test_loader:
         graph_out, text_out = model(batch['entities'], batch['captions'])
         original_points.append(graph_encoder(batch['entities']).detach().cpu())
         points.append(graph_out.detach().cpu()) # points for space visualization
+        entities.append(batch['entities'].detach().cpu())
+        captions += tokenizer.batch_decode(batch['captions']['input_ids'].detach().cpu(), skip_special_tokens=True, clean_up_tokenization_spaces=True)
         # Distance of correct pairs
         distance.append(((graph_out-text_out)**2).sum(-1).sqrt())
         # Distance of offdiagonal pairs
@@ -171,36 +145,26 @@ with torch.no_grad():
     plt.show()
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')
 
-    
     # Latent space visualization
-    from sklearn.manifold import TSNE
-    from sklearn.cluster import KMeans
-    from sklearn.metrics import silhouette_score
-    import numpy as np
-    fig, ax = plt.subplots(1,1, figsize=(16,16))
+    from utils import visualize_embeddings
+    fig, ax = plt.subplots(1,2, figsize=(24,16))
     points = torch.vstack(points).numpy()
     original_points = torch.vstack(original_points).numpy()
-    n_clusters = 52 # 52 appears to be the optimal number
-    sse, sil_coeff = {}, []
-    #for n in range(2,200):
-    #    print(f'k-means {n}/200', end='\r')
-    #    #kmeans = KMeans(n_clusters=n, random_state=0).fit(points)
-    #    kmeans = KMeans(n_clusters=n, random_state=0).fit(original_points)
-    #    sse[n] = kmeans.inertia_
-    #    #sil_coeff.append((n,silhouette_score(points, kmeans.labels_, metric='euclidean')))
-    #    sil_coeff.append((n,silhouette_score(original_points, kmeans.labels_, metric='euclidean')))
-    #sil_coeff = sorted(sil_coeff, key=lambda x: x[1], reverse=True)[:20]
-    #for i in sil_coeff:
-    #    print(i)
-    #plt.plot(list(sse.keys()), list(sse.values()))
-    #plt.show()
-    #kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(points)
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(original_points)
-    clusters = {i:[] for i in range(n_clusters)}
-    for j,i in enumerate(kmeans):
-        clusters[i].append(j)
-    transf = TSNE(n_components=2,init='random').fit_transform(points)
-    for k, v in clusters.items():
-        if len(v) != 0:
-            ax.scatter(transf[v,0], transf[v,1])
+    entities = torch.vstack(entities).numpy().flatten()
+    n_clusters = 30 # 50-60 appears to be the optimal number
+    c1 = visualize_embeddings(points, n_clusters, ax[0])
+    c2 = visualize_embeddings(original_points, n_clusters, ax[1])
     plt.show()
+    
+    clusters_1 = {i:[] for i in range(n_clusters)}
+    clusters_2 = {i:[] for i in range(n_clusters)}
+    idx2wid = dict(zip(wid2idx.values(), wid2idx.keys()))
+    for e, c, cap in zip(entities, c1, captions):
+        clusters_1[c].append((idx2wid[e], cap))
+    for e, c, cap in zip(entities, c2, captions):
+        clusters_2[c].append((idx2wid[e], cap))
+    for k,v in clusters_1.items():
+        print(f'# CLUSTER {k}')
+        for c in random.choices(v, k=5):
+            print(c)
+

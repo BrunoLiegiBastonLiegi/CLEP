@@ -6,7 +6,7 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model, BertModel
 
 class MLP(torch.nn.Module):
 
-    def __init__(self, n_layers: int, indim: int, hdim: int, activation = ReLU(), normalization = Dropout(0.1)):
+    def __init__(self, n_layers: int, indim: int, hdim: int, outdim: int = -1, activation = ReLU(), normalization = Dropout(0.1)):
         super().__init__()
         self.n_layers = n_layers
         self.indim = indim
@@ -15,7 +15,10 @@ class MLP(torch.nn.Module):
         for n in range(n_layers-1):
             layers.append(normalization)
             layers.append(activation)
-            layers.append(Linear(hdim, hdim))
+            if n == n_layers-1 and outdim != -1:
+                layers.append(Linear(hdim, outdim))
+            else:
+                layers.append(Linear(hdim, hdim))
         self.nn = Sequential(*layers)
 
     def forward(self, x):
@@ -168,4 +171,29 @@ class LinkPredictionModel(torch.nn.Module):
     def forward(self, x, y): # x,y can be either head-rel, head-tail, tail-rel depending on the task
         x, y = self.model(x), self.model(y)
         return self.f(x,y)
+
+class ConcatModel(torch.nn.Module):
+
+    def __init__(self, *models):
+        super().__init__()
+        self.models = models
+
+    def forward(self, x):
+        return torch.cat([ m(x) for m in self.models ], dim=-1)
+
+    @property
+    def hdim(self):
+        hdim = 0
+        for m in self.models:
+            hdim += m[0].hdim if isinstance(m, torch.nn.Sequential) else m.hdim
+        return hdim
+
+
+class RGCN(torch.nn.Module):
+
+    def __init__(self, kg, n_layers, indim, hdim):
+        self.kg = kg
         
+        
+    def forward(self, nodes):
+        return self.nn(self.kg.g, self.kg.node_feat, self.kg.etypes)[nodes]

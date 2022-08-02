@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-import pickle, torch
+import pickle, torch, json
 
 
 class CLIPDataset(Dataset):
@@ -7,6 +7,7 @@ class CLIPDataset(Dataset):
     def __init__(self, datafile: str, tokenizer, entity2idx: dict, device: torch.device = torch.device('cpu')):
         with open(datafile, 'rb') as f:
             self.data = list(pickle.load(f).values())
+            #self.data = list(json.load(f).values())
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
@@ -23,10 +24,7 @@ class CLIPDataset(Dataset):
         for i,d in enumerate(self.data):
             flag = False
             if isinstance(d,dict):
-                if 'embedding' in d.keys():
-                    if isinstance(d['embedding'], type(None)) or d['wikidata_id'] == None or d['caption'] == None:
-                        flag = True
-                else:
+                if d['wikidata_id'] == None or d['caption'] == None:
                     flag = True
             else:
                 flag = True
@@ -91,3 +89,26 @@ class LinkPredictionDataset(Dataset):
             inputs, labels = t[:,[0,1]], t[:,2]
         return inputs, labels
             
+
+class NodeClassificationDataset(Dataset):
+
+    def __init__(self, datafile: str, entity2idx: dict, type2idx: dict):
+        with open(datafile, 'r') as f:
+            self.data = json.load(f)
+        self.data = list(self.data.values())
+        self.e2idx = entity2idx
+        self.t2idx = type2idx
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx: int):
+        return self.data[idx]
+
+    def collate_fn(self, batch: list):
+        inputs, labels = [], []
+        for item in batch:
+            inputs.append(self.e2idx[item['wikidata_id']])
+            labels.append(self.t2idx[item['type']])
+        return torch.as_tensor(inputs), torch.as_tensor(labels)
+        

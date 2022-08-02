@@ -1,18 +1,18 @@
 import argparse, torch, json, pickle
-from dataset import LinkPredictionDataset
-from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel
+from dataset import NodeClassificationDataset
+from model import PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 from torchmetrics import F1Score
+import matplotlib.pyplot as plt
+
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
-#parser.add_argument('--entity_index', help='Path to index data file.')
-parser.add_argument('--graph_embeddings', help='Path to pretrained embeddings file.')
-parser.add_argument('--rel_index', help='Path to relations index file.')
-parser.add_argument('--load_model', help='Path to caption pretrained model.')
+parser.add_argument('--graph_embeddings', default='data/pretrained_graph_embeddings.pkl', help='Path to the pretrained graph embedding file.')
+parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
 args = parser.parse_args()
 
 # Set device for computation
@@ -25,25 +25,24 @@ print(f'\n> Setting device {dev} for computation.')
 # Load index
 with open('data/wid2idx_small.json', 'r') as f:
     wid2idx = json.load(f)
-with open (args.rel_index, 'r') as f:
-    rel2idx = json.load(f)
+type2idx = {'PER': 0, 'LOC': 1, 'ORG': 2}
     
 # Train and Test data
-train_data = LinkPredictionDataset(
+train_data = NodeClassificationDataset(
     datafile = args.train_data, 
     entity2idx = wid2idx,
-    rel2idx = rel2idx,
-    predict = 'relation'
+    type2idx = type2idx
 )
-test_data = LinkPredictionDataset(
+test_data = NodeClassificationDataset(
     datafile = args.test_data,
     entity2idx = wid2idx,
-    rel2idx = rel2idx,
-    predict = 'relation'
+    type2idx = type2idx
 )
 
+# Pretrained Graph Embeddings
 with open(args.graph_embeddings, 'rb') as f:
     node_embeddings = pickle.load(f)
+    
 # Baseline: pretrained TransE embeddings
 BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
 # Caption prediction pretraining
@@ -56,10 +55,8 @@ clip = CLIP_KB(graph_encoder=BaselineModel, text_encoder=_, hdim=200).to(dev)
 clip.load_state_dict(torch.load(args.load_model))
 # Stack the pretrained MLP on top of the graph embedding model
 SemanticAugmentedModel = torch.nn.Sequential(BaselineModel, clip.g_mlp)
-for par in SemanticAugmentedModel.parameters():
-    par.requires_grad = False
-ConcatModel = ConcatModel(BaselineModel, SemanticAugmentedModel)
-
+#for par in SemanticAugmentedModel.parameters():
+#    par.requires_grad = False
 
 # Training
 from utils import training_routine
@@ -67,24 +64,26 @@ from utils import training_routine
 # Define training step
 def step_f(model, batch, label, dev):
     batch, label = batch.to(dev), label.to(dev)
-    out = model(batch[:,0], batch[:,1])
+    out = model(batch)
     loss = torch.nn.functional.cross_entropy(out, label)
     del out, batch, label
     torch.cuda.empty_cache()
     return loss
 
-def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
-    # build LP model
-    LPmodel = LinkPredictionModel(
-        graph_embedding_model = model,
-        predict = 'relation',
-        rel2idx = rel2idx
-    ).to(dev)
-    # train
-    epochs = 16
+for m in (SemanticAugmentedModel, BaselineModel):
+
+    NChead = MLP(
+        n_layers = 2,
+        indim = 200,
+        hdim = 200,
+        outdim = 3
+    )
+    NCmodel = torch.nn.Sequential(m, NChead).to(dev)
+
+    epochs = 64
     batchsize = 4096
-    training_routine(
-        model = LPmodel,
+    train_loss, test_loss = training_routine(
+        model = NCmodel,
         step_f = step_f,
         train_data = train_data,
         test_data = test_data,
@@ -93,8 +92,11 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         accum_iter = 1,
         dev = dev
     )
+    plt.plot(train_loss[1:])
+    plt.plot(test_loss[1:])
+    plt.show()
     # test inference
-    LPmodel.eval()
+    NCmodel.eval()
     test_loader = DataLoader(
         test_data,
         batch_size = 8192,
@@ -103,34 +105,17 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     )
     sm = torch.nn.Softmax(1)
     pred, target = [], []
-    microf1 = F1Score(num_classes=len(rel2idx), average='micro').to(dev)
-    macrof1 = F1Score(num_classes=len(rel2idx), average='macro').to(dev)
+    microf1 = F1Score(num_classes=len(type2idx), average='micro').to(dev)
+    macrof1 = F1Score(num_classes=len(type2idx), average='macro').to(dev)
     for i, (batch, label) in enumerate(test_loader):
         with torch.no_grad():
             batch, label = batch.to(dev), label.to(dev)
-            out = LPmodel(batch[:,0], batch[:,1])
+            out = NCmodel(batch)
             pred.append(torch.argmax(sm(out), dim=-1))
             target.append(label)
 
     pred = torch.cat(pred).view(-1)
     target = torch.cat(target).view(-1)
-    return (microf1(pred, target), macrof1(pred, target))
+    print((microf1(pred, target), macrof1(pred, target)))
 
-outcomes = []
-for m in (SemanticAugmentedModel, BaselineModel):
-    scores = []
-    for j in range(5):
-        scores.append(
-            experiment(
-                model = m,
-                train_data = train_data,
-                test_data = test_data,
-                dev = dev,
-                rel2idx = rel2idx
-            )
-        )            
-    scores = torch.as_tensor(scores)
-    outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
-for o in outcomes:
-    print(o)
 
