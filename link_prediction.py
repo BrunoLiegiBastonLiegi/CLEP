@@ -116,8 +116,35 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     target = torch.cat(target).view(-1)
     return (microf1(pred, target), macrof1(pred, target))
 
+
+# Latent space visualilzation
+from utils import visualize_embeddings
+import matplotlib.pyplot as plt
+test_loader = DataLoader(
+        test_data,
+        batch_size = 8192,
+        shuffle = False,
+        collate_fn = test_data.collate_fn
+    )
+
+def get_embeddings(model, loader):
+    embs = {}
+    for i, (batch, _) in enumerate(loader):
+        print(f'{i}/{len(test_loader)}', end='\r')
+        with torch.no_grad():
+            batch = batch.view(-1,1).to(dev)
+            out = model(batch)
+            embs.update(dict(zip(batch.flatten().detach().cpu().tolist(),out.detach().cpu())))
+    return embs
+
+fig, ax = plt.subplots(1,2, figsize=(24,16))
+
+embs = get_embeddings(SemanticAugmentedModel, test_loader)
+clusters = visualize_embeddings(torch.vstack(list(embs.values())), n_clusters=50, ax=ax[0])
+
+# Finetuning
 outcomes = []
-for m in (SemanticAugmentedModel, BaselineModel):
+for m in (SemanticAugmentedModel, ):
     scores = []
     for j in range(5):
         scores.append(
@@ -131,6 +158,11 @@ for m in (SemanticAugmentedModel, BaselineModel):
         )            
     scores = torch.as_tensor(scores)
     outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
+
+embs = get_embeddings(SemanticAugmentedModel, test_loader)
+visualize_embeddings(torch.vstack(list(embs.values())), ax=ax[1])
+plt.show()
+
 for o in outcomes:
     print(o)
 

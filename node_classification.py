@@ -70,7 +70,7 @@ def step_f(model, batch, label, dev):
     torch.cuda.empty_cache()
     return loss
 
-for m in (SemanticAugmentedModel, BaselineModel):
+def experiment(model, train_data, test_data, dev=dev):
 
     NChead = MLP(
         n_layers = 2,
@@ -78,9 +78,9 @@ for m in (SemanticAugmentedModel, BaselineModel):
         hdim = 200,
         outdim = 3
     )
-    NCmodel = torch.nn.Sequential(m, NChead).to(dev)
+    NCmodel = torch.nn.Sequential(model, NChead).to(dev)
 
-    epochs = 64
+    epochs = 50#64
     batchsize = 4096
     train_loss, test_loss = training_routine(
         model = NCmodel,
@@ -92,9 +92,9 @@ for m in (SemanticAugmentedModel, BaselineModel):
         accum_iter = 1,
         dev = dev
     )
-    plt.plot(train_loss[1:])
-    plt.plot(test_loss[1:])
-    plt.show()
+    #plt.plot(train_loss[1:])
+    #plt.plot(test_loss[1:])
+    #plt.show()
     # test inference
     NCmodel.eval()
     test_loader = DataLoader(
@@ -116,6 +116,23 @@ for m in (SemanticAugmentedModel, BaselineModel):
 
     pred = torch.cat(pred).view(-1)
     target = torch.cat(target).view(-1)
-    print((microf1(pred, target), macrof1(pred, target)))
+    return (microf1(pred, target), macrof1(pred, target))
 
 
+outcomes = []
+for m in (SemanticAugmentedModel, BaselineModel):
+    scores = []
+    for j in range(5):
+        scores.append(
+            experiment(
+                model = m,
+                train_data = train_data,
+                test_data = test_data,
+                dev = dev,
+            )
+        )            
+    scores = torch.as_tensor(scores)
+    outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
+
+for o in outcomes:
+    print(o)

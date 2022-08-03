@@ -7,7 +7,7 @@ from sklearn.metrics import silhouette_score
 import numpy as np
 import colorcet as cc
 
-def visualize_embeddings(embeddings, n_clusters=None, ax=plt.subplots()[1]):
+def visualize_embeddings(embeddings, n_clusters=None, clusters=None, ax=plt.subplots()[1]):
     if n_clusters !=None:
         if n_clusters == 'auto':
             sse = {}
@@ -18,10 +18,11 @@ def visualize_embeddings(embeddings, n_clusters=None, ax=plt.subplots()[1]):
             plt.plot(list(sse.keys()), list(sse.values()))
             plt.show()
             n_clusters = input('Number of clusters: ')
-        clusters = SpectralClustering(n_clusters=n_clusters, assign_labels='discretize', random_state=0).fit_predict(embeddings)
-    else:
+        #clusters = SpectralClustering(n_clusters=n_clusters, assign_labels='discretize', random_state=0).fit_predict(embeddings)
+        clusters = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(embeddings)
+    elif clusters == None:
         clusters = [1 for i in range(len(embeddings))]
-    proj = TSNE(n_components=2,init='pca').fit_transform(embeddings)
+    proj = TSNE(n_components=2, init='pca').fit_transform(embeddings)
     ax.scatter(proj[:,0], proj[:,1], c=clusters, cmap=cc.cm.glasbey)
     return clusters
 
@@ -87,8 +88,12 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, ac
 # Graph
 from dgl import graph
 class KG(object):
-    def __init__(self, triples=None):
+    """
+    Simple wrapper to the dgl graph object.
+    """
+    def __init__(self, triples=None, dev=torch.device('cpu')):
         super().__init__()
+        self.dev = dev
         
     def build_from_file(self, infile, ent2idx, rel2idx):
         triples, missing = [], {}
@@ -112,7 +117,11 @@ class KG(object):
                 except:
                     continue
         triples = torch.as_tensor(triples)
-        self.g = graph((triples[:.0], triples[:,2]))
+        self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
         self.etypes = triples[:,1]
-        self.node_feat = torch.randn(self.g.num_nodes, 200)
+        self.node_feat = torch.randn(self.g.num_nodes(), 200) # random initial node features
         #print(f'> {len(missing)} missing mappings.')
+
+    @property
+    def n_rel(self):
+        return len(set(self.etypes.tolist()))

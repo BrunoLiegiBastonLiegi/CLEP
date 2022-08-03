@@ -3,6 +3,7 @@ import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model, BertModel
+from dgl.nn import RelGraphConv
 
 class MLP(torch.nn.Module):
 
@@ -20,6 +21,7 @@ class MLP(torch.nn.Module):
             else:
                 layers.append(Linear(hdim, hdim))
         self.nn = Sequential(*layers)
+        del layers
 
     def forward(self, x):
         return self.nn(x)
@@ -191,9 +193,19 @@ class ConcatModel(torch.nn.Module):
 
 class RGCN(torch.nn.Module):
 
-    def __init__(self, kg, n_layers, indim, hdim):
+    def __init__(self, kg, n_layers, indim, hdim, num_bases, activation = ReLU(), regularization = Dropout(0.0)):
+        super().__init__()
         self.kg = kg
-        
+        self.layers = torch.nn.ModuleList()
+        act = [activation for i in range(n_layers-1)] + [None]
+        self.layers.append(RelGraphConv(indim, hdim, kg.n_rel, regularizer='basis', num_bases=num_bases,
+                                    activation=act[0], layer_norm=regularization))
+        for a in act[1:]:
+            self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer='basis', num_bases=num_bases,
+                                       activation=a, layer_norm=regularization))
         
     def forward(self, nodes):
-        return self.nn(self.kg.g, self.kg.node_feat, self.kg.etypes)[nodes]
+        h = self.kg.node_feat
+        for l in self.layers:
+            h = l(self.kg.g, h, self.kg.etypes)
+        return h[nodes]
