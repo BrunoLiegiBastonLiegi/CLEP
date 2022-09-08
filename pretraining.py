@@ -1,18 +1,23 @@
-import torch, argparse, json, random, time, pickle
+import torch, argparse, json, random, time, pickle, numpy
 from dataset import CLIPDataset
-from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder
+from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN
 from transformers import GPT2Tokenizer, BertTokenizer
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind, mannwhitneyu
 from tqdm import tqdm
+from utils import training_routine, KG
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
-parser.add_argument('--graph_embeddings', default='data/pretrained_graph_embeddings.pkl', help='Path to the pretrained graph embedding file.')
+parser.add_argument('--graph_embeddings', default=None, help='Path to the pretrained graph embedding file.')
+parser.add_argument('--entity_index', default=None, help='Path to relations index file.')
+parser.add_argument('--rel_index', default=None, help='Path to relations index file.')
 parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
+parser.add_argument('--graph', default=None, help='Path to graph triples file.')
+
 args = parser.parse_args()
 
 # Set device for computation
@@ -28,8 +33,11 @@ tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
 #tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
 print('> Preparing the data.')
 # Load index mapping
-with open('data/wid2idx_small.json', 'r') as f:
+with open(args.entity_index, 'r') as f:
     wid2idx = json.load(f)
+if args.rel_index != None:
+    with open (args.rel_index, 'r') as f:
+        rel2idx = json.load(f)
 # Train and Test data
 train_data = CLIPDataset(
     datafile = args.train_data, #'data/FB15k-237/train_new.pkl',
@@ -43,17 +51,29 @@ test_data = CLIPDataset(
     entity2idx = wid2idx,
     device = dev
 )
-#valid_data = CLIPDataset(
-#    datafile = args.valid_data, #'data/FB15k-237/valid.pkl',
-#    tokenizer = tokenizer,
-#    entity2idx = wid2idx,
-#    device = dev
-#)
+
 print('> Initializing the model.')
 # Graph encoder
-with open(args.graph_embeddings, 'rb') as f:
-    node_embeddings = pickle.load(f)
-graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
+if  args.graph_embeddings != None:
+    with open(args.graph_embeddings, 'rb') as f:
+        node_embeddings = pickle.load(f)
+if  args.graph != None:
+    kg = KG(embedding_dim=200, dev=dev)
+    kg.build_from_file(args.graph, wid2idx, rel2idx)
+    #torch.save(kg.node_feat, 'rgcn_initial_node_features.pt')
+    kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
+    
+#graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
+
+graph_encoder = RGCN(
+    kg = kg,
+    n_layers = 3,
+    indim = kg.embedding_dim,
+    hdim = 200,
+    rel_regularizer = 'basis',
+    num_bases = 64
+)
+
 # Caption encoder
 text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 #text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
@@ -61,7 +81,6 @@ text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
 # Training
-from utils import training_routine
 
 # Define training step
 def step_f(model, batch, label, dev):
@@ -77,7 +96,7 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 10
+    epochs = 5
     batchsize = 128
     
     training_routine(
@@ -87,6 +106,7 @@ if args.load_model == None:
         test_data = test_data,
         epochs = epochs,
         batchsize = batchsize,
+        learning_rate = 5e-4,
         accum_iter = 1,
         dev = dev
     )
@@ -108,7 +128,7 @@ test_loader = DataLoader(
 with torch.no_grad():
     sm = torch.nn.Softmax(1)
     acc, tot = 0, 0
-    distance, off_diag_dist = [], []
+    on_diag_dist, off_diag_dist = [], []
     original_points, points, entities, captions = [], [], [], []
     fig, ax = plt.subplots(1,1)
     model.eval()
@@ -119,28 +139,40 @@ with torch.no_grad():
         entities.append(batch['entities'].detach().cpu())
         captions += tokenizer.batch_decode(batch['captions']['input_ids'].detach().cpu(), skip_special_tokens=True, clean_up_tokenization_spaces=True)
         # Distance of correct pairs
-        distance.append(((graph_out-text_out)**2).sum(-1).sqrt())
+        on_diag_dist.append(((graph_out-text_out)**2).sum(-1).sqrt())
         # Distance of offdiagonal pairs
         idx = set(range(graph_out.shape[0]))
-        j = random.choices(list(idx), k=batchsize) # randomly sample a subset of offdiagonal pairs
+        j = random.sample(list(idx), k=graph_out.shape[0]) # randomly sample a subset of offdiagonal pairs
         k = list(map(lambda x: random.choice(list(idx-{x})), j))
         off_diag_dist.append(((graph_out[j]-text_out[k])**2).sum(-1).sqrt())
-        off_diag_dist.append(((graph_out[k]-text_out[j])**2).sum(-1).sqrt()) # asymettric in principle
+        #off_diag_dist.append(((graph_out[k]-text_out[j])**2).sum(-1).sqrt()) # asymettric in principle
         # Accuracy
         logits = torch.tensordot(graph_out, text_out.T, dims=1) #* torch.exp(model.T)
         for i, v in enumerate(sm(logits)):
             tot += 1
             if torch.argmax(v) == i:
                 acc += 1
-    distance = torch.cat(distance).detach().cpu().numpy()
+    on_diag_dist = torch.cat(on_diag_dist).detach().cpu().numpy()
     off_diag_dist = torch.cat(off_diag_dist).detach().cpu().numpy()
-    print(ttest_ind(distance, off_diag_dist, equal_var=False))
-    print(mannwhitneyu(distance, off_diag_dist))
-    print(mannwhitneyu(distance, off_diag_dist, alternative='less'))
-    print(mannwhitneyu(distance, off_diag_dist, alternative='greater'))
+    #print(ttest_ind(distance, off_diag_dist, equal_var=False))
+    #print(mannwhitneyu(distance, off_diag_dist))
+    #print(mannwhitneyu(distance, off_diag_dist, alternative='less'))
+    #print(mannwhitneyu(distance, off_diag_dist, alternative='greater'))
     #print(sorted(distance))
-    ax.hist(distance, bins='auto', alpha=0.5, density=True)
-    ax.hist(off_diag_dist, bins='auto', alpha=0.5, density=True)
+    print(f'Distance of the means: {off_diag_dist.mean() - on_diag_dist.mean():.3f}')
+    # Get area of histogram overlap
+    hist_range = (0.,2.)
+    bins = 100
+    on_diag_hist, _, _ = ax.hist(on_diag_dist, bins=bins, range=hist_range, alpha=0.5, density=True)
+    off_diag_hist, _, _ = ax.hist(off_diag_dist, bins=bins, range=hist_range, alpha=0.5, density=True)
+    area = []
+    for on, off in zip(on_diag_hist, off_diag_hist):
+        if on > 0 and off > 0:
+            area.append(min(on, off))
+    area = (torch.as_tensor(area) * (hist_range[1] - hist_range[0])/100).sum()
+    print(f'Overlapping area: {area:.3f}')
+    ax.annotate(f'Distance of the means: {off_diag_dist.mean() - on_diag_dist.mean():.3f}', (0.1,0.9), xycoords='axes fraction')
+    ax.annotate(f'Overlapping area: {area:.3f}', (0.1,0.8), xycoords='axes fraction')
     #plt.savefig(f'distance_histogram_batchsize_{batchsize}.png')
     plt.show()
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')

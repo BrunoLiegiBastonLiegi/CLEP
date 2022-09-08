@@ -1,17 +1,21 @@
 import argparse, torch, json, pickle
 from dataset import NodeClassificationDataset
-from model import PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel
+from model import PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel, RGCN
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 from torchmetrics import F1Score
 import matplotlib.pyplot as plt
+from utils import training_routine, KG
 
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
-parser.add_argument('--graph_embeddings', default='data/pretrained_graph_embeddings.pkl', help='Path to the pretrained graph embedding file.')
+parser.add_argument('--entity_index', default=None, help='Path to relations index file.')
+parser.add_argument('--rel_index', help='Path to relations index file.')
+parser.add_argument('--graph_embeddings', default=None, help='Path to the pretrained graph embedding file.')
+parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
 args = parser.parse_args()
 
@@ -23,8 +27,11 @@ else:
 print(f'\n> Setting device {dev} for computation.')
 
 # Load index
-with open('data/wid2idx_small.json', 'r') as f:
+with open(args.entity_index, 'r') as f:
     wid2idx = json.load(f)
+if args.rel_index != None:
+    with open (args.rel_index, 'r') as f:
+        rel2idx = json.load(f)
 type2idx = {'PER': 0, 'LOC': 1, 'ORG': 2}
     
 # Train and Test data
@@ -40,11 +47,23 @@ test_data = NodeClassificationDataset(
 )
 
 # Pretrained Graph Embeddings
-with open(args.graph_embeddings, 'rb') as f:
-    node_embeddings = pickle.load(f)
-    
+if  args.graph_embeddings != None:
+    with open(args.graph_embeddings, 'rb') as f:
+        node_embeddings = pickle.load(f)
+if  args.graph != None:
+    kg = KG(embedding_dim = 200, dev=dev)
+    kg.build_from_file(args.graph, wid2idx, rel2idx)
+    kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
+BaselineModel = RGCN(
+    kg = kg,
+    n_layers = 3,
+    indim = kg.embedding_dim,
+    hdim= 200,
+    num_bases = 64
+)    
 # Baseline: pretrained TransE embeddings
-BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
+#BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, device=dev)
+
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
@@ -54,12 +73,11 @@ _ = GPT2CaptionEncoder(pretrained_model='gpt2')
 clip = CLIP_KB(graph_encoder=BaselineModel, text_encoder=_, hdim=200).to(dev)
 clip.load_state_dict(torch.load(args.load_model))
 # Stack the pretrained MLP on top of the graph embedding model
-SemanticAugmentedModel = torch.nn.Sequential(BaselineModel, clip.g_mlp)
+SemanticAugmentedModel = torch.nn.Sequential(clip.g_encoder, clip.g_mlp)
 #for par in SemanticAugmentedModel.parameters():
 #    par.requires_grad = False
 
 # Training
-from utils import training_routine
 
 # Define training step
 def step_f(model, batch, label, dev):
@@ -80,7 +98,7 @@ def experiment(model, train_data, test_data, dev=dev):
     )
     NCmodel = torch.nn.Sequential(model, NChead).to(dev)
 
-    epochs = 50#64
+    epochs = 10#64
     batchsize = 4096
     train_loss, test_loss = training_routine(
         model = NCmodel,
@@ -89,6 +107,7 @@ def experiment(model, train_data, test_data, dev=dev):
         test_data = test_data,
         epochs = epochs,
         batchsize = batchsize,
+        learning_rate = 5e-4,
         accum_iter = 1,
         dev = dev
     )

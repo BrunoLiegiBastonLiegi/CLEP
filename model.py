@@ -73,12 +73,20 @@ class CLIP_KB(torch.nn.Module):
 
 class PretrainedGraphEncoder(torch.nn.Module):
 
-    def __init__(self, node_embeddings: dict, device: torch.device):
+    def __init__(self, node_embeddings: dict, index: dict, device: torch.device):
         super().__init__()
         #self.node2emb = node_embeddings
         self.dev = device
+        self._hdim = list(node_embeddings.values())[0].shape[-1]
+        embs = {}
+        for k in index.keys():
+            try:
+                embs[k] = node_embeddings[k]
+            except:
+                embs[k] = torch.zeros(self._hdim)
         # need to explictly cast to float32
-        self.ordered_embs = torch.as_tensor(np.vstack(list(node_embeddings.values())), dtype=torch.float) 
+        self.ordered_embs = torch.as_tensor(np.vstack(list(embs.values())), dtype=torch.float)
+        del embs
         #self.register_parameter(
         #    name='ordered_embs',
         #    param=torch.nn.Parameter(
@@ -107,8 +115,8 @@ class PretrainedGraphEncoder(torch.nn.Module):
     
     @property
     def hdim(self):
-        #return next(iter(self.node2emb.items()))[1].shape[-1]
-        return self.ordered_embs.shape[-1]
+        #return self.ordered_embs.shape[-1]
+        return self._hdim
         
 class GPT2CaptionEncoder(torch.nn.Module):
 
@@ -128,9 +136,6 @@ class GPT2CaptionEncoder(torch.nn.Module):
     def hdim(self):
         #return self.model.config.vocab_size
         return self.model.config.n_embd
-
-    #def unfreeze_layer(self, i: int):
-     #   for p in self.model.
 
 class BertCaptionEncoder(torch.nn.Module):
 
@@ -154,25 +159,31 @@ class BertCaptionEncoder(torch.nn.Module):
 
 class LinkPredictionModel(torch.nn.Module):
 
-    def __init__(self, graph_embedding_model, predict: str = 'relation', rel2idx: dict = None):
+    def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult', predict: str = 'relation'):
         super().__init__()
+        assert mode in ('Distmult', 'TransE')
         self.model = graph_embedding_model
         self.pred = predict
+        hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
         if self.pred == 'relation':
-            assert rel2idx != None
-            hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
             out_dim = len(rel2idx)
             self.bil = torch.nn.Bilinear(hdim, hdim, out_dim)
             self.lin = torch.nn.Linear(2*hdim, out_dim, bias=False)
             self.f = lambda x,y: self.bil(x,y) + self.lin(torch.cat((x,y), dim=-1))
-        elif self.pred == 'tail':
-            self.f = lambda x,y: x + y
-        elif self.pred == 'head':
-            self.f = lambda x,y: x - y
+        else:
+            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), hdim), requires_grad=True)
+            if mode == 'Distmult':
+                self.f = lambda x,r,y : (x*r*y).sum(-1)
+            elif mode == 'TransE':
+                #self.f = lambda x,r,y : -((y-x-r)**2).sum(-1).sqrt() # L2 distance
+                self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1).sqrt() # L1 distance
 
-    def forward(self, x, y): # x,y can be either head-rel, head-tail, tail-rel depending on the task
+    def forward(self, x, y, r=None): # x,y can be either head-rel, head-tail, tail-rel depending on the task
         x, y = self.model(x), self.model(y)
-        return self.f(x,y)
+        if r == None:
+            return self.f(x,y)
+        else:
+            return self.f(x, self.R[r], y)
 
 class ConcatModel(torch.nn.Module):
 
@@ -193,19 +204,25 @@ class ConcatModel(torch.nn.Module):
 
 class RGCN(torch.nn.Module):
 
-    def __init__(self, kg, n_layers, indim, hdim, num_bases, activation = ReLU(), regularization = Dropout(0.0)):
+    def __init__(self, kg, n_layers, indim, hdim, rel_regularizer='basis', num_bases=None, activation = ReLU(), regularization = Dropout(0.2)):
         super().__init__()
+        assert rel_regularizer in {'bdd', 'basis'}
         self.kg = kg
+        self._hdim = hdim
         self.layers = torch.nn.ModuleList()
         act = [activation for i in range(n_layers-1)] + [None]
-        self.layers.append(RelGraphConv(indim, hdim, kg.n_rel, regularizer='basis', num_bases=num_bases,
+        self.layers.append(RelGraphConv(indim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                     activation=act[0], layer_norm=regularization))
         for a in act[1:]:
-            self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer='basis', num_bases=num_bases,
+            self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                        activation=a, layer_norm=regularization))
         
     def forward(self, nodes):
-        h = self.kg.node_feat
+        h = self.kg.node_feat.weight
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]
+
+    @property
+    def hdim(self):
+        return self._hdim

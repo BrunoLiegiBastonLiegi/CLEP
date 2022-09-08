@@ -32,9 +32,9 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-def training_routine(model, step_f, train_data, test_data, epochs, batchsize, accum_iter=1, dev=torch.device('cpu')):
+def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, accum_iter=1, dev=torch.device('cpu')):
     
-    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     scaler = GradScaler()
 
     train_loader = DataLoader(
@@ -86,14 +86,19 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, ac
     return train_loss, test_loss
 
 # Graph
-from dgl import graph
+from dgl import graph, heterograph
 class KG(object):
     """
     Simple wrapper to the dgl graph object.
     """
-    def __init__(self, triples=None, dev=torch.device('cpu')):
+    def __init__(self, triples=None, embedding_dim = 200, dev=torch.device('cpu')):
         super().__init__()
         self.dev = dev
+        self.emb_dim = embedding_dim
+        if triples != None:
+            self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
+            self.etypes = triples[:,1].to(self.dev)
+            self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
         
     def build_from_file(self, infile, ent2idx, rel2idx):
         triples, missing = [], {}
@@ -117,11 +122,21 @@ class KG(object):
                 except:
                     continue
         triples = torch.as_tensor(triples)
+        #data_dict = {}
+        #for k,v in rel2idx.items():
+        #    idx = triples[:,1] == v
+        #    data_dict[(0,v,0)] = (triples[idx][:,0].flatten(), triples[idx][:,2].flatten())
+        #self.hg = heterograph(data_dict)
+        #(1- kg.hg.adj(etype=0).to_dense()).to_sparse()
         self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
-        self.etypes = triples[:,1]
-        self.node_feat = torch.randn(self.g.num_nodes(), 200) # random initial node features
+        self.etypes = triples[:,1].to(self.dev)
+        self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
         #print(f'> {len(missing)} missing mappings.')
 
     @property
     def n_rel(self):
         return len(set(self.etypes.tolist()))
+
+    @property
+    def embedding_dim(self):
+        return self.node_feat.embedding_dim

@@ -1,13 +1,21 @@
 from torch.utils.data import Dataset
-import pickle, torch, json
+import pickle, torch, json, random
+from tqdm import tqdm
+from scipy.sparse import coo_matrix
+from multiprocessing import Pool
+from itertools import repeat
+from dgl.sampling import global_uniform_negative_sampling
 
 
 class CLIPDataset(Dataset):
 
     def __init__(self, datafile: str, tokenizer, entity2idx: dict, device: torch.device = torch.device('cpu')):
-        with open(datafile, 'rb') as f:
-            self.data = list(pickle.load(f).values())
-            #self.data = list(json.load(f).values())
+        if datafile[-4:] == '.pkl': 
+            with open(datafile, 'rb') as f:
+                self.data = list(pickle.load(f).values())
+        elif datafile[-5:] == '.json':
+            with open(datafile, 'r') as f:
+                self.data = list(json.load(f).values())
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
@@ -43,20 +51,22 @@ class CLIPDataset(Dataset):
             inputs['captions'].append(item['caption'])
             inputs['entities'].append(self.e2idx[item['wikidata_id']])
         inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt').to(self.dev)
-        inputs['entities'] = torch.tensor(inputs['entities']).view(-1,1).to(self.dev)
+        inputs['entities'] = torch.as_tensor(inputs['entities']).to(self.dev)
         labels = torch.arange(len(batch)).to(self.dev)
         return inputs, labels
         
 
 class LinkPredictionDataset(Dataset):
 
-    def __init__(self, datafile: str, entity2idx: dict, rel2idx: dict = None, predict: str = 'relation'):
-        assert predict in ('head', 'tail', 'relation')
-        self.predict = predict
+    def __init__(self, datafile: str, entity2idx: dict, rel2idx, KG=None, add_inverse_edges: bool = False):
         self.e2idx = entity2idx
-        self.r2idx = rel2idx
-        if predict == 'relation':
-            assert self.r2idx != None
+        self.r2idx = rel2idx.copy()
+        self.kg = KG
+        if add_inverse_edges:
+            self.r2idx.update({
+                k+'^(-1)': v
+                for k,v in zip(rel2idx.keys(), range(len(rel2idx), 2*len(rel2idx)))
+            })
         self.discarded_triples = []
         with open(datafile, 'r') as f:
             self.triples = []
@@ -65,12 +75,18 @@ class LinkPredictionDataset(Dataset):
                 triple = l.split()
                 try:
                     h, t = self.e2idx[triple[0]], self.e2idx[triple[2]]
-                    r = self.r2idx[triple[1]] if predict == 'relation' else self.e2idx[triple[1]]
+                    r = self.r2idx[triple[1]] 
                 except:
                     discard = True
                     self.discarded_triples.append(l)
                 if not discard:
                     self.triples.append(torch.as_tensor([h,r,t]))
+                    if add_inverse_edges:
+                        r = self.r2idx[triple[1]+'^(-1)'] 
+                        self.triples.append(torch.as_tensor([t,r,h]))
+            self.triples = torch.vstack(self.triples)
+            self.triples = torch.hstack((self.triples, torch.ones(self.triples.shape[0], 1))).long()
+        self.true_triples = self.triples.clone()
         print(f'> {len(self.discarded_triples)} discarded triples due to missing mapping in the index files.')
 
     def __len__(self):
@@ -79,22 +95,89 @@ class LinkPredictionDataset(Dataset):
     def __getitem__(self, idx: int):
         return self.triples[idx]
 
+    def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', w=1):
+        assert mode in ('gen', 'load')
+        if mode == 'gen':
+            tmp_triples = torch.vstack((self.true_triples, triples)) if triples != None else self.true_triples
+            tmp_triples = torch.vstack((tmp_triples, tmp_triples[:,[2,1,0,3]]))
+            #m = coo_matrix((tmp_triples[:,1], (tmp_triples[:,0], tmp_triples[:,2])), shape=(len(self.e2idx), len(self.e2idx)))
+            #m = torch.as_tensor(m.todense())
+            print('> Generating corrupted triples ...')
+            corrupted_triples = torch.vstack(list(map(self._corrupt_triple, tqdm(self.triples), tmp_triples)))
+            #for t in corrupted_triples:
+            #    if len((t == tmp_triples).all(-1).nonzero()) > 0:
+            #        print('########### ERR')
+            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_train_triples.pt')
+        elif mode == 'load':
+            print(f'> Loading corrupted triples from {triples}.')
+            corrupted_triples = torch.load(triples)
+        self.triples = torch.vstack((self.triples, corrupted_triples)).long()
+        self.triples = self.triples[torch.randperm(len(self.triples))]
+        
+    def _corrupt_triple(self, t, test_triples, c=None, position=[0,2], w=1):
+        ct = []
+        for n in range(w):     
+            for i in position: # head/rel/tail
+                while True:
+                    corr_t = t.clone()
+                    corr_t[i] = random.sample(list(self.e2idx.values()), k=1)[0] if c == None else c
+                    #if corr_t[0] == corr_t[2] and c == None: # discard self loops, i.e. triples of the form (u,r,u)
+                    #    continue
+                    if ((corr_t != test_triples).sum(-1) == 0).sum() == 0:
+                        if len(t) > 3:
+                            corr_t[3] = 0
+                        ct.append(corr_t)
+                        break
+                    elif c != None:
+                        break
+        return torch.vstack(ct)
+
+    def generate_evaluation_triples(self, triples: torch.tensor = None, corrupt: str = 'tail', mode: str ='gen'):
+        """Takes too much memory.
+        """
+        assert corrupt in ('head', 'relation', 'tail')
+        corr_idx = {'head': 0, 'relation': 1, 'tail': 2}
+        nodes = torch.tensor(list(self.e2idx.values()))
+        # correct triples used for checking
+        check_triples = torch.vstack((self.true_triples[:,:3], triples[:,:3])) if triples != None else self.true_triples[:,:3]
+        # new head/rel/tail
+        print('Generating new_el')
+        new_el = torch.vstack([nodes for j in range(self.true_triples.shape[0])]).T.reshape(-1,1)
+        # corrupted triples
+        print('Generating corrupted triples')
+        corr_t = torch.vstack([self.true_triples[:,:3] for j in range(nodes.shape[0])]) # copy and repeat the correct triples
+        corr_t[:,corr_idx[corrupt]] = new_el[:,0] # corrupt the correct triples by injecting the new elements
+        del nodes, new_el
+        corr_t = set(zip(corr_t[:,0].tolist(), corr_t[:,1].tolist(), corr_t[:,2].tolist()))
+        print(f'> Intersection with check_triples')
+        corr_t = torch.as_tensor(list((corr_t.symmetric_difference(check_triples)).intersection(corr_t)))
+        # check which of the corrupted triples don't appear in the corret ones
+        #for t in tqdm(corr_t):
+        #    ((x!=check_triples).sum(-1) == 0).sum().bool()
+        #idx = torch.vstack(list(map(
+        #    lambda x: ((x!=check_triples).sum(-1) == 0).sum().bool(),
+        #    corr_t
+        #))).flatten()
+        # keep only the corrupted triples not present in the correct ones
+        #corr_t = corr_t[~idx,:]
+        # eliminate repeated triples
+        #corr_t = torch.unique(corr_t, dim=0)
+    
     def collate_fn(self, batch: list):
         t = torch.vstack(batch)
-        if self.predict == 'relation':
-            inputs, labels = t[:,[0,2]], t[:,1]
-        elif self.predict == 'head':
-            inputs, labels = t[:,[2,1]], t[:,0]
-        elif self.predict == 'tail':
-            inputs, labels = t[:,[0,1]], t[:,2]
-        return inputs, labels
+        triples, labels = t[:,:-1], t[:,-1].float()
+        return triples, labels
             
 
 class NodeClassificationDataset(Dataset):
 
     def __init__(self, datafile: str, entity2idx: dict, type2idx: dict):
-        with open(datafile, 'r') as f:
-            self.data = json.load(f)
+        if datafile[-4:] == '.pkl': 
+            with open(datafile, 'rb') as f:
+                self.data = pickle.load(f)
+        elif datafile[-5:] == '.json':
+            with open(datafile, 'r') as f:
+                self.data = json.load(f)
         self.data = list(self.data.values())
         self.e2idx = entity2idx
         self.t2idx = type2idx
