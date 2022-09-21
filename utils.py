@@ -32,7 +32,7 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, accum_iter=1, dev=torch.device('cpu')):
+def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, eval_f=None, accum_iter=1, dev=torch.device('cpu')):
     
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     scaler = GradScaler()
@@ -83,6 +83,9 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         test_loss.append(running_loss/(len(test_loader)))
         train_loss.append(epoch_loss/len(train_loader))
         print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
+        if e % 10 == 9 and eval_f != None: # run evaluation every 10 epochs
+            res = eval_f(model, test_loader)
+            print(json.dumps(res, indent=2))
     return train_loss, test_loss
 
 # Graph

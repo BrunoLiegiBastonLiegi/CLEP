@@ -62,6 +62,7 @@ class LinkPredictionDataset(Dataset):
         self.e2idx = entity2idx
         self.r2idx = rel2idx.copy()
         self.kg = KG
+        self.inv_triples = [] if add_inverse_edges else None
         if add_inverse_edges:
             self.r2idx.update({
                 k+'^(-1)': v
@@ -75,7 +76,9 @@ class LinkPredictionDataset(Dataset):
                 triple = l.split()
                 try:
                     h, t = self.e2idx[triple[0]], self.e2idx[triple[2]]
-                    r = self.r2idx[triple[1]] 
+                    r = self.r2idx[triple[1]]
+                    #if h == 8235 or t == 8235 or h == 215 or t == 215: # entity 8235 seemed to cause nan errs in some cases
+                        #assert False
                 except:
                     discard = True
                     self.discarded_triples.append(l)
@@ -83,10 +86,24 @@ class LinkPredictionDataset(Dataset):
                     self.triples.append(torch.as_tensor([h,r,t]))
                     if add_inverse_edges:
                         r = self.r2idx[triple[1]+'^(-1)'] 
-                        self.triples.append(torch.as_tensor([t,r,h]))
+                        self.inv_triples.append(torch.as_tensor([t,r,h]))
             self.triples = torch.vstack(self.triples)
-            self.triples = torch.hstack((self.triples, torch.ones(self.triples.shape[0], 1))).long()
-        self.true_triples = self.triples.clone()
+            self.triples = torch.hstack((
+                self.triples,
+                torch.ones(self.triples.shape[0], 1, dtype=torch.int64)
+            ))
+            self.true_triples = self.triples.clone()
+            if add_inverse_edges:
+                self.inv_triples = torch.vstack(self.inv_triples)
+                self.inv_triples = torch.hstack((
+                    self.inv_triples,
+                    torch.ones(self.inv_triples.shape[0], 1, dtype=torch.int64)
+                ))
+                self.triples = torch.vstack((
+                    self.triples,
+                    self.inv_triples
+                ))
+
         print(f'> {len(self.discarded_triples)} discarded triples due to missing mapping in the index files.')
 
     def __len__(self):
@@ -95,40 +112,48 @@ class LinkPredictionDataset(Dataset):
     def __getitem__(self, idx: int):
         return self.triples[idx]
 
-    def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', w=1):
+    def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', pos : list = ['head','tail'], w: int = 1):
         assert mode in ('gen', 'load')
         if mode == 'gen':
-            tmp_triples = torch.vstack((self.true_triples, triples)) if triples != None else self.true_triples
-            tmp_triples = torch.vstack((tmp_triples, tmp_triples[:,[2,1,0,3]]))
-            #m = coo_matrix((tmp_triples[:,1], (tmp_triples[:,0], tmp_triples[:,2])), shape=(len(self.e2idx), len(self.e2idx)))
-            #m = torch.as_tensor(m.todense())
+            #tmp_triples = torch.vstack((self.true_triples, triples)) if triples != None else self.true_triples
+            #tmp_triples = torch.vstack((tmp_triples, tmp_triples[:,[2,1,0,3]]))
+            #tmp_triples = {tuple(t.tolist()) for t in tmp_triples}
+            #tmp_triples = torch.as_tensor(list(tmp_triples))
+            pos2idx = {'head':0, 'tail':2}
             print('> Generating corrupted triples ...')
-            corrupted_triples = torch.vstack(list(map(self._corrupt_triple, tqdm(self.triples), tmp_triples)))
+            pos = [pos2idx[p] for p in pos]
+            if self.inv_triples == None:
+                corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(self.true_triples[:,:3]) ])
+            else:
+                corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(torch.vstack((self.true_triples[:,:3], self.inv_triples[:,:3]))) ])
+            #f = lambda x : self._corrupt_triple(x, filter_triples, position=pos, w=w)
+            #corrupted_triples = torch.vstack(list(map(f, tqdm(self.true_triples[:,:3]))))
+            #corrupted_triples = torch.vstack(list(map(self._corrupt_triple, tqdm(self.true_triples[:,:3]), repeat(filter_triples), repeat(pos), repeat(w))))
             #for t in corrupted_triples:
             #    if len((t == tmp_triples).all(-1).nonzero()) > 0:
             #        print('########### ERR')
-            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_train_triples.pt')
+            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_test_triples+inverse.pt')
+            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_test_triples.pt')
         elif mode == 'load':
             print(f'> Loading corrupted triples from {triples}.')
             corrupted_triples = torch.load(triples)
+        corrupted_triples = torch.hstack((corrupted_triples, torch.zeros(corrupted_triples.shape[0], 1, dtype=torch.int64)))
         self.triples = torch.vstack((self.triples, corrupted_triples)).long()
         self.triples = self.triples[torch.randperm(len(self.triples))]
         
-    def _corrupt_triple(self, t, test_triples, c=None, position=[0,2], w=1):
+    def _corrupt_triple(self, t, filter_triples, val=None, position=[0,2], w=1):
         ct = []
         for n in range(w):     
             for i in position: # head/rel/tail
                 while True:
                     corr_t = t.clone()
-                    corr_t[i] = random.sample(list(self.e2idx.values()), k=1)[0] if c == None else c
+                    corr_t[i] = random.choice(list(self.e2idx.values())) if val == None else val
                     #if corr_t[0] == corr_t[2] and c == None: # discard self loops, i.e. triples of the form (u,r,u)
                     #    continue
-                    if ((corr_t != test_triples).sum(-1) == 0).sum() == 0:
-                        if len(t) > 3:
-                            corr_t[3] = 0
+                    if len((corr_t == filter_triples).all(-1).nonzero()) == 0:
                         ct.append(corr_t)
                         break
-                    elif c != None:
+                    elif val != None:
                         break
         return torch.vstack(ct)
 

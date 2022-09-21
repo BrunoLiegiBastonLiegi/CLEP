@@ -5,3 +5,4 @@
 *.pt
 *.png
 __pycache__
+*.bak

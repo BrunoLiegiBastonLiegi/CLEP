@@ -78,14 +78,20 @@ class PretrainedGraphEncoder(torch.nn.Module):
         #self.node2emb = node_embeddings
         self.dev = device
         self._hdim = list(node_embeddings.values())[0].shape[-1]
+        self.ordered_embs = torch.zeros(len(index), self._hdim, dtype=float)
         embs = {}
-        for k in index.keys():
+        n = 0
+        for k,v in index.items():
             try:
-                embs[k] = node_embeddings[k]
+                e = torch.as_tensor(node_embeddings[k])
+                embs[k] = e
+                self.ordered_embs[v] = e
             except:
+                n += 1
                 embs[k] = torch.zeros(self._hdim)
+        print(f'Warning: {n} pretrained embeddings were missing. They were substituted with zeros.')
         # need to explictly cast to float32
-        self.ordered_embs = torch.as_tensor(np.vstack(list(embs.values())), dtype=torch.float)
+        #self.ordered_embs = torch.as_tensor(np.vstack(list(embs.values())), dtype=torch.float)
         del embs
         #self.register_parameter(
         #    name='ordered_embs',
@@ -159,32 +165,81 @@ class BertCaptionEncoder(torch.nn.Module):
 
 class LinkPredictionModel(torch.nn.Module):
 
-    def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult', predict: str = 'relation'):
+    def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult'):
         super().__init__()
-        assert mode in ('Distmult', 'TransE')
+        assert mode in ('Distmult', 'TransE', 'Bilin')
+        self.mode = mode
         self.model = graph_embedding_model
-        self.pred = predict
         hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
-        if self.pred == 'relation':
-            out_dim = len(rel2idx)
-            self.bil = torch.nn.Bilinear(hdim, hdim, out_dim)
-            self.lin = torch.nn.Linear(2*hdim, out_dim, bias=False)
-            self.f = lambda x,y: self.bil(x,y) + self.lin(torch.cat((x,y), dim=-1))
+        if mode == 'Bilin':
+            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), hdim, hdim), requires_grad=True)
+            self.f = lambda x,r,y: (x * (r @ y.view(y.shape[0], 1, -1).mT).view(y.shape[0], -1)).sum(-1)
+            #self.prior = pass
+            #self.fast_f = lambda x,y : pass
         else:
             self.R = torch.nn.Parameter(torch.randn(len(rel2idx), hdim), requires_grad=True)
             if mode == 'Distmult':
-                self.f = lambda x,r,y : (x*r*y).sum(-1)
+                 self.f = lambda x,r,y : (x*r*y).sum(-1)
+                 self.prior = {'head': lambda x,r : x*r, 'tail': lambda x,r : x*r}
+                 self.fast_f = lambda p,y: (p*y).sum(-1)
             elif mode == 'TransE':
-                #self.f = lambda x,r,y : -((y-x-r)**2).sum(-1).sqrt() # L2 distance
-                self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1).sqrt() # L1 distance
+                 self.f = lambda x,r,y : -((y-x-r)**2).sum(-1) # L2 distance
+                 self.prior = {'head': lambda x,r: x-r, 'tail': lambda x,r: x+r}
+                 self.fast_f = lambda p,y : -((p-y)**2).sum(-1) # L2 distance # ( this the same for head and tail prediction since (y-x)**2=(x-y)**2)
+                 #self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1) # L1 distance
 
     def forward(self, x, y, r=None): # x,y can be either head-rel, head-tail, tail-rel depending on the task
-        x, y = self.model(x), self.model(y)
-        if r == None:
-            return self.f(x,y)
-        else:
-            return self.f(x, self.R[r], y)
+        #x_bak, y_bak = x, y
+        #print(x.shape, y.shape)
+        #print(torch.cat((x,y)).shape)
+        x, y = self.model(torch.cat((x,y))).view(2,-1, self.model.hdim)
+        #x, y = self.model(x), self.model(y)
+        #nanx = x.isnan().any(-1).nonzero()
+        #nany = y.isnan().any(-1).nonzero()
+        #if len(nanx) > 0:
+        #    print('Found nan in x: ')
+        #    for i in nanx:
+        #        print(x_bak[i])
+        #if len(nany) > 0:
+        #    print('Found nan in y: ')    # the RGCN is producing nans in some cases
+        #    for i in nany:               # in detail entity 8235 seems to be the one causing the nans
+        #        print(y_bak[i])
+        return self.f(x, self.R[r], y)
 
+    def get_embedding(self, x):
+        """Returns the embedding learned by the graph encoder."""
+        return self.model(x)
+
+    def score_candidates(self, triples, candidates, mode='tail', filter=None):
+        assert mode in ('head','tail')
+        idx, idx_pair = (2, [0,1]) if mode == 'tail' else (0, [1,2])
+        mask = (triples[:,idx].view(-1,1) == candidates) 
+        if filter != None:
+            filter_mask = (triples.view(-1,1,3)[:,:,idx_pair].detach().cpu() == filter[:,idx_pair]).all(-1)
+            tmp_cand = candidates.detach().cpu()
+            #idx = 2 if mode == 'tail' else 0
+            filter_mask = torch.vstack([
+                (filter[filter_mask[i]][:,idx].view(-1,1) == tmp_cand).sum(0).bool()
+                for i in range(filter_mask.shape[0])
+            ])
+            filter_mask = (mask.logical_not() * filter_mask.to(mask.device)).bool()
+            del tmp_cand
+        else:
+            filter_mask = torch.zeros(triples.shape[0], candidates.shape[0]).bool()
+        h, t = self.get_embedding(triples[:,0]), self.get_embedding(triples[:,2])
+        r = self.R[triples[:,1]]
+        prior = self.prior[mode](h, r) if mode == 'tail' else self.prior[mode](t, r)
+        prior = torch.hstack([prior for i in range(len(candidates))]).view(-1, prior.shape[-1])
+        candidates = self.get_embedding(candidates)
+        candidates = torch.vstack([candidates for i in range(triples.shape[0])])
+        scores = self.fast_f(prior, candidates).view(triples.shape[0], -1)
+        if filter != None:
+            filter_scores = scores.clone()
+            filter_scores[filter_mask] = -1e8 # really small value to move everything at the back
+        else:
+            filter_scores = None
+        return mask, scores, filter_scores
+    
 class ConcatModel(torch.nn.Module):
 
     def __init__(self, *models):
