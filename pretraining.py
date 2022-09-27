@@ -57,22 +57,26 @@ print('> Initializing the model.')
 if  args.graph_embeddings != None:
     with open(args.graph_embeddings, 'rb') as f:
         node_embeddings = pickle.load(f)
+        
+inverse_edges = True
 if  args.graph != None:
-    kg = KG(embedding_dim=200, dev=dev)
+    kg = KG(embedding_dim=200, dev=dev, add_inverse_edges=inverse_edges)
     kg.build_from_file(args.graph, wid2idx, rel2idx)
     #torch.save(kg.node_feat, 'rgcn_initial_node_features.pt')
     kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
     
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
-graph_encoder = RGCN(
-    kg = kg,
-    n_layers = 3,
-    indim = kg.embedding_dim,
-    hdim = 200,
-    rel_regularizer = 'basis',
-    num_bases = 64
-)
+rgcn_conf = {
+    'kg': kg,
+    'n_layers': 2,
+    'indim': kg.embedding_dim,
+    'hdim': 200,
+    'rel_regularizer': 'basis',
+    #'rel_regularizer': 'bdd',
+    'num_bases': 64
+}
+graph_encoder = RGCN(**rgcn_conf)
 
 # Caption encoder
 text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
@@ -96,8 +100,9 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 5
-    batchsize = 128
+    epochs = 7
+    batchsize = 200
+    #batchsize = 128
     
     training_routine(
         model = model,
@@ -111,7 +116,10 @@ if args.load_model == None:
         dev = dev
     )
 
-    torch.save(model.state_dict(), 'tmp.pt')
+    torch.save(model.state_dict(),
+               'fb15k237_rgcn_{}_layers-{}_{}-{}_epochs.pt'.format(
+                   rgcn_conf['n_layers'], rgcn_conf['rel_regularizer'], rgcn_conf['num_bases'], epochs)
+               )
 
 else:
     model.load_state_dict(torch.load(args.load_model))
@@ -159,6 +167,7 @@ with torch.no_grad():
     #print(mannwhitneyu(distance, off_diag_dist, alternative='less'))
     #print(mannwhitneyu(distance, off_diag_dist, alternative='greater'))
     #print(sorted(distance))
+    print(f'left mean: {on_diag_dist.mean()}\t right mean: {off_diag_dist.mean()}')
     print(f'Distance of the means: {off_diag_dist.mean() - on_diag_dist.mean():.3f}')
     # Get area of histogram overlap
     hist_range = (0.,2.)
@@ -171,7 +180,7 @@ with torch.no_grad():
             area.append(min(on, off))
     area = (torch.as_tensor(area) * (hist_range[1] - hist_range[0])/100).sum()
     print(f'Overlapping area: {area:.3f}')
-    ax.annotate(f'Distance of the means: {off_diag_dist.mean() - on_diag_dist.mean():.3f}', (0.1,0.9), xycoords='axes fraction')
+    ax.annotate(f'Left mean: {on_diag_dist.mean():.2f}     Right mean: {off_diag_dist.mean():.2f}', (0.1,0.9), xycoords='axes fraction')
     ax.annotate(f'Overlapping area: {area:.3f}', (0.1,0.8), xycoords='axes fraction')
     #plt.savefig(f'distance_histogram_batchsize_{batchsize}.png')
     plt.show()

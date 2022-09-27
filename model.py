@@ -36,10 +36,13 @@ class TransformerEncoder(torch.nn.Module):
         self.layer = torch.nn.TransformerEncoderLayer(
             d_model = indim,
             nhead = nhead,
-            dim_feedforward = hdim,
+            dim_feedforward = indim,
             batch_first = True
         )
-        self.nn = torch.nn.TransformerEncoder(self.layer, n_layers)
+        self.nn = Sequential(
+            torch.nn.TransformerEncoder(self.layer, n_layers),
+            Linear(indim, hdim)
+            )
 
     def forward(self, x):
         return self.nn(x)
@@ -61,15 +64,20 @@ class CLIP_KB(torch.nn.Module):
         # text encoding
         self.t_encoder = text_encoder
         self.t_mlp = MLP(1, self.t_encoder.hdim, hdim) # Switch dropout with BatchNorm!?
+        #self.t_mlp = TransformerEncoder(1, self.t_encoder.hdim, hdim)
+        self.t_nn = Sequential(self.t_encoder, self.t_mlp)
         # graph encoding
         self.g_encoder = graph_encoder
         self.g_mlp = MLP(1, self.g_encoder.hdim, hdim)
-        #self.g_mlp = TransformerEncoder(2, self.g_encoder.hdim, hdim)
+        #self.g_mlp = TransformerEncoder(1, self.g_encoder.hdim, hdim)
+        self.g_nn = Sequential(self.g_encoder, self.g_mlp)
 
     def forward(self, nodes, captions):
         self.T = min(self.T, 100)
-        return ( normalize(self.g_mlp(self.g_encoder(nodes)), p=2, dim=-1),
-                 normalize(self.t_mlp(self.t_encoder(captions)), p=2, dim=-1) )
+        #return ( normalize(self.g_mlp(self.g_encoder(nodes)), p=2, dim=-1),
+        #         normalize(self.t_mlp(self.t_encoder(captions)), p=2, dim=-1) )
+        return ( normalize(self.g_nn(nodes), p=2, dim=-1),
+                 normalize(self.t_nn(captions), p=2, dim=-1) )
 
 class PretrainedGraphEncoder(torch.nn.Module):
 
@@ -170,14 +178,14 @@ class LinkPredictionModel(torch.nn.Module):
         assert mode in ('Distmult', 'TransE', 'Bilin')
         self.mode = mode
         self.model = graph_embedding_model
-        hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
+        self.hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
         if mode == 'Bilin':
-            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), hdim, hdim), requires_grad=True)
+            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim, self.hdim), requires_grad=True)
             self.f = lambda x,r,y: (x * (r @ y.view(y.shape[0], 1, -1).mT).view(y.shape[0], -1)).sum(-1)
             #self.prior = pass
             #self.fast_f = lambda x,y : pass
         else:
-            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), hdim), requires_grad=True)
+            self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim), requires_grad=True)
             if mode == 'Distmult':
                  self.f = lambda x,r,y : (x*r*y).sum(-1)
                  self.prior = {'head': lambda x,r : x*r, 'tail': lambda x,r : x*r}
@@ -187,12 +195,11 @@ class LinkPredictionModel(torch.nn.Module):
                  self.prior = {'head': lambda x,r: x-r, 'tail': lambda x,r: x+r}
                  self.fast_f = lambda p,y : -((p-y)**2).sum(-1) # L2 distance # ( this the same for head and tail prediction since (y-x)**2=(x-y)**2)
                  #self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1) # L1 distance
+                 #self.fast_f = lambda p,y : -(p-y).abs().sum(-1)
 
     def forward(self, x, y, r=None): # x,y can be either head-rel, head-tail, tail-rel depending on the task
         #x_bak, y_bak = x, y
-        #print(x.shape, y.shape)
-        #print(torch.cat((x,y)).shape)
-        x, y = self.model(torch.cat((x,y))).view(2,-1, self.model.hdim)
+        x, y = self.model(torch.cat((x,y))).view(2,-1, self.hdim) # more efficient
         #x, y = self.model(x), self.model(y)
         #nanx = x.isnan().any(-1).nonzero()
         #nany = y.isnan().any(-1).nonzero()
@@ -274,6 +281,7 @@ class RGCN(torch.nn.Module):
         
     def forward(self, nodes):
         h = self.kg.node_feat.weight
+        #print(f'Initial Node Features:\n{h}')
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]

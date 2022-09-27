@@ -34,7 +34,7 @@ with open(args.entity_index, 'r') as f:
 with open (args.rel_index, 'r') as f:
     rel2idx = json.load(f)
 
-add_inverse = False
+add_inverse = True
 
 # Train and Test data
 train_data = LinkPredictionDataset(
@@ -76,7 +76,7 @@ if args.graph_embeddings != None:
     with open(args.graph_embeddings, 'rb') as f:
         node_embeddings = pickle.load(f)
 # Baseline: pretrained TransE embeddings
-BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
+#BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
 if  args.graph != None:
     if train_data.inv_triples == None:
@@ -84,42 +84,39 @@ if  args.graph != None:
     else:
         kg = KG(triples = torch.vstack((train_data.true_triples, train_data.inv_triples)), embedding_dim = 200, dev=dev)
     #kg.build_from_file(args.graph, wid2idx, rel2idx)
-    #kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
+    kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
+nodes = kg.g.nodes()
 
-BaselineModel = RGCN(
-    kg = kg,
-    n_layers = 2,
-    indim = kg.embedding_dim,
-    hdim = 200,
-    rel_regularizer = 'basis',
-    #rel_regularizer = 'bdd',
-    num_bases = 64,
-    regularization = torch.nn.Dropout(0.2)
-)
+rgcn_conf = {
+    'kg': kg,
+    'n_layers': 2,
+    'indim': kg.embedding_dim,
+    'hdim': 200,
+    'rel_regularizer': 'basis',
+    #'rel_regularizer': 'bdd',
+    'num_bases': 64
+}
+
+BaselineModel = RGCN(**rgcn_conf)
 
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
 # just the state_dict, that would require more disk space though.
 # REMEMBER: I NEED TO RERUN PRETRAINING SINCE wid2idx.json HAS CHANGED
-"""
+
 _ = GPT2CaptionEncoder(pretrained_model='gpt2')
 #_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
 clip = CLIP_KB(
-    graph_encoder = RGCN(
-        kg = kg,
-        n_layers = 3,
-        indim = kg.embedding_dim,
-        hdim = 200,
-        num_bases = 64
-    ),
+    graph_encoder = RGCN(**rgcn_conf),
     text_encoder = _,
     hdim = 200
 ).to(dev)
 clip.load_state_dict(torch.load(args.load_model))
 # Stack the pretrained MLP on top of the graph embedding model
-SemanticAugmentedModel = torch.nn.Sequential(clip.g_encoder, clip.g_mlp)
-"""
+#SemanticAugmentedModel = torch.nn.Sequential(clip.g_encoder, clip.g_mlp)
+SemanticAugmentedModel = clip.g_nn
+
 #for par in SemanticAugmentedModel.parameters():
 #    par.requires_grad = False
 #ConcatModel = ConcatModel(BaselineModel, SemanticAugmentedModel)
@@ -140,11 +137,22 @@ def step_f(model, batch, label, dev):
     return loss
 
 # Define evaluation function
-def eval_f(model, dataloader):
+def eval_f(model, data):
+    global filter_triples
+    global nodes
+
+    data.triples = data.true_triples
+    dataloader = DataLoader(
+        data,
+        batch_size = 128,#64,#128,
+        shuffle = True,
+        collate_fn = test_data.collate_fn
+    )
+    
     ranks = {'raw': [], 'filtered': []}
     for i, (batch, _) in enumerate(tqdm(dataloader)):
         with torch.no_grad():
-            raw_scores, filter_scores, mask = LPmodel.score_candidates(
+            mask, raw_scores, filter_scores = model.score_candidates(
                 triples = batch.to(dev),
                 candidates = nodes,
                 mode = 'tail',
@@ -153,186 +161,9 @@ def eval_f(model, dataloader):
             ranks['raw'].append((raw_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
             ranks['filtered'].append((filter_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
 
-            del nodes
-            ranks['raw'] = torch.cat(ranks['raw']).view(-1) + 1 # +1 since the position starts counting from zero
-            ranks['filtered'] = torch.cat(ranks['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
-            return {
-                k: {
-                    'mrr': (1/v).mean(dtype=float),
-                    'mean_rank': v.mean(dtype=float),
-                    'hits@1': len((v == 1).nonzero()) / len(ranks),
-                    'hits@3': len((v <= 3).nonzero()) / len(ranks),
-                    'hits@10': len((v <= 10).nonzero()) / len(ranks)
-                }
-                for k,v in ranks.items()
-            }
-
-def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
-    # build LP model
-    LPmodel = LinkPredictionModel(
-        graph_embedding_model = model,
-        #mode = 'Distmult',
-        mode = 'TransE',
-        #mode = 'Bilin',
-        rel2idx = rel2idx
-    ).to(dev)
-    # train
-    epochs = 10
-    #batchsize = 128
-    batchsize = 8192
-    lr = 1e-3
-    training_routine(
-        model = LPmodel,
-        step_f = step_f,
-        train_data = train_data,
-        test_data = test_data,
-        epochs = epochs,
-        batchsize = batchsize,
-        learning_rate = lr,
-        accum_iter = 1,
-        dev = dev
-    )
-    # test inference
-    LPmodel.eval()
-    test_data.triples = test_data.true_triples
-    #print(len(test_data))
-    test_loader = DataLoader(
-        test_data,
-        batch_size = 128,#64,#128,
-        shuffle = True,
-        collate_fn = test_data.collate_fn
-    )
-
-    #nodes = torch.as_tensor(list(wid2idx.values())).to(dev)#
-    nodes = kg.g.nodes()#.detach().cpu()
-    global filter_triples
-    #filter_triples = torch.vstack((filter_triples, filter_triples[:,[2,1,0]])) # do the same also for corrupted train triples
-    #filter_triples = {tuple(t.tolist()) for t in filter_triples}
-    ranks = {'raw': [], 'filtered': []}
-
-    print('################################# STARTING EVALUATION #####################################')
-    el = 2 # head and/or tail
-    el_slice = (1,3) if el == 0 else (0,2)
-    for i, (batch, _) in enumerate(tqdm(test_loader)):
-        with torch.no_grad():
-            #for n in batch[:,0]:
-            #    print('These must be equal: ', nodes[n], n)
-            size = batch.shape[0]
-            mask, raw_scores, filter_scores = LPmodel.score_candidates(triples = batch.to(dev), candidates = nodes, mode = 'tail', filter = filter_triples)
-            #scores, mask = LPmodel.score_candidates(triples = batch.to(dev), candidates = nodes, mode = 'tail', filter = None)
-            ranks['raw'].append((raw_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
-            ranks['filtered'].append((filter_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
-            """
-            corr_t = []
-            for n in nodes:
-                tmp_t = batch[0][:3].clone().tolist()
-                tmp_t[el] = n.item()
-                if tuple(tmp_t) not in check_triples:
-                    corr_t.append(list(tmp_t))
-            corr_t = torch.as_tensor(corr_t)
-            print('Sample of corrupted triples:')
-            print(corr_t[:10])
-            print(f'Number of corrupted triples generated: {corr_t.shape[0]} ({len(nodes)} total nodes)')
-            inp = torch.vstack((batch[:3], corr_t)).to(dev)
-            out = LPmodel(inp[:,0], inp[:,2], r=inp[:,1])
-            scores, indices = out.sort(descending=True)
-            rank = ( indices == 0 ).nonzero().item()
-            print(f'True triple: {batch.tolist()}, score: {out[0]}, rank: {rank}')
-            print(f'Top ten triples:')
-            for s,idx in zip(scores[:10],indices[:10]):
-                print(f'triple: {inp[idx].tolist()}, score: {s}')
-            
-            for j in range(size): # Stupid loop to check that evaluation is right
-                tmp_b = [batch[j].tolist()]
-                for n in nodes:
-                    tmp = batch[j,:2].clone().tolist() + [n]
-                    if tuple(tmp) not in check_triples:
-                        tmp_b.append(tmp)
-                tmp_b = torch.as_tensor(tmp_b).to(dev)
-                tmp_o = LPmodel(tmp_b[:,0], tmp_b[:,2], r=tmp_b[:,1]).detach().cpu()
-                print((tmp_o.sort(descending=True).indices == 0).nonzero())
-            """
-            """
-            # Generate the new corrupted heads/tails
-            new_el = torch.vstack([nodes for j in range(size)]).T.reshape(-1,1)
-            # Copy the true batch in order to make place for the new heads
-            corr_batch = torch.vstack([batch for j in range(nodes.shape[0])])
-            # Attach the new heads
-            corr_batch[:,el] = new_el[:,0]
-            del new_el
-            # Keep only the triples not appearing in the filter triples
-            # This is done by converting the tensor in a set object and using
-            # a combination of symmetric difference and intersection
-            corr_batch = set(zip(corr_batch[:,0].tolist(), corr_batch[:,1].tolist(), corr_batch[:,2].tolist()))
-            corr_batch = torch.as_tensor(list((corr_batch.symmetric_difference(filter_triples)).intersection(corr_batch)))
-            corr_batch = corr_batch[corr_batch[:,0] != corr_batch[:,2]] # remove self loops?
-            #print(f'Number of corrupted triples generated: {corr_batch.shape[0]}')
-            #label = torch.cat([torch.ones(size), torch.zeros(corr_batch.shape[0])])
-            corr_batch = torch.vstack((batch, corr_batch))
-            corr_batch = corr_batch.to(dev)
-            #out = torch.sigmoid(LPmodel(corr_batch[:,0], corr_batch[:,2], r=corr_batch[:,1])).detach().cpu()
-            out = LPmodel(corr_batch[:,0], corr_batch[:,2], r=corr_batch[:,1]).detach().cpu()
-            """
-            """
-            for j,t in enumerate(corr_batch[:size]):
-                if not (t.detach().cpu() == batch[j]).all():
-                    print('> Different triples:', t, batch[j])
-                    assert False
-                mask = torch.cat(( 
-                    torch.nn.functional.one_hot(torch.tensor(j, device=dev), num_classes=size).bool(), 
-                    (corr_batch[size:,el_slice[0]:el_slice[1]] == t[el_slice[0]:el_slice[1]]).all(-1) 
-                ), dim=0)
-                print('> Mask:\n', mask.nonzero())
-                rand_idx = random.choice(mask.nonzero())
-                scores = out[mask]
-                tmp = torch.as_tensor(list(check_triples))
-                print('> Rand Score: ', corr_batch[rand_idx].tolist(), out[rand_idx], (corr_batch[rand_idx].cpu()==tmp).all(-1).nonzero().tolist())
-                print('> True Score: ', 0, corr_batch[mask][0].tolist(), scores[0], (corr_batch[mask][0].cpu()==tmp).all(-1).nonzero().tolist())
-                max_idx = scores.argmax()
-                print(f'> Max Score: ', max_idx.item(), corr_batch[mask][max_idx].tolist(), scores[max_idx], (corr_batch[mask][max_idx].cpu()==tmp).all(-1).nonzero().tolist())
-                tmp_ranks = scores.sort(descending=True)
-                print(tmp_ranks.indices[:10], (tmp_ranks.indices==0).nonzero())
-                del mask, scores, rand_idx
-            """
-            #f = lambda x : (out[ # take only the scores of the relevant triples, i.e. those with the same head-rel or rel-tail
-            #    torch.cat(( # concatenate the true triple (pos 0) and all the corrupted ones
-            #        torch.nn.functional.one_hot(torch.tensor(x[0], device=dev), num_classes=size).bool(), # true triple mask
-            #        (corr_batch[size:,el_slice[0]:el_slice[1]] == x[1][el_slice[0]:el_slice[1]]).all(-1) # relevant corrupted triples mask
-            #), dim=0)
-            #].sort(descending=True).indices == 0).nonzero() # sort the scores and look for the position of the true triple
-            
-            #ranks.append(torch.vstack(list(map(
-            #    f,
-            #    enumerate(corr_batch[:size])
-            #))).flatten())
-            """
-            ranks.append(
-                torch.vstack([
-                    (out[ # take only the scores of the relevant triples, i.e. those with the same head-rel or rel-tail
-                        torch.cat(( # concatenate the true triple (pos 0) and all the corrupted ones
-                            torch.nn.functional.one_hot(torch.tensor(j, device=dev), num_classes=size).bool(), # true triple mask
-                            (corr_batch[size:,el_slice[0]:el_slice[1]] == t[el_slice[0]:el_slice[1]]).all(-1) # relevant corrupted triples mask
-                        ), dim=0)
-                    ].sort(descending=True).indices == 0).nonzero()
-                    for j,t in enumerate(corr_batch[:size])
-                ])
-            )
-            """
-            #for j, tt in enumerate(corr_batch[:size]):
-            #    print(j)
-            #    print(out.shape)
-            #    print((corr_batch[size:,1:3] == tt[1:3]).all(-1).nonzero().shape)
-                #print(torch.zeros(size).bool().shape)
-            #    o = out[torch.cat((
-            #        torch.nn.functional.one_hot(torch.tensor(j, device=dev), num_classes=size).bool(),
-            #        (corr_batch[size:,1:3] == tt[1:3]).all(-1)),
-            #                         dim=0)]
-            #    print(o.shape)
-            #print(time.time()-t)
-    del nodes
     ranks['raw'] = torch.cat(ranks['raw']).view(-1) + 1 # +1 since the position starts counting from zero
     ranks['filtered'] = torch.cat(ranks['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
-    results = {
+    return {
         k: {
             'mrr': (1/v).mean(dtype=float).item(),
             'mean_rank': v.mean(dtype=float).item(),
@@ -342,8 +173,35 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         }
         for k,v in ranks.items()
     }
-    print(json.dumps(results, indent=2))
-    return results
+
+def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
+    # build LP model
+    LPmodel = LinkPredictionModel(
+        graph_embedding_model = model,
+        mode = 'Distmult',
+        #mode = 'TransE',
+        #mode = 'Bilin',
+        rel2idx = rel2idx
+    ).to(dev)
+    # train
+    epochs = 5
+    batchsize = 128
+    #batchsize = 8192
+    lr = 1e-3 
+    train_loss, test_loss, metrics = training_routine(
+        model = LPmodel,
+        step_f = step_f,
+        train_data = train_data,
+        test_data = test_data,
+        epochs = epochs,
+        batchsize = batchsize,
+        learning_rate = lr,
+        eval_f = eval_f,
+        eval_each = 1,# epochs, # evaluate the metrics each n epoch/s
+        accum_iter = 1,
+        dev = dev
+    )
+    return metrics
 
 
 # Latent space visualilzation
@@ -373,10 +231,10 @@ fig, ax = plt.subplots(1,2, figsize=(24,16))
 
 # Finetuning
 outcomes = []
-for m in (BaselineModel, ):
-    scores = []
+for m in (SemanticAugmentedModel, BaselineModel):
+    metrics = []
     for j in range(1):
-        scores.append(
+        outcomes.append(
             experiment(
                 model = m,
                 train_data = train_data,
@@ -385,7 +243,6 @@ for m in (BaselineModel, ):
                 rel2idx = rel2idx
             )
         )            
-    scores = torch.as_tensor(scores)
     #outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
 
 #embs = get_embeddings(SemanticAugmentedModel, test_loader)
@@ -393,5 +250,5 @@ for m in (BaselineModel, ):
 #plt.show()
 
 for o in outcomes:
-    print(o)
+    print(json.dumps(o, indent=2))
 

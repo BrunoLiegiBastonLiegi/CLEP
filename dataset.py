@@ -115,10 +115,6 @@ class LinkPredictionDataset(Dataset):
     def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', pos : list = ['head','tail'], w: int = 1):
         assert mode in ('gen', 'load')
         if mode == 'gen':
-            #tmp_triples = torch.vstack((self.true_triples, triples)) if triples != None else self.true_triples
-            #tmp_triples = torch.vstack((tmp_triples, tmp_triples[:,[2,1,0,3]]))
-            #tmp_triples = {tuple(t.tolist()) for t in tmp_triples}
-            #tmp_triples = torch.as_tensor(list(tmp_triples))
             pos2idx = {'head':0, 'tail':2}
             print('> Generating corrupted triples ...')
             pos = [pos2idx[p] for p in pos]

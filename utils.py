@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.metrics import silhouette_score
 import numpy as np
 import colorcet as cc
+import json
 
 def visualize_embeddings(embeddings, n_clusters=None, clusters=None, ax=plt.subplots()[1]):
     if n_clusters !=None:
@@ -32,7 +33,7 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, eval_f=None, accum_iter=1, dev=torch.device('cpu')):
+def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, eval_f=None, eval_each=-1, accum_iter=1, dev=torch.device('cpu')):
     
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     scaler = GradScaler()
@@ -51,7 +52,7 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         collate_fn = test_data.collate_fn
     )
 
-    train_loss, test_loss = [], []
+    train_loss, test_loss, metrics = [], [], {}
     print_steps = int(len(train_loader)/5)
     for e in range(epochs):
         print(f'\n### EPOCH {e}')
@@ -83,10 +84,11 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         test_loss.append(running_loss/(len(test_loader)))
         train_loss.append(epoch_loss/len(train_loader))
         print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
-        if e % 10 == 9 and eval_f != None: # run evaluation every 10 epochs
-            res = eval_f(model, test_loader)
-            print(json.dumps(res, indent=2))
-    return train_loss, test_loss
+        if e % eval_each == eval_each -1 and eval_f != None: # run evaluation every 10 epochs
+            metrics[e] = eval_f(model, test_data)
+            print(f'### Evaluation Metrics after {e+1} epochs:')
+            print(json.dumps(metrics[e], indent=2))
+    return train_loss, test_loss, metrics
 
 # Graph
 from dgl import graph, heterograph
@@ -94,16 +96,26 @@ class KG(object):
     """
     Simple wrapper to the dgl graph object.
     """
-    def __init__(self, triples=None, embedding_dim = 200, dev=torch.device('cpu')):
+    def __init__(self, triples=None, embedding_dim=200, dev=torch.device('cpu'), rel2idx=None, add_inverse_edges=False):
         super().__init__()
         self.dev = dev
         self.emb_dim = embedding_dim
+        self.add_inverse_edges = add_inverse_edges
+        self.r2idx = rel2idx
         if triples != None:
+            if add_inverse_edges:
+                print(self.r2idx)
+                for i,k in enumerate(rel2idx.keys(), start=len(rel2idx)):
+                    self.r2idx[k+'^-1'] = i
+                print(self.r2idx)
+                inv_triples = triples[:,[2,1,0]]
+                inv_triples[:,1] += len(rel2idx)
+                triples = torch.vstack((triples, inv_triples))
             self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
             self.etypes = triples[:,1].to(self.dev)
             self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
         
-    def build_from_file(self, infile, ent2idx, rel2idx):
+    def build_from_file(self, infile, ent2idx, rel2idx, node_features=None):
         triples, missing = [], {}
         with open(infile, 'r') as f:
             for l in f:
@@ -122,8 +134,11 @@ class KG(object):
                     missing.update({t[2]:0})
                 try:
                     triples.append([head,rel,tail])
+                    if self.add_inverse_edges:
+                        triples.append([tail, rel+len(rel2idx), head])
                 except:
                     continue
+                        
         triples = torch.as_tensor(triples)
         #data_dict = {}
         #for k,v in rel2idx.items():
@@ -133,7 +148,7 @@ class KG(object):
         #(1- kg.hg.adj(etype=0).to_dense()).to_sparse()
         self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
         self.etypes = triples[:,1].to(self.dev)
-        self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
+        self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) if node_features == None else node_features# random initial node features
         #print(f'> {len(missing)} missing mappings.')
 
     @property
