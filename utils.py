@@ -84,10 +84,10 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         test_loss.append(running_loss/(len(test_loader)))
         train_loss.append(epoch_loss/len(train_loader))
         print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
-        if e % eval_each == eval_each -1 and eval_f != None: # run evaluation every 10 epochs
-            metrics[e] = eval_f(model, test_data)
+        if e % eval_each == eval_each -1 and eval_f != None: # run evaluation every eval_each epochs
+            metrics['Epoch '+str(e)] = eval_f(model, test_data)
             print(f'### Evaluation Metrics after {e+1} epochs:')
-            print(json.dumps(metrics[e], indent=2))
+            print(json.dumps(metrics['Epoch '+str(e)], indent=2))
     return train_loss, test_loss, metrics
 
 # Graph

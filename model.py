@@ -175,15 +175,15 @@ class LinkPredictionModel(torch.nn.Module):
 
     def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult'):
         super().__init__()
-        assert mode in ('Distmult', 'TransE', 'Bilin')
+        assert mode in ('Distmult', 'TransE', 'Rescal')
         self.mode = mode
         self.model = graph_embedding_model
         self.hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
-        if mode == 'Bilin':
+        if mode == 'Rescal':
             self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim, self.hdim), requires_grad=True)
             self.f = lambda x,r,y: (x * (r @ y.view(y.shape[0], 1, -1).mT).view(y.shape[0], -1)).sum(-1)
-            #self.prior = pass
-            #self.fast_f = lambda x,y : pass
+            self.prior = { 'head': lambda x,r: (r @ x.view(-1,1,self.hdim)).squeeze(2), 'tail': lambda x,r: (x.view(-1,1,self.hdim) @ r).squeeze(1) }
+            self.fast_f = lambda p,y : (p*y).sum(-1)
         else:
             self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim), requires_grad=True)
             if mode == 'Distmult':

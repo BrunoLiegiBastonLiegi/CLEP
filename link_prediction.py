@@ -19,6 +19,7 @@ parser.add_argument('--entity_index', default=None, help='Path to entity index f
 parser.add_argument('--rel_index', help='Path to relations index file.')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
+parser.add_argument('--save_results', default='lp_results.json')
 args = parser.parse_args()
 
 # Set device for computation
@@ -178,13 +179,13 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
         graph_embedding_model = model,
-        mode = 'Distmult',
+        #mode = 'Distmult',
         #mode = 'TransE',
-        #mode = 'Bilin',
+        mode = 'Rescal',
         rel2idx = rel2idx
     ).to(dev)
     # train
-    epochs = 5
+    epochs = 10
     batchsize = 128
     #batchsize = 8192
     lr = 1e-3 
@@ -231,6 +232,7 @@ fig, ax = plt.subplots(1,2, figsize=(24,16))
 
 # Finetuning
 outcomes = []
+results = {'RGCN Baseline':{}, 'RGCN with Caption Pretraining': {}}
 for m in (SemanticAugmentedModel, BaselineModel):
     metrics = []
     for j in range(1):
@@ -244,11 +246,14 @@ for m in (SemanticAugmentedModel, BaselineModel):
             )
         )            
     #outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
-
+outcomes = dict(zip(
+    ('RGCN Baseline', 'RGCN with Caption Pretraining'),
+    outcomes
+))
 #embs = get_embeddings(SemanticAugmentedModel, test_loader)
 #visualize_embeddings(torch.vstack(list(embs.values())), ax=ax[1])
 #plt.show()
 
-for o in outcomes:
-    print(json.dumps(o, indent=2))
+with open(args.save_results, 'w') as f:
+    json.dump(outcomes, indent=2)
 

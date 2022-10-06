@@ -49,10 +49,11 @@ append_metrics(metrics['RGCN with Caption Pretraining'], caption_pretraining)
 
 metric_type = 'filtered'
 
-fig, axs = plt.subplots(2, 3)
+fig, axs = plt.subplots(2, 3, figsize=(16,9))
 
 for metric, ax in zip(baseline[metric_type].keys(), axs.flatten()[:-1]):
     ax.plot(baseline[metric_type][metric], c='blue')
     ax.plot(caption_pretraining[metric_type][metric], c='orange')
     ax.set_title(metric)
+plt.savefig('lp_metrics.pdf', dpi=300, format='pdf', bbox_inches='tight')
 plt.show()
