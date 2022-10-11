@@ -84,6 +84,7 @@ if  args.graph != None:
         kg = KG(triples = train_data.true_triples, embedding_dim = 200, dev=dev)
     else:
         kg = KG(triples = torch.vstack((train_data.true_triples, train_data.inv_triples)), embedding_dim = 200, dev=dev)
+        #kg = KG(triples = torch.vstack((train_data.true_triples, train_data.inv_triples)), embedding_dim = 256, dev=dev)
     #kg.build_from_file(args.graph, wid2idx, rel2idx)
     kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
 nodes = kg.g.nodes()
@@ -98,7 +99,7 @@ rgcn_conf = {
     'num_bases': 64
 }
 
-BaselineModel = RGCN(**rgcn_conf)
+#BaselineModel = RGCN(**rgcn_conf)
 """
 BaselineModel = CompGCN(
     kg,
@@ -109,17 +110,19 @@ BaselineModel = CompGCN(
     comp_fn = 'mul'
 )
 """
-"""
+
 BaselineModel = CompGCNWrapper(
     kg = kg,
-    n_layers = 2,
+    n_layers = 1,
+    #n_layers = 2,
     indim = kg.embedding_dim,
     hdim = 200,
     num_bases = 5,
-    comp_fn = 'sub',
+    #comp_fn = 'sub',
+    comp_fn = 'ccorr',
     return_rel_embs = True
 )
-"""
+
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
@@ -206,12 +209,13 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         #mode = 'Rescal',
         mode = 'ConvE',
         rel2idx = rel2idx,
-        #external_rel_embs = True
-        external_rel_embs = False
+        external_rel_embs = True
+        #external_rel_embs = False
     ).to(dev)
     # train
     epochs = 10
-    batchsize = 128
+    #batchsize = 128
+    batchsize = 1024
     #batchsize = 8192
     #batchsize = 32768
     lr = 1e-3 

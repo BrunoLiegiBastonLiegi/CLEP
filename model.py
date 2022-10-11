@@ -206,6 +206,7 @@ class LinkPredictionModel(torch.nn.Module):
                  #self.fast_f = lambda p,y : -(p-y).abs().sum(-1)
             elif mode == 'ConvE':
                 self.f = ConvE(self.hdim, k_w=10, k_h=20)
+                #self.f = ConvE(self.hdim, k_w=16, k_h=16)
                 self.prior = {'head': None, 'tail': lambda x,r: self.f.prior(x,r)} # how you define the prior in ConvE for head prediction??
                 self.fast_f = lambda p,y : self.f.fast_forward(p, y)
 
@@ -395,7 +396,7 @@ class CompGCNWrapper(torch.nn.Module):
 
 class ConvE(torch.nn.Module):
 
-    def __init__(self, hdim, k_w, k_h, hid_drop=0.3, feat_drop=0.3, ker_sz=5, num_filt=200):
+    def __init__(self, hdim, k_w, k_h, hid_drop=0.3, feat_drop=0.3, ker_sz=7, num_filt=200):
         super(ConvE, self).__init__()
 
         assert k_w*k_h == hdim

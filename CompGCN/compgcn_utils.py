@@ -35,8 +35,8 @@ def ccorr(a, b):
     Tensor, having the same dimension as the input a.
     """
     return th.fft.irfftn(
-        th.conj(th.fft.rfftn(a, (-1))) * th.fft.rfftn(b, (-1)), (-1)
-    )
+        th.conj(th.fft.rfftn(a.float(), (-1))) * th.fft.rfftn(b.float(), (-1)), (-1) # <------ HAD TO ADD FLOAT32 CAST SINCE FLOAT16
+    )                                                                                # WAS PRODUCING ERRORS 
 
 
 # identify in/out edges, compute edge norm for each and store in edata
