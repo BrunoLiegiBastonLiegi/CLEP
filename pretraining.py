@@ -1,6 +1,6 @@
 import torch, argparse, json, random, time, pickle, numpy
 from dataset import CLIPDataset
-from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN
+from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from transformers import GPT2Tokenizer, BertTokenizer
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
@@ -77,6 +77,15 @@ rgcn_conf = {
     'num_bases': 64
 }
 graph_encoder = RGCN(**rgcn_conf)
+graph_encoder = CompGCNWrapper(
+    kg = kg,
+    n_layers = 2,
+    indim = kg.embedding_dim,
+    hdim = 200,
+    num_bases = 5,
+    comp_fn = 'sub',
+    return_rel_embs = False
+)
 
 # Caption encoder
 text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
@@ -100,7 +109,7 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 7
+    epochs = 10
     batchsize = 200
     #batchsize = 128
     

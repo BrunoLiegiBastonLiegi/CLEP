@@ -1,6 +1,6 @@
 import argparse, torch, json, pickle, time, random
 from dataset import LinkPredictionDataset
-from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel, RGCN
+from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel, RGCN, CompGCN, CompGCNWrapper
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
@@ -99,7 +99,27 @@ rgcn_conf = {
 }
 
 BaselineModel = RGCN(**rgcn_conf)
-
+"""
+BaselineModel = CompGCN(
+    kg,
+    2,
+    kg.embedding_dim,
+    200,
+    num_bases = 5,
+    comp_fn = 'mul'
+)
+"""
+"""
+BaselineModel = CompGCNWrapper(
+    kg = kg,
+    n_layers = 2,
+    indim = kg.embedding_dim,
+    hdim = 200,
+    num_bases = 5,
+    comp_fn = 'sub',
+    return_rel_embs = True
+)
+"""
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
@@ -108,6 +128,7 @@ BaselineModel = RGCN(**rgcn_conf)
 
 _ = GPT2CaptionEncoder(pretrained_model='gpt2')
 #_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
+"""
 clip = CLIP_KB(
     graph_encoder = RGCN(**rgcn_conf),
     text_encoder = _,
@@ -117,6 +138,7 @@ clip.load_state_dict(torch.load(args.load_model))
 # Stack the pretrained MLP on top of the graph embedding model
 #SemanticAugmentedModel = torch.nn.Sequential(clip.g_encoder, clip.g_mlp)
 SemanticAugmentedModel = clip.g_nn
+"""
 
 #for par in SemanticAugmentedModel.parameters():
 #    par.requires_grad = False
@@ -145,7 +167,7 @@ def eval_f(model, data):
     data.triples = data.true_triples
     dataloader = DataLoader(
         data,
-        batch_size = 128,#64,#128,
+        batch_size = 128,
         shuffle = True,
         collate_fn = test_data.collate_fn
     )
@@ -181,13 +203,17 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         graph_embedding_model = model,
         #mode = 'Distmult',
         #mode = 'TransE',
-        mode = 'Rescal',
-        rel2idx = rel2idx
+        #mode = 'Rescal',
+        mode = 'ConvE',
+        rel2idx = rel2idx,
+        #external_rel_embs = True
+        external_rel_embs = False
     ).to(dev)
     # train
     epochs = 10
     batchsize = 128
     #batchsize = 8192
+    #batchsize = 32768
     lr = 1e-3 
     train_loss, test_loss, metrics = training_routine(
         model = LPmodel,
@@ -231,29 +257,22 @@ fig, ax = plt.subplots(1,2, figsize=(24,16))
 #clusters = visualize_embeddings(torch.vstack(list(embs.values())), n_clusters=50, ax=ax[0])
 
 # Finetuning
-outcomes = []
-results = {'RGCN Baseline':{}, 'RGCN with Caption Pretraining': {}}
-for m in (SemanticAugmentedModel, BaselineModel):
-    metrics = []
-    for j in range(1):
-        outcomes.append(
-            experiment(
-                model = m,
-                train_data = train_data,
-                test_data = test_data,
-                dev = dev,
-                rel2idx = rel2idx
-            )
-        )            
-    #outcomes.append({'micro F1': scores[:,0].mean(), 'macro F1': scores[:,1].mean()})
-outcomes = dict(zip(
-    ('RGCN Baseline', 'RGCN with Caption Pretraining'),
-    outcomes
-))
+results = {'RGCN with Caption Pretraining': {}, 'RGCN Baseline': {}}
+#for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
+for m in (BaselineModel,):
+    name = 'test'
+    results[name] = experiment(
+        model = m,
+        train_data = train_data,
+        test_data = test_data,
+        dev = dev,
+        rel2idx = rel2idx
+    )
+
 #embs = get_embeddings(SemanticAugmentedModel, test_loader)
 #visualize_embeddings(torch.vstack(list(embs.values())), ax=ax[1])
 #plt.show()
 
 with open(args.save_results, 'w') as f:
-    json.dump(outcomes, indent=2)
+    json.dump(results, f, indent=2)
 

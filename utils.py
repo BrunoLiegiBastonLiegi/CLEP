@@ -113,8 +113,18 @@ class KG(object):
                 triples = torch.vstack((triples, inv_triples))
             self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
             self.etypes = triples[:,1].to(self.dev)
+            self.g.edata['etype'] = self.etypes
             self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
-        
+            # identify in and out edges
+            in_edges_mask = [True] * (self.g.num_edges() // 2) + [False] * (
+                self.g.num_edges() // 2
+            )
+            out_edges_mask = [False] * (self.g.num_edges() // 2) + [True] * (
+                self.g.num_edges() // 2
+            )
+            self.g.edata["in_edges_mask"] = torch.Tensor(in_edges_mask).to(dev)
+            self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(dev)
+                
     def build_from_file(self, infile, ent2idx, rel2idx, node_features=None):
         triples, missing = [], {}
         with open(infile, 'r') as f:
@@ -148,7 +158,17 @@ class KG(object):
         #(1- kg.hg.adj(etype=0).to_dense()).to_sparse()
         self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
         self.etypes = triples[:,1].to(self.dev)
+        self.g.edata['etype'] = self.etypes
         self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) if node_features == None else node_features# random initial node features
+        # identify in and out edges
+        in_edges_mask = [True] * (self.g.num_edges() // 2) + [False] * (
+            self.g.num_edges() // 2
+        )
+        out_edges_mask = [False] * (self.g.num_edges() // 2) + [True] * (
+            self.g.num_edges() // 2
+        )
+        self.g.edata["in_edges_mask"] = torch.Tensor(in_edges_mask).to(self.dev)
+        self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(self.dev)
         #print(f'> {len(missing)} missing mappings.')
 
     @property
