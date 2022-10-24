@@ -49,7 +49,7 @@ class CompGraphConv(nn.Module):
             # append loop_rel embedding to r_feats
             r_feats = th.cat((r_feats, self.loop_rel), 0)
             # Assign features to all edges with the corresponding relation embeddings
-            g.edata["h"] = r_feats[g.edata["etype"]] #* g.edata["norm"] #<------------------------------- THIS IS NOT DEFINED!!!!
+            g.edata["h"] = r_feats[g.edata["etype"]] * g.edata["norm"] 
 
             # Compute composition function in 4 steps
             # Step 1: compute composition by edge in the edge direction, and store results in edges.
@@ -221,6 +221,8 @@ class CompGCN_ConvE(nn.Module):
         ker_sz=5,
         k_w=5,
         k_h=5,
+        compgcn=None,
+        mapping_net=None    
     ):
         super(CompGCN_ConvE, self).__init__()
 
@@ -233,17 +235,22 @@ class CompGCN_ConvE(nn.Module):
         self.num_filt = num_filt
 
         # compGCN model to get sub/rel embs
-        self.compGCN_Model = CompGCN(
-            num_bases,
-            num_rel,
-            num_ent,
-            in_dim,
-            layer_size,
-            comp_fn,
-            batchnorm,
-            dropout,
-            layer_dropout,
-        )
+        if compgcn == None:
+            self.compGCN_Model = CompGCN(
+                num_bases,
+                num_rel,
+                num_ent,
+                in_dim,
+                layer_size,
+                comp_fn,
+                batchnorm,
+                dropout,
+                layer_dropout,
+            )
+            self.mapping_net = None
+        else:
+            self.compGCN_Model = compgcn
+            self.mapping_net = mapping_net
 
         # batchnorms to the combined (sub+rel) emb
         self.bn0 = th.nn.BatchNorm2d(1)
@@ -283,6 +290,8 @@ class CompGCN_ConvE(nn.Module):
     def forward(self, graph, sub, rel):
         # get sub_emb and rel_emb via compGCN
         n_feats, r_feats = self.compGCN_Model(graph)
+        if self.mapping_net != None:
+            n_feats = self.mapping_net(n_feats)
         sub_emb = n_feats[sub, :]
         rel_emb = r_feats[rel, :]
 

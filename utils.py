@@ -35,7 +35,8 @@ from tqdm import tqdm
 
 def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, eval_f=None, eval_each=-1, accum_iter=1, dev=torch.device('cpu')):
     
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.)
+    #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.)
     scaler = GradScaler()
 
     train_loader = DataLoader(
@@ -92,6 +93,9 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
 
 # Graph
 from dgl import graph, heterograph
+import sys
+sys.path.append('CompGCN')
+from compgcn_utils import in_out_norm
 class KG(object):
     """
     Simple wrapper to the dgl graph object.
@@ -104,10 +108,10 @@ class KG(object):
         self.r2idx = rel2idx
         if triples != None:
             if add_inverse_edges:
-                print(self.r2idx)
+                #print(self.r2idx)
                 for i,k in enumerate(rel2idx.keys(), start=len(rel2idx)):
                     self.r2idx[k+'^-1'] = i
-                print(self.r2idx)
+                #print(self.r2idx)
                 inv_triples = triples[:,[2,1,0]]
                 inv_triples[:,1] += len(rel2idx)
                 triples = torch.vstack((triples, inv_triples))
@@ -124,6 +128,7 @@ class KG(object):
             )
             self.g.edata["in_edges_mask"] = torch.Tensor(in_edges_mask).to(dev)
             self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(dev)
+            self.g = in_out_norm(self.g)
                 
     def build_from_file(self, infile, ent2idx, rel2idx, node_features=None):
         triples, missing = [], {}
@@ -148,7 +153,6 @@ class KG(object):
                         triples.append([tail, rel+len(rel2idx), head])
                 except:
                     continue
-                        
         triples = torch.as_tensor(triples)
         #data_dict = {}
         #for k,v in rel2idx.items():
@@ -169,6 +173,7 @@ class KG(object):
         )
         self.g.edata["in_edges_mask"] = torch.Tensor(in_edges_mask).to(self.dev)
         self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(self.dev)
+        self.g = in_out_norm(self.g)
         #print(f'> {len(missing)} missing mappings.')
 
     @property

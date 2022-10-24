@@ -80,13 +80,11 @@ if args.graph_embeddings != None:
 #BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
 if  args.graph != None:
-    if train_data.inv_triples == None:
-        kg = KG(triples = train_data.true_triples, embedding_dim = 200, dev=dev)
-    else:
-        kg = KG(triples = torch.vstack((train_data.true_triples, train_data.inv_triples)), embedding_dim = 200, dev=dev)
-        #kg = KG(triples = torch.vstack((train_data.true_triples, train_data.inv_triples)), embedding_dim = 256, dev=dev)
+    triples = train_data.true_triples if train_data.inv_triples == None else torch.vstack((train_data.true_triples, train_data.inv_triples))
+    #triples = train_data.true_triples
+    kg = KG(triples = triples, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
     #kg.build_from_file(args.graph, wid2idx, rel2idx)
-    kg.node_feat = torch.load('data/FB15k-237/rgcn_initial_node_features.pt')
+    kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
 nodes = kg.g.nodes()
 
 rgcn_conf = {
@@ -99,7 +97,7 @@ rgcn_conf = {
     'num_bases': 64
 }
 
-#BaselineModel = RGCN(**rgcn_conf)
+BaselineModel = RGCN(**rgcn_conf)
 """
 BaselineModel = CompGCN(
     kg,
@@ -110,19 +108,19 @@ BaselineModel = CompGCN(
     comp_fn = 'mul'
 )
 """
-
+"""
 BaselineModel = CompGCNWrapper(
     kg = kg,
     n_layers = 1,
-    #n_layers = 2,
+    #n_layers = 3,
     indim = kg.embedding_dim,
     hdim = 200,
-    num_bases = 5,
+    num_bases = -1,
     #comp_fn = 'sub',
     comp_fn = 'ccorr',
     return_rel_embs = True
 )
-
+"""
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
@@ -156,7 +154,7 @@ def step_f(model, batch, label, dev):
     loss = torch.nn.functional.binary_cross_entropy_with_logits(
         out,
         label,
-        #weight = torch.ones(batch.shape[0], device=dev)*1/(1+w) # w=2 ratio negative/positive triples (c = 1/(w+1))
+        weight = torch.ones(batch.shape[0], device=dev)*1/(1+w) # w=2 ratio negative/positive triples (c = 1/(w+1))
     )
     del out, batch, label
     torch.cuda.empty_cache()
@@ -184,8 +182,8 @@ def eval_f(model, data):
                 mode = 'tail',
                 filter = filter_triples
             )
-            ranks['raw'].append((raw_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
-            ranks['filtered'].append((filter_scores.sort(dim=-1, descending=True).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+            ranks['raw'].append((raw_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+            ranks['filtered'].append((filter_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
 
     ranks['raw'] = torch.cat(ranks['raw']).view(-1) + 1 # +1 since the position starts counting from zero
     ranks['filtered'] = torch.cat(ranks['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
@@ -204,18 +202,19 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
         graph_embedding_model = model,
-        #mode = 'Distmult',
+        mode = 'Distmult',
         #mode = 'TransE',
         #mode = 'Rescal',
-        mode = 'ConvE',
+        #mode = 'ConvE',
         rel2idx = rel2idx,
         external_rel_embs = True
         #external_rel_embs = False
     ).to(dev)
     # train
-    epochs = 10
+    epochs = 5
     #batchsize = 128
-    batchsize = 1024
+    batchsize = 128
+    #batchsize = 256
     #batchsize = 8192
     #batchsize = 32768
     lr = 1e-3 
@@ -264,8 +263,7 @@ fig, ax = plt.subplots(1,2, figsize=(24,16))
 results = {'RGCN with Caption Pretraining': {}, 'RGCN Baseline': {}}
 #for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
 for m in (BaselineModel,):
-    name = 'test'
-    results[name] = experiment(
+    results[m] = experiment(
         model = m,
         train_data = train_data,
         test_data = test_data,
