@@ -89,7 +89,6 @@ class PretrainedGraphEncoder(torch.nn.Module):
 
     def __init__(self, node_embeddings: dict, index: dict, device: torch.device):
         super().__init__()
-        #self.node2emb = node_embeddings
         self.dev = device
         self._hdim = list(node_embeddings.values())[0].shape[-1]
         self.ordered_embs = torch.zeros(len(index), self._hdim, dtype=float)
@@ -104,34 +103,10 @@ class PretrainedGraphEncoder(torch.nn.Module):
                 n += 1
                 embs[k] = torch.zeros(self._hdim)
         print(f'Warning: {n} pretrained embeddings were missing. They were substituted with zeros.')
-        # need to explictly cast to float32
-        #self.ordered_embs = torch.as_tensor(np.vstack(list(embs.values())), dtype=torch.float)
         del embs
-        #self.register_parameter(
-        #    name='ordered_embs',
-        #    param=torch.nn.Parameter(
-        #        torch.as_tensor(np.vstack(list(node_embeddings.values()))),
-        #        requires_grad = False
-        #    )
-        #)
-        #self.register_parameter(
-        #    name='ordered_embs',
-        #    param=torch.nn.Parameter(
-        #        torch.as_tensor(list(zip(
-        #            *sorted(node_embeddings.items(),
-        #                    key=lambda x: x[0])
-        #        ))[1]),
-        #        requires_grad = False
-        #    )
-        #)
-        #self.ordered_embs = torch.vstack(list(zip(
-        #    *sorted(node_embeddings.items(),
-        #            key=lambda x: x[0])
-        #))[1])
 
     def forward(self, nodes):
         return self.ordered_embs[nodes].squeeze(1).to(self.dev) # dinamically move to device the batch
-        #return self.ordered_embs[nodes].squeeze(1)
     
     @property
     def hdim(self):
@@ -308,10 +283,12 @@ class RGCN(torch.nn.Module):
         for a in act[1:]:
             self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                        activation=a, layer_norm=regularization))
+            
+        self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), self.in_dim))
+        torch.nn.init.xavier_normal_(self.node_featss)
         
     def forward(self, nodes):
-        h = self.kg.node_feat.weight
-        #print(f'Initial Node Features:\n{h}')
+        h = self.node_feats
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]

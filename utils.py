@@ -100,25 +100,22 @@ class KG(object):
     """
     Simple wrapper to the dgl graph object.
     """
-    def __init__(self, triples=None, embedding_dim=200, dev=torch.device('cpu'), rel2idx=None, add_inverse_edges=False):
+    def __init__(self, embedding_dim, ent2idx, rel2idx, triples=None, dev=torch.device('cpu'), add_inverse_edges=False):
         super().__init__()
         self.dev = dev
         self.emb_dim = embedding_dim
         self.add_inverse_edges = add_inverse_edges
         self.r2idx = rel2idx
+        self.e2idx = ent2idx
         if triples != None:
             if add_inverse_edges:
-                #print(self.r2idx)
-                for i,k in enumerate(rel2idx.keys(), start=len(rel2idx)):
-                    self.r2idx[k+'^-1'] = i
-                #print(self.r2idx)
                 inv_triples = triples[:,[2,1,0]]
                 inv_triples[:,1] += len(rel2idx)
                 triples = torch.vstack((triples, inv_triples))
-            self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
+            self.g = graph((triples[:,0], triples[:,2]), num_nodes=len(ent2idx), device=self.dev)
             self.etypes = triples[:,1].to(self.dev)
             self.g.edata['etype'] = self.etypes
-            self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
+            #self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) # random initial node features
             # identify in and out edges
             in_edges_mask = [True] * (self.g.num_edges() // 2) + [False] * (
                 self.g.num_edges() // 2
@@ -130,40 +127,20 @@ class KG(object):
             self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(dev)
             self.g = in_out_norm(self.g)
                 
-    def build_from_file(self, infile, ent2idx, rel2idx, node_features=None):
-        triples, missing = [], {}
+    def build_from_file(self, infile):
+        triples = []
         with open(infile, 'r') as f:
             for l in f:
-                t = l.split()
-                try:
-                    head = ent2idx[t[0]]
-                except:
-                    missing.update({t[0]:0})
-                try:
-                    rel = rel2idx[t[1]]
-                except:
-                    missing.update({t[1]:0})
-                try:
-                    tail = ent2idx[t[2]]
-                except:
-                    missing.update({t[2]:0})
-                try:
-                    triples.append([head,rel,tail])
-                    if self.add_inverse_edges:
-                        triples.append([tail, rel+len(rel2idx), head])
-                except:
-                    continue
+                head, rel, tail = l.split()
+                head, rel, tail = self.e2idx[head], self.r2idx[rel], self.e2idx[tail]
+                triples.append([head, rel, tail])
+                if self.add_inverse_edges:
+                    triples.append([tail, rel+len(self.r2idx), head])
         triples = torch.as_tensor(triples)
-        #data_dict = {}
-        #for k,v in rel2idx.items():
-        #    idx = triples[:,1] == v
-        #    data_dict[(0,v,0)] = (triples[idx][:,0].flatten(), triples[idx][:,2].flatten())
-        #self.hg = heterograph(data_dict)
-        #(1- kg.hg.adj(etype=0).to_dense()).to_sparse()
-        self.g = graph((triples[:,0], triples[:,2]), device=self.dev)
+        self.g = graph((triples[:,0], triples[:,2]), num_nodes=len(self.e2idx), device=self.dev)
         self.etypes = triples[:,1].to(self.dev)
         self.g.edata['etype'] = self.etypes
-        self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) if node_features == None else node_features# random initial node features
+        #self.node_feat = torch.nn.Embedding(self.g.num_nodes(), self.emb_dim).to(self.dev) if node_features == None else node_features# random initial node features
         # identify in and out edges
         in_edges_mask = [True] * (self.g.num_edges() // 2) + [False] * (
             self.g.num_edges() // 2
@@ -174,7 +151,6 @@ class KG(object):
         self.g.edata["in_edges_mask"] = torch.Tensor(in_edges_mask).to(self.dev)
         self.g.edata["out_edges_mask"] = torch.Tensor(out_edges_mask).to(self.dev)
         self.g = in_out_norm(self.g)
-        #print(f'> {len(missing)} missing mappings.')
 
     @property
     def n_rel(self):
@@ -182,4 +158,4 @@ class KG(object):
 
     @property
     def embedding_dim(self):
-        return self.node_feat.embedding_dim
+        return self.emb_dim

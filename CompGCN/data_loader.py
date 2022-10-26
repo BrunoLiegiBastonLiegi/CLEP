@@ -109,7 +109,7 @@ class TestDataset(Dataset):
 
 
 class Data(object):
-    def __init__(self, dataset, lbl_smooth, num_workers, batch_size):
+    def __init__(self, dataset, lbl_smooth, num_workers, batch_size, ent2idx=None, rel2idx=None):
         """
         Reading in raw triples and converts it into a standard format.
         Parameters
@@ -148,8 +148,14 @@ class Data(object):
                 rel_set.add(rel)
                 ent_set.add(obj)
 
-        self.ent2id = {ent: idx for idx, ent in enumerate(ent_set)}
-        self.rel2id = {rel: idx for idx, rel in enumerate(rel_set)}
+        if ent2idx != None:
+            self.ent2id = {k.lower(): v for k,v in ent2idx.items()}
+        else:
+            self.ent2id = {ent: idx for idx, ent in enumerate(ent_set)}
+        if rel2idx != None:
+            self.rel2id = {k.lower(): v for k,v in rel2idx.items()}
+        else:
+            self.rel2id = {rel: idx for idx, rel in enumerate(rel_set)}
         self.rel2id.update(
             {
                 rel + "_reverse": idx + len(self.rel2id)

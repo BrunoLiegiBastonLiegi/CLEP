@@ -51,7 +51,8 @@ test_data = LinkPredictionDataset(
     add_inverse_edges = add_inverse
 )
 val_data = LinkPredictionDataset(
-    datafile = 'data/FB15k-237/link-prediction/_valid_wiki-id.txt',
+    #datafile = 'data/FB15k-237/link-prediction/_valid_wiki-id.txt',
+    datafile = 'data/WN18RR/link-prediction/valid_text.txt',
     entity2idx = wid2idx,
     rel2idx = rel2idx,
     add_inverse_edges = add_inverse
@@ -66,8 +67,10 @@ filter_triples = torch.cat([train_data.triples, test_data.triples])[:,:3]
 #train_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 #test_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 if add_inverse:
-    train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples+inverse.pt', mode='load')
-    test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples+inverse.pt', mode='load')
+    #train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples+inverse.pt', mode='load')
+    #test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples+inverse.pt', mode='load')
+    train_data.generate_corrupted_triples('data/WN18RR/corrupted_train_triples+inverse.pt', mode='load')
+    test_data.generate_corrupted_triples('data/WN18RR/corrupted_test_triples+inverse.pt', mode='load')
 else:
     train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
     test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
@@ -82,9 +85,9 @@ if args.graph_embeddings != None:
 if  args.graph != None:
     triples = train_data.true_triples if train_data.inv_triples == None else torch.vstack((train_data.true_triples, train_data.inv_triples))
     #triples = train_data.true_triples
-    kg = KG(triples = triples, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
+    kg = KG(triples = triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
     #kg.build_from_file(args.graph, wid2idx, rel2idx)
-    kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
+    #kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
 nodes = kg.g.nodes()
 
 rgcn_conf = {
@@ -207,12 +210,11 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         #mode = 'Rescal',
         #mode = 'ConvE',
         rel2idx = rel2idx,
-        external_rel_embs = True
-        #external_rel_embs = False
+        #external_rel_embs = True
+        external_rel_embs = False
     ).to(dev)
     # train
     epochs = 5
-    #batchsize = 128
     batchsize = 128
     #batchsize = 256
     #batchsize = 8192

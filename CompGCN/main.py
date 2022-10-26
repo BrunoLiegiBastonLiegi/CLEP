@@ -109,9 +109,14 @@ def main(args):
     else:
         device = "cpu"
 
+    with open('../data/FB15k-237/_wid2idx.json', 'r') as f:
+        ent2idx = json.load(f)
+    with open ('../data/FB15k-237/link-prediction/rel2idx.json', 'r') as f:
+        rel2idx = json.load(f)
+        
     # construct graph, split in/out edges and prepare train/validation/test data_loader
     data = Data(
-        args.dataset, args.lbl_smooth, args.num_workers, args.batch_size
+        args.dataset, args.lbl_smooth, args.num_workers, args.batch_size, ent2idx=ent2idx, rel2idx=rel2idx
     )
     data_iter = data.data_iter  # train/validation/test data_loader
     graph = data.g.to(device)
@@ -119,18 +124,12 @@ def main(args):
 
     # Compute in/out edge norms and store in edata
     graph = in_out_norm(graph)
-    print(graph.num_nodes())
 
     if args.load_model != None:
         # all this just to load a pretrained compgcn is really annoying
-        with open('../data/FB15k-237/_wid2idx.json', 'r') as f:
-            wid2idx = json.load(f)
-        with open ('../data/FB15k-237/link-prediction/rel2idx.json', 'r') as f:
-            rel2idx = json.load(f)
-        kg = KG(embedding_dim = 200, dev=device, add_inverse_edges=True)
-        kg.build_from_file('../data/FB15k-237/link-prediction/_train+valid_wiki-id.txt', wid2idx, rel2idx)
-        #kg = KG(triples = triples, rel2idx=rel2idx, embedding_dim = 200, dev=device)
-        kg.node_feat = torch.load('../data/FB15k-237/initial_node_features.pt')
+        kg = KG(embedding_dim=200, ent2idx=ent2idx, rel2idx=rel2idx, dev=device, add_inverse_edges=True)
+        kg.build_from_file('FB15k-237/train.txt')
+        graph = kg.g
         _ = GPT2CaptionEncoder(pretrained_model='gpt2')
         conf = {
             'kg': kg,
@@ -149,7 +148,6 @@ def main(args):
         ).to(device)
         clip.load_state_dict(torch.load(args.load_model))
         compgcn = clip.g_encoder.model
-        compgcn.n_embds = kg.node_feat.weight
         mapping_net = clip.g_mlp
     else:
         compgcn = None

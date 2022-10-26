@@ -26,11 +26,13 @@ if torch.cuda.is_available():
 else:
     dev = torch.device('cpu')
 print(f'\n> Setting device {dev} for computation.')
+
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
 #tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+
 print('> Preparing the data.')
 # Load index mapping
 with open(args.entity_index, 'r') as f:
@@ -38,15 +40,16 @@ with open(args.entity_index, 'r') as f:
 if args.rel_index != None:
     with open (args.rel_index, 'r') as f:
         rel2idx = json.load(f)
+        
 # Train and Test data
 train_data = CLIPDataset(
-    datafile = args.train_data, #'data/FB15k-237/train_new.pkl',
+    datafile = args.train_data,
     tokenizer = tokenizer,
     entity2idx = wid2idx,
     device = dev
 )
 test_data = CLIPDataset(
-    datafile = args.test_data, #'data/FB15k-237/test_new.pkl',
+    datafile = args.test_data,
     tokenizer = tokenizer,
     entity2idx = wid2idx,
     device = dev
@@ -60,42 +63,45 @@ if  args.graph_embeddings != None:
         
 inverse_edges = True
 if  args.graph != None:
-    kg = KG(embedding_dim=200, dev=dev, add_inverse_edges=inverse_edges)
-    kg.build_from_file(args.graph, wid2idx, rel2idx)
+    kg = KG(embedding_dim=200, ent2idx=wid2idx, rel2idx=rel2idx, dev=dev, add_inverse_edges=inverse_edges)
+    kg.build_from_file(args.graph)
     #torch.save(kg.node_feat, 'data/FB15k-237/initial_node_features.pt')
-    kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
+    #kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
-rgcn_conf = {
-    'kg': kg,
-    'n_layers': 2,
-    'indim': kg.embedding_dim,
-    'hdim': 200,
-    'rel_regularizer': 'basis',
-    #'rel_regularizer': 'bdd',
-    'num_bases': 64
-}
-compgcn_conf = {
-    'kg': kg,
-    'n_layers': 2,
-    'indim': kg.embedding_dim,
-    'hdim': 200,
-    'num_bases': -1,
-    'comp_fn' : 'sub',
-    'return_rel_embs':  False
-}
-
-graph_encoder = RGCN(**rgcn_conf)
-#graph_encoder = CompGCNWrapper(**compgcn_conf)
-
+graph_model = 'CompGCN'
+if graph_model == 'CompGCN':
+    conf = {
+        'kg': kg,
+        'n_layers': 2,
+        'indim': kg.embedding_dim,
+        'hdim': 200,
+        'num_bases': -1,
+        'comp_fn' : 'sub',
+        'return_rel_embs':  False
+    }
+    graph_encoder = CompGCNWrapper(**conf)
+    
+elif graph_model == 'RGCN':
+    conf = {
+        'kg': kg,
+        'n_layers': 2,
+        'indim': kg.embedding_dim,
+        'hdim': 200,
+        'rel_regularizer': 'basis',
+        #'rel_regularizer': 'bdd',
+        'num_bases': 64
+    }
+    graph_encoder = RGCN(**conf)
+    
 # Caption encoder
 text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 #text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
 # CLIP
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
-#original_node_feat = graph_encoder.model.n_embds.clone().cpu()
+original_node_feat = graph_encoder.model.n_embds.clone().cpu()
 
 # Training
 
@@ -113,7 +119,7 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 6
+    epochs = 1
     batchsize = 200
     #batchsize = 128
     
@@ -128,7 +134,6 @@ if args.load_model == None:
         accum_iter = 1,
         dev = dev
     )
-
     model_name = input('> Save model to:\n\t')
     torch.save(model.state_dict(), model_name)
     #torch.save(model.state_dict(),
@@ -136,7 +141,7 @@ if args.load_model == None:
     #               model_name, rgcn_conf['n_layers'], rgcn_conf['rel_regularizer'], rgcn_conf['num_bases'], epochs)
     #           )
 
-    #print(graph_encoder.model.n_embds.cpu() - original_node_feat)
+    print(graph_encoder.model.n_embds.cpu() - original_node_feat)
 else:
     model.load_state_dict(torch.load(args.load_model))
 

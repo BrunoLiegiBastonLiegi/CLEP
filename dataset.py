@@ -32,7 +32,8 @@ class CLIPDataset(Dataset):
         for i,d in enumerate(self.data):
             flag = False
             if isinstance(d,dict):
-                if d['wikidata_id'] == None or d['caption'] == None:
+                eid = d['wikidata_id'] if 'wikidata_id' in d.keys() else d['entity_id']
+                if eid == None or d['caption'] == None:
                     flag = True
             else:
                 flag = True
@@ -49,7 +50,8 @@ class CLIPDataset(Dataset):
         inputs = {'captions':[], 'entities':[]}
         for item in batch:
             inputs['captions'].append(item['caption'])
-            inputs['entities'].append(self.e2idx[item['wikidata_id']])
+            eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
+            inputs['entities'].append(self.e2idx[eid])
         inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt').to(self.dev)
         inputs['entities'] = torch.as_tensor(inputs['entities']).to(self.dev)
         labels = torch.arange(len(batch)).to(self.dev)
@@ -128,7 +130,8 @@ class LinkPredictionDataset(Dataset):
             #for t in corrupted_triples:
             #    if len((t == tmp_triples).all(-1).nonzero()) > 0:
             #        print('########### ERR')
-            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_test_triples+inverse.pt')
+            name = input('Save corrupted triples to:\n\t')
+            torch.save(corrupted_triples, name)
             #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_test_triples.pt')
         elif mode == 'load':
             print(f'> Loading corrupted triples from {triples}.')
