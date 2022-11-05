@@ -119,7 +119,7 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 1
+    epochs = 8
     batchsize = 200
     #batchsize = 128
     

@@ -1,4 +1,4 @@
-import torch
+import torch, time
 import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
@@ -154,11 +154,12 @@ class BertCaptionEncoder(torch.nn.Module):
 
 class LinkPredictionModel(torch.nn.Module):
 
-    def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult', external_rel_embs=False):
+    def __init__(self, graph_embedding_model, rel2idx : dict, mode: str = 'Distmult', external_rel_embs=False, one_to_N_scoring=False):
         super().__init__()
         assert mode in ('Distmult', 'TransE', 'Rescal', 'ConvE')
         self.mode = mode
         self.external_rel_embs = external_rel_embs
+        self.one_to_N = one_to_N_scoring
         self.model = graph_embedding_model
         self.hdim = self.model[0].hdim if isinstance(self.model, torch.nn.Sequential) else self.model.hdim
         if mode == 'Rescal':
@@ -170,43 +171,61 @@ class LinkPredictionModel(torch.nn.Module):
             if not external_rel_embs:
                 self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim), requires_grad=True)
             if mode == 'Distmult':
-                 self.f = lambda x,r,y : (x*r*y).sum(-1)
-                 self.prior = {'head': lambda x,r : x*r, 'tail': lambda x,r : x*r}
-                 self.fast_f = lambda p,y: (p*y).sum(-1)
+                self.f = Distmult(one_to_N_scoring=self.one_to_N)
+                #self.f = lambda x,r,y : (x*r*y).sum(-1)
+                #self.prior = {'head': lambda x,r : x*r, 'tail': lambda x,r : x*r}
+                #self.fast_f = lambda p,y: (p*y).sum(-1)
             elif mode == 'TransE':
-                 self.f = lambda x,r,y : -((y-x-r)**2).sum(-1) # L2 distance
-                 self.prior = {'head': lambda x,r: x-r, 'tail': lambda x,r: x+r}
-                 self.fast_f = lambda p,y : -((p-y)**2).sum(-1) # L2 distance # ( this the same for head and tail prediction since (y-x)**2=(x-y)**2)
-                 #self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1) # L1 distance
-                 #self.fast_f = lambda p,y : -(p-y).abs().sum(-1)
+                self.f = lambda x,r,y : -((y-x-r)**2).sum(-1) # L2 distance
+                self.prior = {'head': lambda x,r: x-r, 'tail': lambda x,r: x+r}
+                self.fast_f = lambda p,y : -((p-y)**2).sum(-1) # L2 distance # ( this the same for head and tail prediction since (y-x)**2=(x-y)**2)
+                #self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1) # L1 distance
+                #self.fast_f = lambda p,y : -(p-y).abs().sum(-1)
             elif mode == 'ConvE':
-                self.f = ConvE(self.hdim, k_w=10, k_h=20)
+                self.f = ConvE(self.hdim, k_w=10, k_h=20, one_to_N_scoring=one_to_N_scoring)
                 #self.f = ConvE(self.hdim, k_w=16, k_h=16)
-                self.prior = {'head': None, 'tail': lambda x,r: self.f.prior(x,r)} # how you define the prior in ConvE for head prediction??
-                self.fast_f = lambda p,y : self.f.fast_forward(p, y)
+                #self.prior = {'head': None, 'tail': lambda x,r: self.f.prior(x,r)} # how you define the prior in ConvE for head prediction??
+                #self.fast_f = lambda p,y : self.f.fast_forward(p, y)
 
-    def forward(self, x, y, r): 
-        #x_bak, y_bak = x, y
+    def forward(self, x, y, r):
+        #if self.one_to_N:
+        #    y_mask = (y.view(-1,1) == self.model.kg.g.nodes()).nonzero()[:,1].cpu()
+        #    y = self.model.kg.g.nodes()
         if self.external_rel_embs:
-            xy, rel = self.model(torch.cat((x,y)))
-            x, y = xy.view(2,-1, self.hdim)
-            del xy
+            node_embs, rel = self.model(self.model.kg.g.nodes())
+            #xy, rel = self.model(torch.cat((x,y)))
+            #x, y = xy.view(2,-1, self.hdim)
+            #del xy
             rel = rel[r]
         else:
-            x, y = self.model(torch.cat((x,y))).view(2,-1, self.hdim) # more efficient
+            node_embs = self.model(self.model.kg.g.nodes())
+            #xy = self.model(torch.cat((x,y)))#.view(2,-1, self.hdim)
             rel = self.R[r]
-        #x, y = self.model(x), self.model(y)
-        #nanx = x.isnan().any(-1).nonzero()
-        #nany = y.isnan().any(-1).nonzero()
-        #if len(nanx) > 0:
-        #    print('Found nan in x: ')
-        #    for i in nanx:
-        #        print(x_bak[i])
-        #if len(nany) > 0:
-        #    print('Found nan in y: ')    # the RGCN is producing nans in some cases
-        #    for i in nany:               # in detail entity 8235 seems to be the one causing the nans
-        #        print(y_bak[i])
-        return self.f(x, rel, y)
+        x, y = node_embs[x], node_embs[y]
+        #x = xy[:len(x)]
+        #y = xy[len(x):]
+        #del xy
+        #torch.cuda.empty_cache()
+        if self.one_to_N:
+            #y = torch.vstack([y for i in range(len(x))])
+            #t_prior = self.prior['tail'](x, rel)
+            #t_prior = torch.hstack([t_prior for i in range(n_nodes)]).view(-1, t_prior.shape[-1])
+            #t_scores = t_prior.mm(y.T)
+            #t_scores = self.fast_f(t_prior, y).view(len(x), -1)
+            #del t_prior
+            #torch.cuda.empty_cache()
+            #h_prior = self.prior['head'](y[y_mask], rel)
+            #h_prior = torch.hstack([h_prior for i in range(n_nodes)]).view(-1, h_prior.shape[-1])
+            #h_scores = self.fast_f(h_prior, y).view(len(x), -1)
+            #h_scores = h_prior.mm(y.T)
+            #del h_prior
+            #torch.cuda.empty_cache()
+            #t_scores, h_scores = self.f(x, rel, y), self.f(y, rel, y[y_mask])
+            t_scores, h_scores = self.f(x, rel, node_embs), self.f(node_embs, rel, y)
+            return torch.vstack((t_scores, h_scores))
+            #return self.fast_f(torch.vstack((t_prior, h_prior)), y).view(2*len(x), -1)
+        else:
+            return self.f(x, rel, y)
 
     def get_embedding(self, x):
         """Returns the embedding learned by the graph encoder."""
@@ -214,60 +233,56 @@ class LinkPredictionModel(torch.nn.Module):
 
     def score_candidates(self, triples, candidates, mode='tail', filter=None):
         assert mode in ('head','tail')
-        if self.mode == 'ConvE':
-            assert mode == 'tail' # head prediction not implemented for ConvE
+        if not self.one_to_N:
+            self.f.one_to_N = True
+        if self.mode == 'ConvE' and mode == 'head':
+            print('# Warning: head prediction with ConvE.')
+            #assert mode == 'tail' # head prediction not implemented for ConvE
         idx, idx_pair = (2, [0,1]) if mode == 'tail' else (0, [1,2])
         mask = (triples[:,idx].view(-1,1) == candidates) 
         if filter != None:
-            filter_mask = (triples.view(-1,1,3)[:,:,idx_pair].detach().cpu() == filter[:,idx_pair]).all(-1)
-            tmp_cand = candidates.detach().cpu()
-            #idx = 2 if mode == 'tail' else 0
+            t = time.time()
+            #filter_mask = (triples.view(-1,1,3)[:,:,idx_pair].detach().cpu() == filter[:,idx_pair]).all(-1)
+            filter_mask = (triples.view(-1,1,3)[:,:,idx_pair] == filter[:,idx_pair]).all(-1)
+            #tmp_cand = candidates.detach().cpu()
             filter_mask = torch.vstack([
-                (filter[filter_mask[i]][:,idx].view(-1,1) == tmp_cand).sum(0).bool()
+                #(filter[filter_mask[i]][:,idx].view(-1,1) == tmp_cand).sum(0).bool()
+                (filter[filter_mask[i]][:,idx].view(-1,1) == candidates).sum(0).bool()
                 for i in range(filter_mask.shape[0])
             ])
             filter_mask = (mask.logical_not() * filter_mask.to(mask.device)).bool()
-            del tmp_cand
+            #del tmp_cand
+            #print('time: ', time.time()-t)
         else:
             filter_mask = torch.zeros(triples.shape[0], candidates.shape[0]).bool()
         if self.external_rel_embs:
-            ht, rel = self.get_embedding(torch.cat((triples[:,0], triples[:,2])))
-            h, t = ht.view(2,-1, self.hdim)
-            del ht
+            node_embs, rel = self.get_embedding(self.model.kg.g.nodes())
+            #ht, rel = self.get_embedding(torch.cat((triples[:,0], triples[:,2])))
+            #h, t = ht.view(2,-1, self.hdim)
+            #del ht
             r = rel[triples[:,1]]
         else:
-            h, t = self.get_embedding(torch.cat((triples[:,0], triples[:,2]))).view(2,-1, self.hdim)
+            node_embs = self.get_embedding(self.model.kg.g.nodes())
+            #h, t = self.get_embedding(torch.cat((triples[:,0], triples[:,2]))).view(2,-1, self.hdim)
             r = self.R[triples[:,1]]
-        prior = self.prior[mode](h, r) if mode == 'tail' else self.prior[mode](t, r)
-        prior = torch.hstack([prior for i in range(len(candidates))]).view(-1, prior.shape[-1])
-        if self.external_rel_embs:
-            candidates, _ = self.get_embedding(candidates)
-        else:
-            candidates = self.get_embedding(candidates)
-        candidates = torch.vstack([candidates for i in range(triples.shape[0])])
-        scores = self.fast_f(prior, candidates).view(triples.shape[0], -1)
+        h, t = node_embs[triples[:,0]], node_embs[triples[:,2]]
+        #prior = self.prior[mode](h, r) if mode == 'tail' else self.prior[mode](t, r)
+        #prior = torch.hstack([prior for i in range(len(candidates))]).view(-1, prior.shape[-1])
+        #if self.external_rel_embs:
+        #    candidates, _ = self.get_embedding(candidates)
+        #else:
+        #    candidates = self.get_embedding(candidates)
+        #candidates = torch.vstack([candidates for i in range(triples.shape[0])])
+        #scores = self.fast_f(prior, candidates).view(triples.shape[0], -1)
+        scores = self.f(h, r, node_embs) if mode == 'tail' else self.f(t, r, node_embs)
+        if not self.one_to_N:
+            self.f.one_to_N = False
         if filter != None:
             filter_scores = scores.clone()
             filter_scores[filter_mask] = -1e8 # really small value to move everything at the back
         else:
             filter_scores = None
         return mask, scores, filter_scores
-    
-class ConcatModel(torch.nn.Module):
-
-    def __init__(self, *models):
-        super().__init__()
-        self.models = models
-
-    def forward(self, x):
-        return torch.cat([ m(x) for m in self.models ], dim=-1)
-
-    @property
-    def hdim(self):
-        hdim = 0
-        for m in self.models:
-            hdim += m[0].hdim if isinstance(m, torch.nn.Sequential) else m.hdim
-        return hdim
 
 class RGCN(torch.nn.Module):
 
@@ -284,58 +299,14 @@ class RGCN(torch.nn.Module):
             self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                        activation=a, layer_norm=regularization))
             
-        self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), self.in_dim))
-        torch.nn.init.xavier_normal_(self.node_featss)
+        self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), indim), requires_grad=True)
+        torch.nn.init.xavier_normal_(self.node_feats)
         
     def forward(self, nodes):
         h = self.node_feats
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]
-
-    @property
-    def hdim(self):
-        return self._hdim
-
-class CompGCN(torch.nn.Module):
-
-    def __init__(self, kg, n_layers, indim, hdim, num_bases=-1, comp_fn='sub', activation = ReLU(), regularization = Dropout(0.2)):
-        super().__init__()
-        self.kg = kg
-        self._indim = indim
-        self._hdim = hdim
-        self.num_rel = kg.n_rel
-        self.num_bases = num_bases
-        self.layers = torch.nn.ModuleList()
-        act = [activation for i in range(n_layers-1)] + [None]
-        self.layers.append(CompGraphConv(indim, hdim, comp_fn=comp_fn))
-        for a in act[1:]:
-            self.layers.append(CompGraphConv(hdim, hdim, comp_fn=comp_fn))
-
-        # Initial relation embeddings
-        if self.num_bases > 0:
-            self.basis = torch.nn.Parameter(torch.Tensor(self.num_bases, self._indim), requires_grad=True)
-            self.weights = torch.nn.Parameter(torch.Tensor(self.num_rel, self.num_bases), requires_grad=True)
-            torch.nn.init.xavier_normal_(self.basis)
-            torch.nn.init.xavier_normal_(self.weights)
-        else:
-            self.rel_embds = torch.nn.Parameter(torch.Tensor(self.num_rel, self._indim), requires_grad=True)
-            torch.nn.init.xavier_normal_(self.rel_embds)
-
-        # Dropout after compGCN layers
-        self.dropouts = torch.nn.ModuleList()
-        for i in range(n_layers):
-            self.dropouts.append(regularization)
-        
-    def forward(self, nodes):
-        h = self.kg.node_feat.weight
-        r = torch.mm(self.weights, self.basis) if self.num_bases > 0 else self.rel_embds
-        #print(f'Initial Node Features:\n{h}')
-        # add dropout
-        for l,d in zip(self.layers, self.dropouts):
-            h, r = l(self.kg.g, h, r)
-            h = d(h)
-        return h[nodes], r
 
     @property
     def hdim(self):
@@ -373,7 +344,7 @@ class CompGCNWrapper(torch.nn.Module):
 
 class ConvE(torch.nn.Module):
 
-    def __init__(self, hdim, k_w, k_h, hid_drop=0.3, feat_drop=0.3, ker_sz=7, num_filt=200):
+    def __init__(self, hdim, k_w, k_h, one_to_N_scoring=False, hid_drop=0.3, feat_drop=0.3, ker_sz=7, num_filt=200):
         super(ConvE, self).__init__()
 
         assert k_w*k_h == hdim
@@ -383,6 +354,7 @@ class ConvE(torch.nn.Module):
         self.ker_sz = ker_sz
         self.k_w = k_w
         self.k_h = k_h
+        self.one_to_N = one_to_N_scoring
         self.num_filt = num_filt
 
         # batchnorms to the combined (sub+rel) emb
@@ -434,8 +406,31 @@ class ConvE(torch.nn.Module):
         return x
     
     def forward(self, h, r, t):
-        x = self.prior(h, r)
-        return (x*t).sum(-1)
+        if self.one_to_N:
+            if h.shape[0] == r.shape[0]:
+                x = self.prior(h, r)
+                return x.mm(t.T)
+            elif t.shape[0] == r.shape[0]:
+                x = self.prior(t, r)
+                return x.mm(h.T)
+        else:
+            x = self.prior(h, r)
+            return (x*t).sum(-1)
 
     def fast_forward(self, prior, t):
         return (prior*t).sum(-1)
+
+class Distmult(torch.nn.Module):
+
+    def __init__(self, one_to_N_scoring=False):
+        super(Distmult, self).__init__()
+        self.one_to_N = one_to_N_scoring
+
+    def forward(self, h, r, t):
+        if self.one_to_N:
+            if h.shape[0] == r.shape[0]:
+                return (h*r).mm(t.T)
+            elif t.shape[0] == r.shape[0]:
+                return (t*r).mm(h.T)
+        else:
+            return (h*r*t).sum(-1)

@@ -124,15 +124,8 @@ class LinkPredictionDataset(Dataset):
                 corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(self.true_triples[:,:3]) ])
             else:
                 corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(torch.vstack((self.true_triples[:,:3], self.inv_triples[:,:3]))) ])
-            #f = lambda x : self._corrupt_triple(x, filter_triples, position=pos, w=w)
-            #corrupted_triples = torch.vstack(list(map(f, tqdm(self.true_triples[:,:3]))))
-            #corrupted_triples = torch.vstack(list(map(self._corrupt_triple, tqdm(self.true_triples[:,:3]), repeat(filter_triples), repeat(pos), repeat(w))))
-            #for t in corrupted_triples:
-            #    if len((t == tmp_triples).all(-1).nonzero()) > 0:
-            #        print('########### ERR')
             name = input('Save corrupted triples to:\n\t')
             torch.save(corrupted_triples, name)
-            #torch.save(corrupted_triples, 'data/FB15k-237/corrupted_test_triples.pt')
         elif mode == 'load':
             print(f'> Loading corrupted triples from {triples}.')
             corrupted_triples = torch.load(triples)

@@ -1,6 +1,6 @@
 import argparse, torch, json, pickle, time, random
 from dataset import LinkPredictionDataset
-from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, ConcatModel, RGCN, CompGCN, CompGCNWrapper
+from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
@@ -14,12 +14,15 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
+parser.add_argument('--valid_data', help='Path to test data file.')
 parser.add_argument('--graph_embeddings', help='Path to pretrained embeddings file.')
 parser.add_argument('--entity_index', default=None, help='Path to entity index file.')
 parser.add_argument('--rel_index', help='Path to relations index file.')
+parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--save_results', default='lp_results.json')
+parser.add_argument('--one_to_N_scoring', default=False)
 args = parser.parse_args()
 
 # Set device for computation
@@ -50,9 +53,8 @@ test_data = LinkPredictionDataset(
     rel2idx = rel2idx,
     add_inverse_edges = add_inverse
 )
-val_data = LinkPredictionDataset(
-    #datafile = 'data/FB15k-237/link-prediction/_valid_wiki-id.txt',
-    datafile = 'data/WN18RR/link-prediction/valid_text.txt',
+valid_data = LinkPredictionDataset(
+    datafile = args.valid_data,
     entity2idx = wid2idx,
     rel2idx = rel2idx,
     add_inverse_edges = add_inverse
@@ -61,19 +63,21 @@ val_data = LinkPredictionDataset(
 rel2idx = train_data.r2idx
 
 w = 2 # number of corrupted triples per positive triple
-#filter_triples = torch.cat([train_data.true_triples, test_data.true_triples, val_data.true_triples])[:,:3]
-#filter_triples = torch.cat([train_data.true_triples, test_data.true_triples])[:,:3]
-filter_triples = torch.cat([train_data.triples, test_data.triples])[:,:3]
+filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.triples])[:,:3].to(dev)
 #train_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 #test_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
-if add_inverse:
-    #train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples+inverse.pt', mode='load')
-    #test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples+inverse.pt', mode='load')
-    train_data.generate_corrupted_triples('data/WN18RR/corrupted_train_triples+inverse.pt', mode='load')
-    test_data.generate_corrupted_triples('data/WN18RR/corrupted_test_triples+inverse.pt', mode='load')
-else:
-    train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
-    test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
+#valid_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
+if not args.one_to_N_scoring:
+    if add_inverse:
+        train_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_train_triples.pt', mode='load')
+        test_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_test_triples.pt', mode='load')
+        valid_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_valid_triples.pt', mode='load')
+        #train_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_train_triples+inverse.pt', mode='load')
+        #test_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_test_triples+inverse.pt', mode='load')
+        #valid_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_valid_triples+inverse.pt', mode='load')
+    else:
+        train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
+        test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
 
 
 if args.graph_embeddings != None:
@@ -83,66 +87,73 @@ if args.graph_embeddings != None:
 #BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
 if  args.graph != None:
+    kg = KG(ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev, add_inverse_edges=add_inverse)
+    kg.build_from_file(args.graph)
+else:
     triples = train_data.true_triples if train_data.inv_triples == None else torch.vstack((train_data.true_triples, train_data.inv_triples))
-    #triples = train_data.true_triples
     kg = KG(triples = triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
-    #kg.build_from_file(args.graph, wid2idx, rel2idx)
-    #kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
 nodes = kg.g.nodes()
 
-rgcn_conf = {
-    'kg': kg,
-    'n_layers': 2,
-    'indim': kg.embedding_dim,
-    'hdim': 200,
-    'rel_regularizer': 'basis',
-    #'rel_regularizer': 'bdd',
-    'num_bases': 64
-}
+graph_model = args.graph_encoder
+print(f'> Using {graph_model} as graph encoder.')
 
-BaselineModel = RGCN(**rgcn_conf)
-"""
-BaselineModel = CompGCN(
-    kg,
-    2,
-    kg.embedding_dim,
-    200,
-    num_bases = 5,
-    comp_fn = 'mul'
-)
-"""
-"""
-BaselineModel = CompGCNWrapper(
-    kg = kg,
-    n_layers = 1,
-    #n_layers = 3,
-    indim = kg.embedding_dim,
-    hdim = 200,
-    num_bases = -1,
-    #comp_fn = 'sub',
-    comp_fn = 'ccorr',
-    return_rel_embs = True
-)
-"""
+if graph_model == 'RGCN':
+    conf = {
+        'kg': kg,
+        'n_layers': 2,
+        'indim': kg.embedding_dim,
+        'hdim': 200,
+        'rel_regularizer': 'basis',
+        #'rel_regularizer': 'bdd',
+        'num_bases': 64
+    }   
+    BaselineModel = RGCN(**conf)
+elif graph_model == 'CompGCN':
+    conf = {
+        'kg': kg,
+        'n_layers': 2,
+        'indim': kg.embedding_dim,
+        'hdim': 200,
+        'comp_fn': 'sub',
+        'num_bases': -1,
+        'return_rel_embs' : True
+        #'return_rel_embs' : False
+    }   
+    BaselineModel = CompGCNWrapper(**conf)
+
 # Caption prediction pretraining
 # Annoyingly I have to load the gpt model to load the weights I need, even though I am not
 # going to use that. A possible solution would be to save the complete model instead of saving
 # just the state_dict, that would require more disk space though.
-# REMEMBER: I NEED TO RERUN PRETRAINING SINCE wid2idx.json HAS CHANGED
 
-_ = GPT2CaptionEncoder(pretrained_model='gpt2')
-#_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
-"""
-clip = CLIP_KB(
-    graph_encoder = RGCN(**rgcn_conf),
-    text_encoder = _,
-    hdim = 200
-).to(dev)
-clip.load_state_dict(torch.load(args.load_model))
-# Stack the pretrained MLP on top of the graph embedding model
-#SemanticAugmentedModel = torch.nn.Sequential(clip.g_encoder, clip.g_mlp)
-SemanticAugmentedModel = clip.g_nn
-"""
+if args.load_model != None:
+    
+    _ = GPT2CaptionEncoder(pretrained_model='gpt2')
+    #_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
+    
+    g_encoder = CompGCNWrapper(**conf) if graph_model == 'CompGCN' else RGCN(**conf)
+    clip = CLIP_KB(
+        graph_encoder = g_encoder,
+        text_encoder = _,
+        hdim = 200
+    ).to(dev)
+    clip.load_state_dict(torch.load(args.load_model))
+    # Stack the pretrained MLP on top of the graph embedding model
+    if graph_model == 'CompGCN' and conf['return_rel_embs']:
+        class tmp(torch.nn.Module):
+            def __init__(self, g_encoder, nn):
+                super().__init__()
+                self.g_encoder = g_encoder
+                self.nn = nn
+                self.hdim = g_encoder.hdim
+            def forward(self, x):
+                x, rel = self.g_encoder(x)
+                return self.nn(x), rel
+            SemanticAugmentedModel = tmp(clip.g_encoder, clip.g_mlp)
+            SemanticAugmentedModel.return_rel_embs = True
+    else:
+        SemanticAugmentedModel = clip.g_nn
+
 
 #for par in SemanticAugmentedModel.parameters():
 #    par.requires_grad = False
@@ -152,13 +163,23 @@ SemanticAugmentedModel = clip.g_nn
 # Training
 # Define training step
 def step_f(model, batch, label, dev):
-    batch, label = batch.to(dev), label.to(dev)
-    out = model(batch[:,0], batch[:,2], r=batch[:,1])
+    if model.one_to_N:
+        global nodes
+        batch = batch.to(dev)
+        label = torch.vstack((batch[:,2].view(-1,1) == nodes, batch[:,0].view(-1,1) == nodes))
+    else:
+        batch, label = batch.to(dev), label.to(dev)
+    out = model(x=batch[:,0], y=batch[:,2], r=batch[:,1])
+    weight = None if model.one_to_N else torch.ones(batch.shape[0], device=dev)*1/(1+w) # w=2 ratio negative/positive triples (c = 1/(w+1))
     loss = torch.nn.functional.binary_cross_entropy_with_logits(
-        out,
-        label,
-        weight = torch.ones(batch.shape[0], device=dev)*1/(1+w) # w=2 ratio negative/positive triples (c = 1/(w+1))
+        out.view(-1),
+        label.float().view(-1),
+        weight = weight,
     )
+    #loss = torch.nn.functional.cross_entropy(
+    #    torch.sigmoid(out),
+    #    label.nonzero()[:,1]
+    #)
     del out, batch, label
     torch.cuda.empty_cache()
     return loss
@@ -171,35 +192,54 @@ def eval_f(model, data):
     data.triples = data.true_triples
     dataloader = DataLoader(
         data,
-        batch_size = 128,
+        batch_size = 512,
         shuffle = True,
         collate_fn = test_data.collate_fn
     )
     
-    ranks = {'raw': [], 'filtered': []}
+    ranks = {'left': {'raw': [], 'filtered': []}, 'right': {'raw': [], 'filtered': []}}
     for i, (batch, _) in enumerate(tqdm(dataloader)):
+        triples = batch.to(dev)
         with torch.no_grad():
-            mask, raw_scores, filter_scores = model.score_candidates(
-                triples = batch.to(dev),
-                candidates = nodes,
-                mode = 'tail',
-                filter = filter_triples
-            )
-            ranks['raw'].append((raw_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
-            ranks['filtered'].append((filter_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+            for mode, side in zip(('head', 'tail'), ('left', 'right')):
+                mask, raw_scores, filter_scores = model.score_candidates(
+                    triples = triples,
+                    candidates = nodes,
+                    mode = mode,
+                    filter = filter_triples
+                )
+                raw_scores, filter_scores = torch.sigmoid(raw_scores), torch.sigmoid(filter_scores) 
+                ranks[side]['raw'].append((raw_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+                ranks[side]['filtered'].append((filter_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
 
-    ranks['raw'] = torch.cat(ranks['raw']).view(-1) + 1 # +1 since the position starts counting from zero
-    ranks['filtered'] = torch.cat(ranks['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
-    return {
-        k: {
-            'mrr': (1/v).mean(dtype=float).item(),
-            'mean_rank': v.mean(dtype=float).item(),
-            'hits@1': len((v == 1).nonzero()) / len(v),
-            'hits@3': len((v <= 3).nonzero()) / len(v),
-            'hits@10': len((v <= 10).nonzero()) / len(v)
-        }
-        for k,v in ranks.items()
-    }
+    for side in ('left', 'right'):
+        ranks[side]['raw'] = torch.cat(ranks[side]['raw']).view(-1) + 1 # +1 since the position starts counting from zero
+        ranks[side]['filtered'] = torch.cat(ranks[side]['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
+    left_metrics = { k: {
+        'mrr': (1/v).mean(dtype=float).item(),
+        'mean_rank': v.mean(dtype=float).item(),
+        'hits@1': len((v == 1).nonzero()) / len(v),
+        'hits@3': len((v <= 3).nonzero()) / len(v),
+        'hits@10': len((v <= 10).nonzero()) / len(v)
+    } for k,v in ranks['left'].items()}
+    right_metrics = { k: {
+        'mrr': (1/v).mean(dtype=float).item(),
+        'mean_rank': v.mean(dtype=float).item(),
+        'hits@1': len((v == 1).nonzero()) / len(v),
+        'hits@3': len((v <= 3).nonzero()) / len(v),
+        'hits@10': len((v <= 10).nonzero()) / len(v)
+    } for k,v in ranks['right'].items()
+                     }
+    metrics = { type: {
+        k: 0.5 * (right_metrics[type][k] + left_metrics[type][k])
+        for k in right_metrics[type].keys()
+    } for type in ('raw', 'filtered')
+               }
+    for d, side in zip((right_metrics, left_metrics), ('right', 'left')):
+        for type in ('raw', 'filtered'):
+            for k, v in d[type].items():
+                metrics[type][side+'_'+k] = v
+    return metrics
 
 def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     # build LP model
@@ -210,16 +250,16 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         #mode = 'Rescal',
         #mode = 'ConvE',
         rel2idx = rel2idx,
-        #external_rel_embs = True
-        external_rel_embs = False
+        external_rel_embs = conf['return_rel_embs'] if graph_model == 'CompGCN' else False,
+        one_to_N_scoring = args.one_to_N_scoring
     ).to(dev)
     # train
-    epochs = 5
-    batchsize = 128
-    #batchsize = 256
+    epochs = 50
+    batchsize = 1024
+    #batchsize = 128
     #batchsize = 8192
     #batchsize = 32768
-    lr = 1e-3 
+    lr = 1e-3
     train_loss, test_loss, metrics = training_routine(
         model = LPmodel,
         step_f = step_f,
@@ -262,7 +302,7 @@ fig, ax = plt.subplots(1,2, figsize=(24,16))
 #clusters = visualize_embeddings(torch.vstack(list(embs.values())), n_clusters=50, ax=ax[0])
 
 # Finetuning
-results = {'RGCN with Caption Pretraining': {}, 'RGCN Baseline': {}}
+results = {'{} Caption Pretraining'.format(graph_model): {}, '{} Baseline'.format(graph_model): {}}
 #for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
 for m in (BaselineModel,):
     results[m] = experiment(

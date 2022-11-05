@@ -1,4 +1,4 @@
-import argparse
+import argparse, json
 from time import time
 
 import numpy as np
@@ -184,6 +184,7 @@ def main(args):
     # Step 4: training epoches =============================================================== #
     best_mrr = 0.0
     kill_cnt = 0
+    results = {}
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
         compgcn_model.train()
@@ -215,6 +216,7 @@ def main(args):
             compgcn_model, graph, device, data_iter, split="valid"
         )
         t2 = time()
+        results[epoch] = val_results
 
         # validate
         if val_results["mrr"] > best_mrr:
@@ -251,7 +253,7 @@ def main(args):
             test_results["hits@1"],
         )
     )
-
+    json.dumps(results, args.save_res, indent=2)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -398,6 +400,7 @@ if __name__ == "__main__":
         default=None,
         help='Path to model to load.'
     )
+    parser.add_argument('--save_res')
 
     args = parser.parse_args()
 
