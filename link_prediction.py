@@ -6,9 +6,6 @@ from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 from torchmetrics import F1Score
 from utils import training_routine, KG
-from multiprocessing import Pool
-from itertools import repeat
-from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
@@ -22,7 +19,7 @@ parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--save_results', default='lp_results.json')
-parser.add_argument('--one_to_N_scoring', default=False)
+parser.add_argument('--one_to_N_scoring', action='store_true')
 args = parser.parse_args()
 
 # Set device for computation
@@ -69,12 +66,12 @@ filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.tr
 #valid_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 if not args.one_to_N_scoring:
     if add_inverse:
-        train_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_train_triples.pt', mode='load')
-        test_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_test_triples.pt', mode='load')
-        valid_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_valid_triples.pt', mode='load')
-        #train_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_train_triples+inverse.pt', mode='load')
-        #test_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_test_triples+inverse.pt', mode='load')
-        #valid_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_valid_triples+inverse.pt', mode='load')
+        #train_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_train_triples.pt', mode='load')
+        #test_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_test_triples.pt', mode='load')
+        #valid_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_valid_triples.pt', mode='load')
+        train_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_train_triples+inverse.pt', mode='load')
+        test_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_test_triples+inverse.pt', mode='load')
+        valid_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_valid_triples+inverse.pt', mode='load')
     else:
         train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
         test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
@@ -86,7 +83,7 @@ if args.graph_embeddings != None:
 # Baseline: pretrained TransE embeddings
 #BaselineModel = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
-if  args.graph != None:
+if args.graph != None:
     kg = KG(ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev, add_inverse_edges=add_inverse)
     kg.build_from_file(args.graph)
 else:
@@ -139,21 +136,25 @@ if args.load_model != None:
     ).to(dev)
     clip.load_state_dict(torch.load(args.load_model))
     # Stack the pretrained MLP on top of the graph embedding model
-    if graph_model == 'CompGCN' and conf['return_rel_embs']:
-        class tmp(torch.nn.Module):
-            def __init__(self, g_encoder, nn):
-                super().__init__()
-                self.g_encoder = g_encoder
-                self.nn = nn
-                self.hdim = g_encoder.hdim
-            def forward(self, x):
+    class vstack(torch.nn.Module):
+        def __init__(self, g_encoder, nn):
+            super().__init__()
+            self.g_encoder = g_encoder
+            self.nn = nn
+            self.hdim = g_encoder.hdim
+            self.kg = g_encoder.kg
+        def forward(self, x):
+            if graph_model == 'CompGCN' and conf['return_rel_embs']:
                 x, rel = self.g_encoder(x)
                 return self.nn(x), rel
-            SemanticAugmentedModel = tmp(clip.g_encoder, clip.g_mlp)
-            SemanticAugmentedModel.return_rel_embs = True
-    else:
-        SemanticAugmentedModel = clip.g_nn
+            else:
+                x = self.g_encoder(x)
+                return self.nn(x)
+    SemanticAugmentedModel = vstack(clip.g_encoder, clip.g_mlp)
+    SemanticAugmentedModel.return_rel_embs = True if graph_model == 'CompGCN' and conf['return_rel_embs'] else False
 
+else:
+    SemanticAugmentedModel = None
 
 #for par in SemanticAugmentedModel.parameters():
 #    par.requires_grad = False
@@ -164,16 +165,35 @@ if args.load_model != None:
 # Define training step
 def step_f(model, batch, label, dev):
     if model.one_to_N:
-        global nodes
+        global nodes, filter_triples
         batch = batch.to(dev)
         label = torch.vstack((batch[:,2].view(-1,1) == nodes, batch[:,0].view(-1,1) == nodes))
+        tail_mask = (batch.view(-1,1,3)[:,:,[0,1]] == filter_triples[:,[0,1]]).all(-1)
+        tail_mask = torch.vstack([
+                (filter_triples[tail_mask[i]][:,2].view(-1,1) == nodes).sum(0).bool()
+                for i in range(tail_mask.shape[0])
+            ])
+        head_mask = (batch.view(-1,1,3)[:,:,[1,2]] == filter_triples[:,[1,2]]).all(-1)
+        head_mask = torch.vstack([
+                (filter_triples[head_mask[i]][:,0].view(-1,1) == nodes).sum(0).bool()
+                for i in range(head_mask.shape[0])
+            ])
+        mask = torch.vstack((tail_mask, head_mask))
+        del tail_mask, head_mask
+        torch.cuda.empty_cache()
+        mask = (label.logical_not() * mask).logical_not().view(-1)
+        out = model(x=batch[:,0], y=batch[:,2], r=batch[:,1]).view(-1)
+        out = out[mask]
+        label = label.view(-1)[mask]
+        del mask
+        torch.cuda.empty_cache()
     else:
-        batch, label = batch.to(dev), label.to(dev)
-    out = model(x=batch[:,0], y=batch[:,2], r=batch[:,1])
+        batch, label = batch.to(dev), label.to(dev).view(-1)
+        out = model(x=batch[:,0], y=batch[:,2], r=batch[:,1]).view(-1)
     weight = None if model.one_to_N else torch.ones(batch.shape[0], device=dev)*1/(1+w) # w=2 ratio negative/positive triples (c = 1/(w+1))
     loss = torch.nn.functional.binary_cross_entropy_with_logits(
-        out.view(-1),
-        label.float().view(-1),
+        out,
+        label.float(),
         weight = weight,
     )
     #loss = torch.nn.functional.cross_entropy(
@@ -259,7 +279,7 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     #batchsize = 128
     #batchsize = 8192
     #batchsize = 32768
-    lr = 1e-3
+    lr = 1e-4
     train_loss, test_loss, metrics = training_routine(
         model = LPmodel,
         step_f = step_f,
@@ -276,42 +296,19 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     return metrics
 
 
-# Latent space visualilzation
-from utils import visualize_embeddings
-import matplotlib.pyplot as plt
-test_loader = DataLoader(
-        test_data,
-        batch_size = 8192,
-        shuffle = False,
-        collate_fn = test_data.collate_fn
-    )
-
-def get_embeddings(model, loader):
-    embs = {}
-    for i, (batch, _) in enumerate(loader):
-        print(f'{i}/{len(test_loader)}', end='\r')
-        with torch.no_grad():
-            batch = batch.view(-1,1).to(dev)
-            out = model(batch)
-            embs.update(dict(zip(batch.flatten().detach().cpu().tolist(),out.detach().cpu())))
-    return embs
-
-fig, ax = plt.subplots(1,2, figsize=(24,16))
-
-#embs = get_embeddings(SemanticAugmentedModel, test_loader)
-#clusters = visualize_embeddings(torch.vstack(list(embs.values())), n_clusters=50, ax=ax[0])
-
 # Finetuning
 results = {'{} Caption Pretraining'.format(graph_model): {}, '{} Baseline'.format(graph_model): {}}
-#for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
-for m in (BaselineModel,):
-    results[m] = experiment(
-        model = m,
-        train_data = train_data,
-        test_data = test_data,
-        dev = dev,
-        rel2idx = rel2idx
-    )
+for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
+    if m != None:
+        results[name] = experiment(
+            model = m,
+            train_data = train_data,
+            test_data = test_data,
+            dev = dev,
+            rel2idx = rel2idx
+        )
+    else:
+        results[name] = None
 
 #embs = get_embeddings(SemanticAugmentedModel, test_loader)
 #visualize_embeddings(torch.vstack(list(embs.values())), ax=ax[1])

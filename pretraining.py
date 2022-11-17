@@ -101,7 +101,7 @@ text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 # CLIP
 model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
 
-original_node_feat = graph_encoder.model.n_embds.clone().cpu()
+#original_node_feat = graph_encoder.model.n_embds.clone().cpu()
 
 # Training
 
@@ -119,9 +119,10 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 8
-    batchsize = 200
+    epochs = 4
+    #batchsize = 200
     #batchsize = 128
+    batchsize = 64
     
     training_routine(
         model = model,
@@ -141,7 +142,7 @@ if args.load_model == None:
     #               model_name, rgcn_conf['n_layers'], rgcn_conf['rel_regularizer'], rgcn_conf['num_bases'], epochs)
     #           )
 
-    print(graph_encoder.model.n_embds.cpu() - original_node_feat)
+    #print(graph_encoder.model.n_embds.cpu() - original_node_feat)
 else:
     model.load_state_dict(torch.load(args.load_model))
 

@@ -39,18 +39,21 @@ caption_pretraining = {
     }
 }
 
-def append_metrics(source, dest):
+def append_metrics(source, dest, keys=('mean_rank', 'mrr', 'hits@1', 'hits@3', 'hits@10')):
     for epoch in source.values():
         for t in ('raw', 'filtered'):
             try:
-                items = epoch[t].items()
+                items = epoch[t]#.items()
             except:
                 try:
-                    items = epoch.items()
+                    items = epoch#.items()
                 except:
                     continue
-            for k,v in items:
-                dest[t][k].append(v)
+            #for k,v in items:
+            
+            for k in keys:
+                #dest[t][k].append(v)
+                dest[t][k].append(items[k])
                 
 max_n_epochs = 0
 for m in metrics:
@@ -61,7 +64,14 @@ for m in metrics:
             max_n_epochs = max(len(list(m.values())[i].keys()), max_n_epochs)
             
 for m in metrics:
-    for i, d in zip((0, 1), (baseline, caption_pretraining)):
+    idx = {}
+    for i,k in enumerate(m.keys()):
+        if 'baseline' in k.lower():
+            idx['baseline'] = i
+        elif 'pretraining' in k.lower():
+            idx['pretrained'] = i
+    #for i, d in zip((0, 1), (baseline, caption_pretraining)):
+    for i, d in zip((idx['baseline'], idx['pretrained']), (baseline, caption_pretraining)):
         length = len(list(m.values())[i]['filtered'].keys()) if 'filtered' in list(m.values())[i].keys() else len(list(m.values())[i].keys())
         if length < max_n_epochs:
             for n in range(length, max_n_epochs):

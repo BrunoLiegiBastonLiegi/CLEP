@@ -172,58 +172,25 @@ class LinkPredictionModel(torch.nn.Module):
                 self.R = torch.nn.Parameter(torch.randn(len(rel2idx), self.hdim), requires_grad=True)
             if mode == 'Distmult':
                 self.f = Distmult(one_to_N_scoring=self.one_to_N)
-                #self.f = lambda x,r,y : (x*r*y).sum(-1)
-                #self.prior = {'head': lambda x,r : x*r, 'tail': lambda x,r : x*r}
-                #self.fast_f = lambda p,y: (p*y).sum(-1)
             elif mode == 'TransE':
                 self.f = lambda x,r,y : -((y-x-r)**2).sum(-1) # L2 distance
                 self.prior = {'head': lambda x,r: x-r, 'tail': lambda x,r: x+r}
                 self.fast_f = lambda p,y : -((p-y)**2).sum(-1) # L2 distance # ( this the same for head and tail prediction since (y-x)**2=(x-y)**2)
-                #self.f = lambda x,r,y : -((y-x-r).abs()).sum(-1) # L1 distance
-                #self.fast_f = lambda p,y : -(p-y).abs().sum(-1)
             elif mode == 'ConvE':
                 self.f = ConvE(self.hdim, k_w=10, k_h=20, one_to_N_scoring=one_to_N_scoring)
-                #self.f = ConvE(self.hdim, k_w=16, k_h=16)
-                #self.prior = {'head': None, 'tail': lambda x,r: self.f.prior(x,r)} # how you define the prior in ConvE for head prediction??
-                #self.fast_f = lambda p,y : self.f.fast_forward(p, y)
 
     def forward(self, x, y, r):
-        #if self.one_to_N:
-        #    y_mask = (y.view(-1,1) == self.model.kg.g.nodes()).nonzero()[:,1].cpu()
-        #    y = self.model.kg.g.nodes()
         if self.external_rel_embs:
             node_embs, rel = self.model(self.model.kg.g.nodes())
-            #xy, rel = self.model(torch.cat((x,y)))
-            #x, y = xy.view(2,-1, self.hdim)
-            #del xy
             rel = rel[r]
         else:
             node_embs = self.model(self.model.kg.g.nodes())
-            #xy = self.model(torch.cat((x,y)))#.view(2,-1, self.hdim)
             rel = self.R[r]
         x, y = node_embs[x], node_embs[y]
-        #x = xy[:len(x)]
-        #y = xy[len(x):]
-        #del xy
-        #torch.cuda.empty_cache()
         if self.one_to_N:
-            #y = torch.vstack([y for i in range(len(x))])
-            #t_prior = self.prior['tail'](x, rel)
-            #t_prior = torch.hstack([t_prior for i in range(n_nodes)]).view(-1, t_prior.shape[-1])
-            #t_scores = t_prior.mm(y.T)
-            #t_scores = self.fast_f(t_prior, y).view(len(x), -1)
-            #del t_prior
-            #torch.cuda.empty_cache()
-            #h_prior = self.prior['head'](y[y_mask], rel)
-            #h_prior = torch.hstack([h_prior for i in range(n_nodes)]).view(-1, h_prior.shape[-1])
-            #h_scores = self.fast_f(h_prior, y).view(len(x), -1)
-            #h_scores = h_prior.mm(y.T)
-            #del h_prior
-            #torch.cuda.empty_cache()
-            #t_scores, h_scores = self.f(x, rel, y), self.f(y, rel, y[y_mask])
             t_scores, h_scores = self.f(x, rel, node_embs), self.f(node_embs, rel, y)
+            #return t_scores
             return torch.vstack((t_scores, h_scores))
-            #return self.fast_f(torch.vstack((t_prior, h_prior)), y).view(2*len(x), -1)
         else:
             return self.f(x, rel, y)
 
