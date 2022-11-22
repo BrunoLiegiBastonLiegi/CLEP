@@ -119,10 +119,10 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 4
-    #batchsize = 200
+    epochs = 32
+    batchsize = 200
     #batchsize = 128
-    batchsize = 64
+    #batchsize = 64
     
     training_routine(
         model = model,

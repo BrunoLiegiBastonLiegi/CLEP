@@ -1,8 +1,10 @@
 import argparse, torch, json, pickle, time, random
+from transformers import GPT2Tokenizer, BertTokenizer
+from torch.utils.data import DataLoader
 from dataset import LinkPredictionDataset
 from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler, autocast
+from torch.cuda.amp import autocast
 from tqdm import tqdm
 from utils import  KG
 from torch.utils.data import Dataset
@@ -18,7 +20,6 @@ parser.add_argument('--id2cap', help='Path to captions index file.')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--save_results', default='lp_results.json')
-parser.add_argument('--one_to_N_scoring', action='store_true')
 args = parser.parse_args()
 
 # Set device for computation
@@ -58,20 +59,7 @@ valid_data = LinkPredictionDataset(
 
 rel2idx = train_data.r2idx
 
-w = 2 # number of corrupted triples per positive triple
 filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.triples])[:,:3].to(dev)
-
-if not args.one_to_N_scoring:
-    if add_inverse:
-        train_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_train_triples.pt', mode='load')
-        test_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_test_triples.pt', mode='load')
-        valid_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_valid_triples.pt', mode='load')
-        #train_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_train_triples+inverse.pt', mode='load')
-        #test_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_test_triples+inverse.pt', mode='load')
-        #valid_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_valid_triples+inverse.pt', mode='load')
-    else:
-        train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
-        test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
 
 if args.graph != None:
     kg = KG(ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev, add_inverse_edges=add_inverse)
@@ -81,8 +69,10 @@ else:
     kg = KG(triples = triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
 nodes = kg.g.nodes()
 
+print('> Initializing Caption Encoder.')
 t_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 
+print('> Initializing Graph Encoder.')
 conf = {
     'kg': kg,
     'n_layers': 2,
@@ -95,6 +85,7 @@ conf = {
 }
 g_encoder = CompGCNWrapper(**conf)
 
+print('> Loading Pretrained CLIP Model.')
 clip = CLIP_KB(
     graph_encoder = g_encoder,
     text_encoder = t_encoder,
@@ -102,9 +93,9 @@ clip = CLIP_KB(
 ).to(dev)
 clip.load_state_dict(torch.load(args.load_model))
 try:
-    clip.graph_encoder.return_rel_embs = True
+    clip.g_encoder.return_rel_embs = True
 except:
-    print('Warnging: the graph encoder does not returns relation embeddings.')
+    print('# Warning: the graph encoder does not returns relation embeddings.')
 
 class CaptionEncodingData(Dataset):
 
@@ -128,45 +119,57 @@ class CaptionEncodingData(Dataset):
         return captions, torch.as_tensor(ids)
 
     def get_loader(self, batchsize=128):
-        return Dataloader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
+        return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
 
 with open(args.id2cap, 'r') as f:
-    ids, cap = list(zip(*json.load(id2cap).item()))
+    ids, cap = list(zip(*json.load(f).items()))
     ids = [ wid2idx[i] for i in ids ]
-    
+
+print('> Loading Tokenizer.')
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
 
 data = CaptionEncodingData(captions=cap, ids=ids, tokenizer=tokenizer)
 
-caption_encodings = {}
-for batch in tqdm(data.get_loader()):
-    with torch.autocast() and torch.no_grad():
+print('> Encoding Entity Captions.')
+index, caption_encodings = [], []
+bs = 64
+for batch in tqdm(data.get_loader(batchsize=bs)):
+    with autocast() and torch.no_grad():
         captions, ids = batch[0].to(dev), batch[1].to(dev)
         captions = clip.t_nn(captions)
-        caption_encodings.update(dict(zip(ids, captions)))
-print(caption_encodings)
+        caption_encodings.append(captions)
+        index.append(ids)
 
-index, caption_encodings = caption_encodings.items()
-index, caption_encodings = torch.as_tensor(index), torch.vstack(caption_encodings)
+index, caption_encodings = torch.cat(index), torch.nn.functional.normalize(torch.cat(caption_encodings), p=2, dim=-1)
 # REMEMBER TO NORMALIZE CAPTIONS AND NODE ENCODINGS BEFORE COMPARING/MAKING OPERATIONS ON THEM <------------
         
-LP_loader = Dataloader(
+LP_loader = DataLoader(
     test_data,
-    batch_size = 512,
+    batch_size = 32,
     shuffle = True,
     collate_fn = test_data.collate_fn
 )
 
+print('> Zero-shot Link Prediction.')
 ranks = []
-for batch, _ in tqdm(LP_loader()):
-    with torch.no_grad() and torch.autocast():
+for batch, _ in tqdm(LP_loader):
+    with torch.no_grad() and autocast():
         triples = batch.to(dev)
+        tail_mask = (triples[:,2].view(-1,1) == index) 
+        mask = (triples.view(-1,1,3)[:,:,[0,1]] == filter_triples[:,[0,1]]).all(-1)
+        mask = torch.vstack([
+            (filter_triples[mask[i]][:,2].view(-1,1) == index).sum(0).bool()
+            for i in range(mask.shape[0])
+        ])
+        mask = (tail_mask.logical_not() * mask.to(tail_mask.device)).bool()
         h, r, t = triples[:,0], triples[:,1], triples[:,2]
-        h, r = clip.g_encoder(h, r)
-        h = clip.g_mlp(h + r)
+        h, rel = clip.g_encoder(h)
+        r = rel[r]
+        h = torch.nn.functional.normalize(clip.g_mlp(h + r), p=2, dim=-1)
         # Normalization ?? Is it needed?
         distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
+        distances[mask] = 1e8
         prediction = index[distances.sort(-1)[1]]
         ranks.append((t.view(-1,1) == prediction).nonzero()[:,1])
         
@@ -180,5 +183,5 @@ metrics = {
     'hits@10': len((ranks <= 10).nonzero()) / len(ranks)
 }
 
-print(metrics)
+print(json.dumps(metrics, indent=2))
 

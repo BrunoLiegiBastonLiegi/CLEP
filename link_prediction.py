@@ -265,10 +265,10 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
         graph_embedding_model = model,
-        mode = 'Distmult',
+        #mode = 'Distmult',
         #mode = 'TransE',
         #mode = 'Rescal',
-        #mode = 'ConvE',
+        mode = 'ConvE',
         rel2idx = rel2idx,
         external_rel_embs = conf['return_rel_embs'] if graph_model == 'CompGCN' else False,
         one_to_N_scoring = args.one_to_N_scoring
@@ -279,7 +279,7 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     #batchsize = 128
     #batchsize = 8192
     #batchsize = 32768
-    lr = 1e-4
+    lr = 1e-3
     train_loss, test_loss, metrics = training_routine(
         model = LPmodel,
         step_f = step_f,
