@@ -55,9 +55,10 @@ class TransformerEncoder(torch.nn.Module):
 
 class CLIP_KB(torch.nn.Module):
 
-    def __init__(self, graph_encoder, text_encoder, hdim: int):
+    def __init__(self, graph_encoder, text_encoder, hdim: int, head_to_tail=False):
         super().__init__()
         self.hdim = hdim
+        self.h_to_t = head_to_tail
         # Temperature
         #self.register_parameter(
         #    name = 'T',
@@ -80,10 +81,17 @@ class CLIP_KB(torch.nn.Module):
 
     def forward(self, nodes, captions):
         self.T = min(self.T, 100)
-        #return ( normalize(self.g_mlp(self.g_encoder(nodes)), p=2, dim=-1),
-        #         normalize(self.t_mlp(self.t_encoder(captions)), p=2, dim=-1) )
-        return ( normalize(self.g_nn(nodes), p=2, dim=-1),
-                 normalize(self.t_nn(captions), p=2, dim=-1) )
+        if self.h_to_t:
+            ents, rel = self.g_encoder(nodes[:,0])
+            rel = rel[nodes[:,1]]
+            nodes = ents + rel
+            nodes = self.g_mlp(nodes)
+        else:
+            nodes = self.g_nn(nodes)
+        captions = self.t_nn(captions)
+        return normalize(nodes, p=2, dim=-1), normalize(captions, p=2, dim=-1)
+        #return ( normalize(self.g_nn(nodes), p=2, dim=-1),
+        #         normalize(self.t_nn(captions), p=2, dim=-1) )
 
 class PretrainedGraphEncoder(torch.nn.Module):
 

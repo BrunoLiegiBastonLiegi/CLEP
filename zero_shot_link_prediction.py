@@ -8,6 +8,7 @@ from torch.cuda.amp import autocast
 from tqdm import tqdm
 from utils import  KG
 from torch.utils.data import Dataset
+import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
@@ -84,6 +85,7 @@ conf = {
     #'return_rel_embs' : False
 }
 g_encoder = CompGCNWrapper(**conf)
+baseline = CompGCNWrapper(**conf) # Just use a randomly initialized CompGCN as baseline
 
 print('> Loading Pretrained CLIP Model.')
 clip = CLIP_KB(
@@ -185,3 +187,76 @@ metrics = {
 
 print(json.dumps(metrics, indent=2))
 
+LPmodel = LinkPredictionModel(
+        graph_embedding_model = baseline,
+        mode = 'Distmult',
+        #mode = 'TransE',
+        #mode = 'Rescal',
+        #mode = 'ConvE',
+        rel2idx = rel2idx,
+        external_rel_embs = True,
+        one_to_N_scoring = True
+    ).to(dev)
+
+def eval_f(model, data):
+    global filter_triples
+    global nodes
+
+    data.triples = data.true_triples
+    dataloader = DataLoader(
+        data,
+        batch_size = 512,
+        shuffle = True,
+        collate_fn = test_data.collate_fn
+    )
+    
+    ranks = {'left': {'raw': [], 'filtered': []}, 'right': {'raw': [], 'filtered': []}}
+    for i, (batch, _) in enumerate(tqdm(dataloader)):
+        triples = batch.to(dev)
+        with torch.no_grad():
+            for mode, side in zip(('head', 'tail'), ('left', 'right')):
+                mask, raw_scores, filter_scores = model.score_candidates(
+                    triples = triples,
+                    candidates = nodes,
+                    mode = mode,
+                    filter = filter_triples
+                )
+                raw_scores, filter_scores = torch.sigmoid(raw_scores), torch.sigmoid(filter_scores) 
+                ranks[side]['raw'].append((raw_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+                ranks[side]['filtered'].append((filter_scores.sort(dim=-1, descending=True, stable=False).indices == mask.nonzero()[:,1].view(-1,1)).nonzero()[:,1])
+
+    for side in ('left', 'right'):
+        ranks[side]['raw'] = torch.cat(ranks[side]['raw']).view(-1) + 1 # +1 since the position starts counting from zero
+        ranks[side]['filtered'] = torch.cat(ranks[side]['filtered']).view(-1) + 1 # +1 since the position starts counting from zero
+    left_metrics = { k: {
+        'mrr': (1/v).mean(dtype=float).item(),
+        'mean_rank': v.mean(dtype=float).item(),
+        'hits@1': len((v == 1).nonzero()) / len(v),
+        'hits@3': len((v <= 3).nonzero()) / len(v),
+        'hits@10': len((v <= 10).nonzero()) / len(v)
+    } for k,v in ranks['left'].items()}
+    right_metrics = { k: {
+        'mrr': (1/v).mean(dtype=float).item(),
+        'mean_rank': v.mean(dtype=float).item(),
+        'hits@1': len((v == 1).nonzero()) / len(v),
+        'hits@3': len((v <= 3).nonzero()) / len(v),
+        'hits@10': len((v <= 10).nonzero()) / len(v)
+    } for k,v in ranks['right'].items()
+                     }
+    metrics = { type: {
+        k: 0.5 * (right_metrics[type][k] + left_metrics[type][k])
+        for k in right_metrics[type].keys()
+    } for type in ('raw', 'filtered')
+               }
+    for d, side in zip((right_metrics, left_metrics), ('right', 'left')):
+        for type in ('raw', 'filtered'):
+            for k, v in d[type].items():
+                metrics[type][side+'_'+k] = v
+    return metrics, ranks['right']['filtered']
+
+baseline_metrics, baseline_ranks = eval_f(LPmodel, test_data)
+
+bins = 100
+plt.hist(ranks.cpu().numpy(), bins=bins)
+plt.hist(baseline_ranks.cpu().numpy(), bins=bins)
+plt.show()

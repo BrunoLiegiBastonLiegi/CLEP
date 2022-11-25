@@ -1,5 +1,5 @@
 import torch, argparse, json, random, time, pickle, numpy
-from dataset import CLIPDataset
+from dataset import CLIPDataset, LinkPredictionDataset
 from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from transformers import GPT2Tokenizer, BertTokenizer
 from torch.utils.data import DataLoader
@@ -17,6 +17,8 @@ parser.add_argument('--entity_index', default=None, help='Path to relations inde
 parser.add_argument('--rel_index', default=None, help='Path to relations index file.')
 parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
+parser.add_argument('--head_to_tail', action='store_true')
+parser.add_argument('--entities', help='Path to entities file.')
 
 args = parser.parse_args()
 
@@ -42,18 +44,48 @@ if args.rel_index != None:
         rel2idx = json.load(f)
         
 # Train and Test data
-train_data = CLIPDataset(
-    datafile = args.train_data,
-    tokenizer = tokenizer,
-    entity2idx = wid2idx,
-    device = dev
-)
-test_data = CLIPDataset(
-    datafile = args.test_data,
-    tokenizer = tokenizer,
-    entity2idx = wid2idx,
-    device = dev
-)
+if args.head_to_tail:
+    
+    train_triples = LinkPredictionDataset(
+        datafile = args.train_data, 
+        entity2idx = wid2idx,
+        rel2idx = rel2idx,
+        add_inverse_edges = True
+    ).triples
+    train_data = CLIPDataset(
+        datafile = args.entities,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        triples = train_triples,
+        device = dev
+    )
+
+    test_triples = LinkPredictionDataset(
+        datafile = args.test_data, 
+        entity2idx = wid2idx,
+        rel2idx = rel2idx,
+        add_inverse_edges = True
+    ).triples
+    test_data = CLIPDataset(
+        datafile = args.entities,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        triples = test_triples,
+        device = dev
+    )
+else:
+    train_data = CLIPDataset(
+        datafile = args.train_data,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        device = dev
+    )
+    test_data = CLIPDataset(
+        datafile = args.test_data,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        device = dev
+    )
 
 print('> Initializing the model.')
 # Graph encoder
@@ -67,6 +99,11 @@ if  args.graph != None:
     kg.build_from_file(args.graph)
     #torch.save(kg.node_feat, 'data/FB15k-237/initial_node_features.pt')
     #kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
+else:
+    try:
+        kg = KG(triples = train_triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
+    except:
+        print('> Warning: no data available for building the graph.')
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
@@ -79,7 +116,7 @@ if graph_model == 'CompGCN':
         'hdim': 200,
         'num_bases': -1,
         'comp_fn' : 'sub',
-        'return_rel_embs':  False
+        'return_rel_embs':  True
     }
     graph_encoder = CompGCNWrapper(**conf)
     
@@ -94,12 +131,19 @@ elif graph_model == 'RGCN':
         'num_bases': 64
     }
     graph_encoder = RGCN(**conf)
-    
+
+if args.head_to_tail:
+    assert graph_model == 'CompGCN' and graph_encoder.return_rel_embs, "Head-to-Tail pretraining is only supported for CompGCN models with return_rel_embs=True"
 # Caption encoder
 text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 #text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
 # CLIP
-model = CLIP_KB(graph_encoder=graph_encoder, text_encoder=text_encoder, hdim=200).to(dev)
+model = CLIP_KB(
+    graph_encoder=graph_encoder,
+    text_encoder=text_encoder,
+    hdim=200,
+    head_to_tail=args.head_to_tail
+).to(dev)
 
 #original_node_feat = graph_encoder.model.n_embds.clone().cpu()
 
@@ -119,7 +163,7 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 32
+    epochs = 5
     batchsize = 200
     #batchsize = 128
     #batchsize = 64

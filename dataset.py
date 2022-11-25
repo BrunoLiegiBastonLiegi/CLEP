@@ -9,17 +9,29 @@ from dgl.sampling import global_uniform_negative_sampling
 
 class CLIPDataset(Dataset):
 
-    def __init__(self, datafile: str, tokenizer, entity2idx: dict, device: torch.device = torch.device('cpu')):
-        if datafile[-4:] == '.pkl': 
-            with open(datafile, 'rb') as f:
-                self.data = list(pickle.load(f).values())
-        elif datafile[-5:] == '.json':
+    def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, device: torch.device = torch.device('cpu')):
+        if triples == None:
+            if datafile[-4:] == '.pkl': 
+                with open(datafile, 'rb') as f:
+                    self.data = list(pickle.load(f).values())
+            elif datafile[-5:] == '.json':
+                with open(datafile, 'r') as f:
+                    self.data = list(json.load(f).values())
+        else:
             with open(datafile, 'r') as f:
-                self.data = list(json.load(f).values())
+                idx2cap = {
+                    entity2idx[v['wikidata_id']]: v['caption']
+                    for v in json.load(f).values()
+                    }
+            self.data = []
+            for t in triples:
+                cap = idx2cap[t[2].item()]
+                if cap is not None:
+                    self.data.append((t[:2], cap))
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
-        self.discard_incomplete()
+        #self.discard_incomplete()
         
     def __len__(self):
         return len(self.data)
@@ -48,13 +60,19 @@ class CLIPDataset(Dataset):
 
     def collate_fn(self, batch: list):
         inputs = {'captions':[], 'entities':[]}
+        flag = type(batch[0]) == tuple
         for item in batch:
-            inputs['captions'].append(item['caption'])
-            eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
-            inputs['entities'].append(self.e2idx[eid])
-        inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt').to(self.dev)
-        inputs['entities'] = torch.as_tensor(inputs['entities']).to(self.dev)
-        labels = torch.arange(len(batch)).to(self.dev)
+            if flag:
+                inputs['captions'].append(item[1])
+                inputs['entities'].append(item[0])
+            else:
+                inputs['captions'].append(item['caption'])
+                eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
+                inputs['entities'].append(self.e2idx[eid])
+        inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
+        #inputs['entities'] = torch.as_tensor(inputs['entities'])#.to(self.dev)
+        inputs['entities'] = torch.vstack(inputs['entities'])
+        labels = torch.arange(len(batch))#.to(self.dev)
         return inputs, labels
         
 
