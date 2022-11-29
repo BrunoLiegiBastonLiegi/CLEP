@@ -10,8 +10,9 @@ from tqdm import tqdm
 from utils import training_routine, KG
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
-parser.add_argument('--train_data', help='Path to train data file.')
-parser.add_argument('--test_data', help='Path to test data file.')
+parser.add_argument('--dataset', default=None)
+parser.add_argument('--train_data', default=None, help='Path to train data file.')
+parser.add_argument('--test_data', default=None, help='Path to test data file.')
 parser.add_argument('--graph_embeddings', default=None, help='Path to the pretrained graph embedding file.')
 parser.add_argument('--entity_index', default=None, help='Path to relations index file.')
 parser.add_argument('--rel_index', default=None, help='Path to relations index file.')
@@ -19,8 +20,21 @@ parser.add_argument('--load_model', default=None, help='Path to caption pretrain
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--head_to_tail', action='store_true')
 parser.add_argument('--entities', help='Path to entities file.')
+parser.add_argument('--batchsize', help='Batchsize.', type=int)
+parser.add_argument('--save_model', help='Save model to.')
 
 args = parser.parse_args()
+
+if args.dataset is not None:
+    args.entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
+    args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
+    args.entities = 'data/{}/pretraining/entities.json'.format(args.dataset)
+    if args.head_to_tail:
+        args.train_data = 'data/{}/link-prediction/train.json'.format(args.dataset)
+        args.test_data = 'data/{}/link-prediction/test.json'.format(args.dataset)
+    else:
+        args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
+        args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
 
 # Set device for computation
 if torch.cuda.is_available():
@@ -39,9 +53,8 @@ print('> Preparing the data.')
 # Load index mapping
 with open(args.entity_index, 'r') as f:
     wid2idx = json.load(f)
-if args.rel_index != None:
-    with open (args.rel_index, 'r') as f:
-        rel2idx = json.load(f)
+with open (args.rel_index, 'r') as f:
+    rel2idx = json.load(f)
         
 # Train and Test data
 if args.head_to_tail:
@@ -97,13 +110,11 @@ inverse_edges = True
 if  args.graph != None:
     kg = KG(embedding_dim=200, ent2idx=wid2idx, rel2idx=rel2idx, dev=dev, add_inverse_edges=inverse_edges)
     kg.build_from_file(args.graph)
-    #torch.save(kg.node_feat, 'data/FB15k-237/initial_node_features.pt')
-    #kg.node_feat = torch.load('data/FB15k-237/initial_node_features.pt')
 else:
     try:
         kg = KG(triples = train_triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
     except:
-        print('> Warning: no data available for building the graph.')
+        assert False, 'No data provided for building the graph, try using the --graph argument.'
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
@@ -116,7 +127,7 @@ if graph_model == 'CompGCN':
         'hdim': 200,
         'num_bases': -1,
         'comp_fn' : 'sub',
-        'return_rel_embs':  True
+        'return_rel_embs':  args.head_to_tail
     }
     graph_encoder = CompGCNWrapper(**conf)
     
@@ -163,8 +174,8 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 5
-    batchsize = 200
+    epochs = 32
+    batchsize = args.batchsize
     #batchsize = 128
     #batchsize = 64
     
@@ -179,7 +190,7 @@ if args.load_model == None:
         accum_iter = 1,
         dev = dev
     )
-    model_name = input('> Save model to:\n\t')
+    model_name = 'tmp.pt' if args.save_model is None else args.save_model#input('> Save model to:\n\t')
     torch.save(model.state_dict(), model_name)
     #torch.save(model.state_dict(),
     #           '{}_fb15k237_{}_layers-{}_{}-{}_epochs.pt'.format(
@@ -207,8 +218,8 @@ with torch.no_grad():
     fig, ax = plt.subplots(1,1)
     model.eval()
     for batch, label in test_loader:
-        graph_out, text_out = model(batch['entities'], batch['captions'])
-        original_points.append(graph_encoder(batch['entities']).detach().cpu())
+        graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
+        original_points.append(graph_encoder(batch['entities'])[0].detach().cpu())
         points.append(graph_out.detach().cpu()) # points for space visualization
         entities.append(batch['entities'].detach().cpu())
         captions += tokenizer.batch_decode(batch['captions']['input_ids'].detach().cpu(), skip_special_tokens=True, clean_up_tokenization_spaces=True)
