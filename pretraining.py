@@ -20,8 +20,9 @@ parser.add_argument('--load_model', default=None, help='Path to caption pretrain
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--head_to_tail', action='store_true')
 parser.add_argument('--entities', help='Path to entities file.')
-parser.add_argument('--batchsize', help='Batchsize.', type=int)
+parser.add_argument('--batchsize', help='Batchsize.', default=128, type=int)
 parser.add_argument('--save_model', help='Save model to.')
+parser.add_argument('--graph_encoder', default='RGCN')
 
 args = parser.parse_args()
 
@@ -29,9 +30,10 @@ if args.dataset is not None:
     args.entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
     args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
     args.entities = 'data/{}/pretraining/entities.json'.format(args.dataset)
+    args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
     if args.head_to_tail:
-        args.train_data = 'data/{}/link-prediction/train.json'.format(args.dataset)
-        args.test_data = 'data/{}/link-prediction/test.json'.format(args.dataset)
+        args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+        args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
     else:
         args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
@@ -118,7 +120,7 @@ else:
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
-graph_model = 'CompGCN'
+graph_model = args.graph_encoder
 if graph_model == 'CompGCN':
     conf = {
         'kg': kg,

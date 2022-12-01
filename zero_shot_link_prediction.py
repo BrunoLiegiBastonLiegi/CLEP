@@ -70,6 +70,9 @@ else:
     kg = KG(triples = triples, ent2idx=wid2idx, rel2idx=rel2idx, embedding_dim = 200, dev=dev)
 nodes = kg.g.nodes()
 
+for d in (train_data, test_data, valid_data):
+    d.triples = d.true_triples
+
 print('> Initializing Caption Encoder.')
 t_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
 
@@ -185,8 +188,6 @@ metrics = {
     'hits@10': len((ranks <= 10).nonzero()) / len(ranks)
 }
 
-print(json.dumps(metrics, indent=2))
-
 LPmodel = LinkPredictionModel(
         graph_embedding_model = baseline,
         mode = 'Distmult',
@@ -202,7 +203,7 @@ def eval_f(model, data):
     global filter_triples
     global nodes
 
-    data.triples = data.true_triples
+    #data.triples = data.true_triples
     dataloader = DataLoader(
         data,
         batch_size = 512,
@@ -256,7 +257,16 @@ def eval_f(model, data):
 
 baseline_metrics, baseline_ranks = eval_f(LPmodel, test_data)
 
+print('--- CompGCN Baseline ---')
+print(json.dumps({k:v for k, v in baseline_metrics['filtered'].items() if 'right' in k}, indent=2))
+print('--- CP Pretrained CompGCN ---')
+print(json.dumps(metrics, indent=2))
+
+print(ranks.shape)
+print(baseline_ranks.shape)
 bins = 100
-plt.hist(ranks.cpu().numpy(), bins=bins)
-plt.hist(baseline_ranks.cpu().numpy(), bins=bins)
+dens = True
+plt.hist(baseline_ranks.cpu().numpy(), bins=bins, density=dens, alpha=0.5)
+plt.hist(ranks.cpu().numpy(), bins=bins, density=dens, alpha=0.5)
+#plt.yscale('log')
 plt.show()

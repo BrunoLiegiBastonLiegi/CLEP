@@ -10,6 +10,7 @@ from dgl.sampling import global_uniform_negative_sampling
 class CLIPDataset(Dataset):
 
     def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, device: torch.device = torch.device('cpu')):
+        self.h_to_t = False
         if triples == None:
             if datafile[-4:] == '.pkl': 
                 with open(datafile, 'rb') as f:
@@ -17,7 +18,11 @@ class CLIPDataset(Dataset):
             elif datafile[-5:] == '.json':
                 with open(datafile, 'r') as f:
                     self.data = list(json.load(f).values())
+            for d in self.data:
+                if d['caption'] is None:
+                    d['caption'] = 'Caption not available.'
         else:
+            self.h_to_t = True
             with open(datafile, 'r') as f:
                 idx2cap = {
                     entity2idx[v['wikidata_id']]: v['caption']
@@ -28,6 +33,8 @@ class CLIPDataset(Dataset):
                 cap = idx2cap[t[2].item()]
                 if cap is not None:
                     self.data.append((t[:2], cap))
+                else:
+                    self.data.append((t[:2], 'Caption not available.'))
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
@@ -60,9 +67,8 @@ class CLIPDataset(Dataset):
 
     def collate_fn(self, batch: list):
         inputs = {'captions':[], 'entities':[]}
-        flag = type(batch[0]) == tuple
         for item in batch:
-            if flag:
+            if self.h_to_t:
                 inputs['captions'].append(item[1])
                 inputs['entities'].append(item[0])
             else:
@@ -71,7 +77,7 @@ class CLIPDataset(Dataset):
                 inputs['entities'].append(self.e2idx[eid])
         inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
         #inputs['entities'] = torch.as_tensor(inputs['entities'])#.to(self.dev)
-        inputs['entities'] = torch.vstack(inputs['entities'])
+        inputs['entities'] = torch.vstack(inputs['entities']) if self.h_to_t else torch.as_tensor(inputs['entities'])
         labels = torch.arange(len(batch))#.to(self.dev)
         return inputs, labels
         

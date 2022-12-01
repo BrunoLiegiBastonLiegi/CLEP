@@ -109,11 +109,11 @@ def main(args):
     else:
         device = "cpu"
 
-    with open('../data/FB15k-237/_wid2idx.json', 'r') as f:
+    with open(args.entity_index, 'r') as f:
         ent2idx = json.load(f)
-    with open ('../data/FB15k-237/link-prediction/rel2idx.json', 'r') as f:
+    with open (args.rel_index, 'r') as f:
         rel2idx = json.load(f)
-        
+
     # construct graph, split in/out edges and prepare train/validation/test data_loader
     data = Data(
         args.dataset, args.lbl_smooth, args.num_workers, args.batch_size, ent2idx=ent2idx, rel2idx=rel2idx
@@ -128,7 +128,7 @@ def main(args):
     if args.load_model != None:
         # all this just to load a pretrained compgcn is really annoying
         kg = KG(embedding_dim=200, ent2idx=ent2idx, rel2idx=rel2idx, dev=device, add_inverse_edges=True)
-        kg.build_from_file('FB15k-237/train.txt')
+        kg.build_from_file('./' + args.dataset + '/train.txt')
         graph = kg.g
         _ = GPT2CaptionEncoder(pretrained_model='gpt2')
         conf = {
@@ -244,6 +244,7 @@ def main(args):
     test_results = evaluate(
         compgcn_model, graph, device, data_iter, split="test"
     )
+    results['test'] = test_results
     print(
         "Test MRR: {:.5}\n, MR: {:.10}\n, H@10: {:.5}\n, H@3: {:.5}\n, H@1: {:.5}\n".format(
             test_results["mrr"],
@@ -253,8 +254,10 @@ def main(args):
             test_results["hits@1"],
         )
     )
-    json.dumps(results, args.save_res, indent=2)
+    with open(args.save_res, 'w') as f:
+        json.dump(results, f, indent=2)
 
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Parser For Arguments",
@@ -401,6 +404,8 @@ if __name__ == "__main__":
         help='Path to model to load.'
     )
     parser.add_argument('--save_res')
+    parser.add_argument('--entity_index')
+    parser.add_argument('--rel_index')
 
     args = parser.parse_args()
 
