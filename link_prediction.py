@@ -9,6 +9,7 @@ from utils import training_routine, KG
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
+parser.add_argument('--dataset', default=None)
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
 parser.add_argument('--valid_data', help='Path to test data file.')
@@ -20,7 +21,26 @@ parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--save_results', default='lp_results.json')
 parser.add_argument('--one_to_N_scoring', action='store_true')
+parser.add_argument('--train_corrupted_triples', help='Path to train corrupted triples file.')
+parser.add_argument('--test_corrupted_triples', help='Path to test corrupted triples file.')
+parser.add_argument('--valid_corrupted_triples', help='Path to valid corrupted triples file.')
+parser.add_argument('--LP_head', default='Distmult')
+parser.add_argument('--batchsize', default=128, type=int)
+parser.add_argument('--epochs', default=50, type=int)
+
 args = parser.parse_args()
+
+if args.dataset is not None:
+    args.entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
+    args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
+    #args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
+    args.valid_data = 'data/{}/link-prediction/valid.txt'.format(args.dataset)
+    args.train_corrupted_triples = 'data/{}/link-prediction/corrupted_train_triples+inverse.pt'.format(args.dataset)
+    args.test_corrupted_triples = 'data/{}/link-prediction/corrupted_test_triples+inverse.pt'.format(args.dataset)
+    args.valid_corrupted_triples = 'data/{}/link-prediction/corrupted_valid_triples+inverse.pt'.format(args.dataset)
+    
 
 # Set device for computation
 if torch.cuda.is_available():
@@ -65,17 +85,14 @@ filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.tr
 #test_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 #valid_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 if not args.one_to_N_scoring:
-    if add_inverse:
-        #train_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_train_triples.pt', mode='load')
-        #test_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_test_triples.pt', mode='load')
-        #valid_data.generate_corrupted_triples('data/FB15k-237/link-prediction/corrupted_valid_triples.pt', mode='load')
-        train_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_train_triples+inverse.pt', mode='load')
-        test_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_test_triples+inverse.pt', mode='load')
-        valid_data.generate_corrupted_triples('data/WN18RR/link-prediction/corrupted_valid_triples+inverse.pt', mode='load')
-    else:
-        train_data.generate_corrupted_triples('data/FB15k-237/corrupted_train+valid_triples.pt', mode='load')
-        test_data.generate_corrupted_triples('data/FB15k-237/corrupted_test_triples.pt', mode='load')
-
+    for d,a in zip(
+            (train_data, test_data, valid_data),
+            (args.train_corrupted_triples, args.test_corrupted_triples, args.valid_corrupted_triples)
+    ):
+        try:
+            d.generate_corrupted_triples(a, mode='load')
+        except:
+            d.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 
 if args.graph_embeddings != None:
     with open(args.graph_embeddings, 'rb') as f:
@@ -265,20 +282,15 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
         graph_embedding_model = model,
-        #mode = 'Distmult',
-        #mode = 'TransE',
-        #mode = 'Rescal',
-        mode = 'ConvE',
+        mode = args.LP_head,
         rel2idx = rel2idx,
         external_rel_embs = conf['return_rel_embs'] if graph_model == 'CompGCN' else False,
         one_to_N_scoring = args.one_to_N_scoring
     ).to(dev)
     # train
-    epochs = 50
-    batchsize = 1024
-    #batchsize = 128
-    #batchsize = 8192
-    #batchsize = 32768
+    epochs = args.epochs
+    batchsize = args.batchsize
+
     lr = 1e-3
     train_loss, test_loss, metrics = training_routine(
         model = LPmodel,
