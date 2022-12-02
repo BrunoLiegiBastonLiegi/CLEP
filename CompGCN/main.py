@@ -185,6 +185,7 @@ def main(args):
     best_mrr = 0.0
     kill_cnt = 0
     results = {}
+    saved_model_name = "comp_link" + "_" + args.dataset + "_dev-" + device
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
         compgcn_model.train()
@@ -223,7 +224,7 @@ def main(args):
             best_mrr = val_results["mrr"]
             best_epoch = epoch
             th.save(
-                compgcn_model.state_dict(), "comp_link" + "_" + args.dataset
+                compgcn_model.state_dict(), saved_model_name
             )
             kill_cnt = 0
             print("saving model...")
@@ -240,7 +241,7 @@ def main(args):
 
     # test use the best model
     compgcn_model.eval()
-    compgcn_model.load_state_dict(th.load("comp_link" + "_" + args.dataset))
+    compgcn_model.load_state_dict(th.load(saved_model_name))
     test_results = evaluate(
         compgcn_model, graph, device, data_iter, split="test"
     )
