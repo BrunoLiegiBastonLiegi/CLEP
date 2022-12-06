@@ -23,6 +23,7 @@ parser.add_argument('--entities', help='Path to entities file.')
 parser.add_argument('--batchsize', help='Batchsize.', default=128, type=int)
 parser.add_argument('--save_model', help='Save model to.')
 parser.add_argument('--graph_encoder', default='RGCN')
+parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
 
 args = parser.parse_args()
 
@@ -38,6 +39,14 @@ if args.dataset is not None:
         args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
 
+if args.save_model is None:
+    args.save_model = '{}_{}bs_{}e_{}'.format(args.graph_encoder, args.batchsize, args.epochs, args.dataset)
+    if args.head_to_tail:
+        args.save_model += '_h_to_t'
+    args.save_model += '.pt'
+
+print(args.save_model)
+        
 # Set device for computation
 if torch.cuda.is_available():
     dev = torch.device('cuda:0')
@@ -176,10 +185,8 @@ def step_f(model, batch, label, dev):
     return loss
 
 if args.load_model == None:
-    epochs = 32
+    epochs = args.epochs
     batchsize = args.batchsize
-    #batchsize = 128
-    #batchsize = 64
     
     training_routine(
         model = model,
@@ -192,7 +199,7 @@ if args.load_model == None:
         accum_iter = 1,
         dev = dev
     )
-    model_name = 'tmp.pt' if args.save_model is None else args.save_model#input('> Save model to:\n\t')
+    model_name = '{}_{}bs_{}e_{}.pt'.format(args.graph_encoder, args.batchsize, args.epochs, args.dataset) if args.save_model is None else args.save_model#input('> Save model to:\n\t')
     torch.save(model.state_dict(), model_name)
     #torch.save(model.state_dict(),
     #           '{}_fb15k237_{}_layers-{}_{}-{}_epochs.pt'.format(

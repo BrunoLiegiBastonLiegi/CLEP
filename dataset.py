@@ -138,7 +138,7 @@ class LinkPredictionDataset(Dataset):
     def __getitem__(self, idx: int):
         return self.triples[idx]
 
-    def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', pos : list = ['head','tail'], w: int = 1):
+    def generate_corrupted_triples(self, triples : torch.tensor = None, mode: str ='gen', pos : list = ['head','tail'], w: int = 1, save=None):
         assert mode in ('gen', 'load')
         if mode == 'gen':
             pos2idx = {'head':0, 'tail':2}
@@ -148,8 +148,8 @@ class LinkPredictionDataset(Dataset):
                 corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(self.true_triples[:,:3]) ])
             else:
                 corrupted_triples = torch.vstack([ self._corrupt_triple(t, triples, position=pos, w=w) for t in tqdm(torch.vstack((self.true_triples[:,:3], self.inv_triples[:,:3]))) ])
-            name = input('Save corrupted triples to:\n\t')
-            torch.save(corrupted_triples, name)
+            if save is not None:
+                torch.save(corrupted_triples, save)
         elif mode == 'load':
             print(f'> Loading corrupted triples from {triples}.')
             corrupted_triples = torch.load(triples)
@@ -172,37 +172,6 @@ class LinkPredictionDataset(Dataset):
                     elif val != None:
                         break
         return torch.vstack(ct)
-
-    def generate_evaluation_triples(self, triples: torch.tensor = None, corrupt: str = 'tail', mode: str ='gen'):
-        """Takes too much memory.
-        """
-        assert corrupt in ('head', 'relation', 'tail')
-        corr_idx = {'head': 0, 'relation': 1, 'tail': 2}
-        nodes = torch.tensor(list(self.e2idx.values()))
-        # correct triples used for checking
-        check_triples = torch.vstack((self.true_triples[:,:3], triples[:,:3])) if triples != None else self.true_triples[:,:3]
-        # new head/rel/tail
-        print('Generating new_el')
-        new_el = torch.vstack([nodes for j in range(self.true_triples.shape[0])]).T.reshape(-1,1)
-        # corrupted triples
-        print('Generating corrupted triples')
-        corr_t = torch.vstack([self.true_triples[:,:3] for j in range(nodes.shape[0])]) # copy and repeat the correct triples
-        corr_t[:,corr_idx[corrupt]] = new_el[:,0] # corrupt the correct triples by injecting the new elements
-        del nodes, new_el
-        corr_t = set(zip(corr_t[:,0].tolist(), corr_t[:,1].tolist(), corr_t[:,2].tolist()))
-        print(f'> Intersection with check_triples')
-        corr_t = torch.as_tensor(list((corr_t.symmetric_difference(check_triples)).intersection(corr_t)))
-        # check which of the corrupted triples don't appear in the corret ones
-        #for t in tqdm(corr_t):
-        #    ((x!=check_triples).sum(-1) == 0).sum().bool()
-        #idx = torch.vstack(list(map(
-        #    lambda x: ((x!=check_triples).sum(-1) == 0).sum().bool(),
-        #    corr_t
-        #))).flatten()
-        # keep only the corrupted triples not present in the correct ones
-        #corr_t = corr_t[~idx,:]
-        # eliminate repeated triples
-        #corr_t = torch.unique(corr_t, dim=0)
     
     def collate_fn(self, batch: list):
         t = torch.vstack(batch)

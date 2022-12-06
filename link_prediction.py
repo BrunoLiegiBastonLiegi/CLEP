@@ -19,7 +19,7 @@ parser.add_argument('--rel_index', help='Path to relations index file.')
 parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
-parser.add_argument('--save_results', default='lp_results.json')
+parser.add_argument('--save_results', default=None)
 parser.add_argument('--one_to_N_scoring', action='store_true')
 parser.add_argument('--train_corrupted_triples', help='Path to train corrupted triples file.')
 parser.add_argument('--test_corrupted_triples', help='Path to test corrupted triples file.')
@@ -42,6 +42,14 @@ if args.dataset is not None:
     args.valid_corrupted_triples = 'data/{}/link-prediction/corrupted_valid_triples+inverse.pt'.format(args.dataset)
     
 
+if args.save_results is None:
+    args.save_results = 'lp_results_{}_{}+{}_{}bs_{}e'.format(args.dataset, args.graph_encoder, args.LP_head, args.batchsize, args.epochs)
+    if args.one_to_N_scoring:
+        args.save_results += '_1_to_N'
+    args.save_results += '.json'
+
+print(args.save_results)    
+    
 # Set device for computation
 if torch.cuda.is_available():
     dev = torch.device('cuda:0')
@@ -80,7 +88,7 @@ valid_data = LinkPredictionDataset(
 rel2idx = train_data.r2idx
 
 w = 2 # number of corrupted triples per positive triple
-filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.triples])[:,:3].to(dev)
+filter_triples = torch.cat([train_data.triples, test_data.triples, valid_data.triples])[:,:3]
 #train_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 #test_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
 #valid_data.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
@@ -92,8 +100,11 @@ if not args.one_to_N_scoring:
         try:
             d.generate_corrupted_triples(a, mode='load')
         except:
-            d.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2))
+            print('> File not found. Generating new corrupted triples file.')
+            d.generate_corrupted_triples(filter_triples, mode='gen', w=int(w/2), save=a)
 
+filter_triples = filter_triples.to(dev)
+            
 if args.graph_embeddings != None:
     with open(args.graph_embeddings, 'rb') as f:
         node_embeddings = pickle.load(f)
@@ -321,10 +332,6 @@ for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
         )
     else:
         results[name] = None
-
-#embs = get_embeddings(SemanticAugmentedModel, test_loader)
-#visualize_embeddings(torch.vstack(list(embs.values())), ax=ax[1])
-#plt.show()
 
 with open(args.save_results, 'w') as f:
     json.dump(results, f, indent=2)
