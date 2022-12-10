@@ -192,7 +192,8 @@ def main(args):
     if args.load_model is None:
         saved_model_name += "Baseline"
     else:
-        saved_model_name += args.load_model
+        tmp = args.load_model.split('/')[-1]
+        saved_model_name += tmp
     saved_model_name += "_{}_{}bs_{}e.json".format(args.dataset, args.batch, args.epoch)
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
