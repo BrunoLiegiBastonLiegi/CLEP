@@ -49,7 +49,7 @@ def predict(model, graph, device, data_iter, split="valid", mode="tail"):
                 )[b_range, obj]
             )
             ranks = ranks.float()
-            results["ranks"] = ranks
+            results["ranks"] = ranks.tolist()
             results["count"] = th.numel(ranks) + results.get("count", 0.0)
             results["mr"] = th.sum(ranks).item() + results.get("mr", 0.0)
             results["mrr"] = th.sum(1.0 / ranks).item() + results.get(
@@ -194,7 +194,7 @@ def main(args):
     else:
         tmp = args.load_model.split('/')[-1]
         saved_model_name += tmp
-    saved_model_name += "_{}_{}bs_{}e.json".format(args.dataset, args.batch, args.epoch)
+    saved_model_name += "_{}_{}bs_{}e.json".format(args.dataset, args.batch_size, args.max_epochs)
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
         compgcn_model.train()
@@ -265,7 +265,8 @@ def main(args):
         )
     )
     if args.save_res is None:
-        args.save_res = saved_model_name
+        args.save_res = "lp_results_" + saved_model_name
+    print(f'Saving results to: {args.save_res}')
     with open(args.save_res, 'w') as f:
         json.dump(results, f, indent=2)
 
