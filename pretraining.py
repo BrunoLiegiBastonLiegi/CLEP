@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind, mannwhitneyu
 from tqdm import tqdm
 from utils import training_routine, KG
+from torch.utils.data import Dataset
+
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--dataset', default=None)
@@ -35,6 +37,7 @@ if args.dataset is not None:
     if args.head_to_tail:
         args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
         args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
+        args.val_data = 'data/{}/link-prediction/valid.txt'.format(args.dataset)
     else:
         args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
@@ -75,12 +78,12 @@ if args.head_to_tail:
         entity2idx = wid2idx,
         rel2idx = rel2idx,
         add_inverse_edges = True
-    ).triples
+    )
     train_data = CLIPDataset(
         datafile = args.entities,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        triples = train_triples,
+        triples = train_triples.triples,
         device = dev
     )
 
@@ -89,14 +92,24 @@ if args.head_to_tail:
         entity2idx = wid2idx,
         rel2idx = rel2idx,
         add_inverse_edges = True
-    ).triples
+    )
     test_data = CLIPDataset(
         datafile = args.entities,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        triples = test_triples,
+        triples = test_triples.triples,
         device = dev
     )
+
+    valid_triples = LinkPredictionDataset(
+        datafile = args.val_data, 
+        entity2idx = wid2idx,
+        rel2idx = rel2idx,
+        add_inverse_edges = True
+    )
+
+    filter_triples = torch.cat([train_triples.triples, test_triples.triples, valid_triples.triples])[:,:3].to(dev)
+
 else:
     train_data = CLIPDataset(
         datafile = args.train_data,
@@ -184,6 +197,84 @@ def step_f(model, batch, label, dev):
     torch.cuda.empty_cache()
     return loss
 
+# Define Evaluation
+def eval_f(model, data):
+    global test_triples, filter_triples, dev
+    
+    LP_loader = DataLoader(
+        test_triples,
+        batch_size = 32,
+        shuffle = True,
+        collate_fn = data.collate_fn
+    )
+    
+    class CaptionEncodingData(Dataset):
+
+        def __init__(self, captions, ids, tokenizer):
+            self.ids = ids
+            self.captions = list(zip(ids,captions))
+            self.tok = tokenizer
+
+        def __len__(self):
+            return len(self.captions)
+        
+        def __getitem__(self, i):
+            return self.captions[i]
+        
+        def collate_fn(self, batch):
+            ids, captions = [], []
+            for item in batch:
+                ids.append(item[0])
+                captions.append(item[1])
+            captions = self.tok(text=captions, padding=True, return_tensors='pt')
+            return captions, torch.as_tensor(ids)
+
+        def get_loader(self, batchsize=128):
+            return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
+
+    capdata = CaptionEncodingData(list(data.idx2cap.values()), ids=list(data.idx2cap.keys()), tokenizer=data.tok)
+    index, caption_encodings = [], []
+    with torch.no_grad() and autocast():
+        for batch in tqdm(capdata.get_loader(batchsize=64)):
+            captions, ids = batch[0].to(dev), batch[1].to(dev)
+            captions = model.t_nn(captions)
+            caption_encodings.append(captions)
+            index.append(ids)
+    index, caption_encodings = torch.cat(index), torch.nn.functional.normalize(torch.cat(caption_encodings), p=2, dim=-1)
+            
+    ranks = []
+    for batch, _ in tqdm(LP_loader):
+        with torch.no_grad() and autocast():
+            triples = batch.to(dev)
+            tail_mask = (triples[:,2].view(-1,1) == index) 
+            mask = (triples.view(-1,1,3)[:,:,[0,1]] == filter_triples[:,[0,1]]).all(-1)
+            mask = torch.vstack([
+                (filter_triples[mask[i]][:,2].view(-1,1) == index).sum(0).bool()
+                for i in range(mask.shape[0])
+            ])
+            mask = (tail_mask.logical_not() * mask.to(tail_mask.device)).bool()
+            h, r, t = triples[:,0], triples[:,1], triples[:,2]
+            h, rel = model.g_encoder(h)
+            r = rel[r]
+            h = torch.nn.functional.normalize(model.g_mlp(h + r), p=2, dim=-1)
+            # Normalization ?? Is it needed?
+            distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
+            distances[mask] = 1e8
+            prediction = index[distances.sort(-1)[1]]
+            ranks.append((t.view(-1,1) == prediction).nonzero()[:,1])
+        
+    ranks = torch.cat(ranks).view(-1) + 1
+            
+    metrics = {
+        'mrr': (1/ranks).mean(dtype=float).item(),
+        'mean_rank': ranks.mean(dtype=float).item(),
+        'hits@1': len((ranks == 1).nonzero()) / len(ranks),
+        'hits@3': len((ranks <= 3).nonzero()) / len(ranks),
+        'hits@10': len((ranks <= 10).nonzero()) / len(ranks)
+    }
+    return metrics
+    
+
 if args.load_model == None:
     epochs = args.epochs
     batchsize = args.batchsize
@@ -191,6 +282,8 @@ if args.load_model == None:
     training_routine(
         model = model,
         step_f = step_f,
+        eval_f = eval_f if args.head_to_tail else None,
+        eval_each = 1,
         train_data = train_data,
         test_data = test_data,
         epochs = epochs,

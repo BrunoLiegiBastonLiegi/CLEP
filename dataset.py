@@ -24,13 +24,13 @@ class CLIPDataset(Dataset):
         else:
             self.h_to_t = True
             with open(datafile, 'r') as f:
-                idx2cap = {
-                    entity2idx[v['wikidata_id']]: v['caption']
+                self.idx2cap = {
+                    entity2idx[v['entity_id']]: v['caption']
                     for v in json.load(f).values()
-                    }
+                }
             self.data = []
             for t in triples:
-                cap = idx2cap[t[2].item()]
+                cap = self.idx2cap[t[2].item()]
                 if cap is not None:
                     self.data.append((t[:2], cap))
                 else:

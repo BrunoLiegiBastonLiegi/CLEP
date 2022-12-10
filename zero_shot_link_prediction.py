@@ -3,7 +3,6 @@ from transformers import GPT2Tokenizer, BertTokenizer
 from torch.utils.data import DataLoader
 from dataset import LinkPredictionDataset
 from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
-from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast
 from tqdm import tqdm
 from utils import  KG

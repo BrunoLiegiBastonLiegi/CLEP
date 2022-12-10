@@ -49,6 +49,7 @@ def predict(model, graph, device, data_iter, split="valid", mode="tail"):
                 )[b_range, obj]
             )
             ranks = ranks.float()
+            results["ranks"] = ranks
             results["count"] = th.numel(ranks) + results.get("count", 0.0)
             results["mr"] = th.sum(ranks).item() + results.get("mr", 0.0)
             results["mrr"] = th.sum(1.0 / ranks).item() + results.get(
@@ -72,6 +73,8 @@ def evaluate(model, graph, device, data_iter, split="valid"):
 
     # combine the head and tail prediction results
     # Metrics: MRR, MR, and Hit@k
+    results["left_ranks"] = left_results["ranks"]
+    results["right_ranks"] = right_results["ranks"]
     results["left_mr"] = round(left_results["mr"] / count, 5)
     results["left_mrr"] = round(left_results["mrr"] / count, 5)
     results["right_mr"] = round(right_results["mr"] / count, 5)
@@ -185,7 +188,12 @@ def main(args):
     best_mrr = 0.0
     kill_cnt = 0
     results = {}
-    saved_model_name = "comp_link" + "_" + args.dataset + "_dev-" + device
+    saved_model_name = "comp_link_"
+    if args.load_model is None:
+        saved_model_name += "Baseline"
+    else:
+        saved_model_name += args.load_model
+    saved_model_name += "_{}_{}bs_{}e.json".format(args.dataset, args.batch, args.epoch)
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
         compgcn_model.train()
@@ -255,6 +263,8 @@ def main(args):
             test_results["hits@1"],
         )
     )
+    if args.save_res is None:
+        args.save_res = saved_model_name
     with open(args.save_res, 'w') as f:
         json.dump(results, f, indent=2)
 

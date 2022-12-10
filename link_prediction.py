@@ -120,6 +120,7 @@ else:
 nodes = kg.g.nodes()
 
 graph_model = args.graph_encoder
+assert graph_model in ('RGCN', 'CompGCN'), 'Unsupported graph encoder, use RGCN or CompGCN instead.'
 print(f'> Using {graph_model} as graph encoder.')
 
 if graph_model == 'RGCN':
