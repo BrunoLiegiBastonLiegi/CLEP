@@ -1,5 +1,6 @@
 import json, sys, torch
 import matplotlib.pyplot as plt
+import numpy as np
 
 metrics = []
 for filename in sys.argv[1:]:
@@ -52,9 +53,25 @@ def append_metrics(source, dest, keys=('mean_rank', 'mrr', 'hits@1', 'hits@3', '
             #for k,v in items:
             
             for k in keys:
-                #dest[t][k].append(v)
-                dest[t][k].append(items[k])
-                
+                if k == 'mean_rank':
+                    try:
+                        dest[t][k].append(items[k])
+                    except:
+                        dest[t][k].append(items['mr'])
+                else:
+                    dest[t][k].append(items[k])
+
+test = []
+for m in metrics:
+    d = {}
+    for k,v in m.items():
+        if 'test' in v.keys():
+            d.update({k:v.pop('test')})
+        else:
+            ep = input(f'Missing \'test\' key, specify which epoch to calculate performance at.\n Possible choiches: {list(v.keys())}\n> ')
+            d.update({k:v[ep]})
+    test.append(d)
+            
 max_n_epochs = 0
 for m in metrics:
     for i in (0,1):
@@ -111,3 +128,58 @@ for metric, ax in zip(baseline[metric_type].keys(), axs.flatten()[:-1]):
         ax.set_title(metric)
 plt.savefig('lp_metrics.pdf', dpi=300, format='pdf', bbox_inches='tight')
 plt.show()
+
+
+# Ranks histogram and test metrics
+
+test_baseline, test_cpp = {}, {}
+for k in ('ranks','mean_rank', 'mrr', 'hits@1', 'hits@3', 'hits@10'):
+    test_baseline.update({k:[]})
+    test_cpp.update({k:[]})
+    for t in test:
+        for model_name, v in t.items():
+            try:
+                metrics = v['filtered']
+            except:
+                metrics = v
+            if k == 'ranks':
+                try:
+                    d = {k: metrics['right_ranks'] + metrics['left_ranks']}
+                except:
+                    print('No data for ranks found.')
+                    continue
+            elif k == 'mean_rank':
+                try:
+                    d = {k:metrics[k]}
+                except:
+                    d = {k:metrics['mr']}
+            else:
+                 d = {k:metrics[k]}   
+                
+            if 'baseline' in model_name.lower():
+                test_baseline[k].append(d[k])
+            else:
+                test_cpp[k].append(d[k])
+
+
+print('\t\t Baseline\t Caption Pretrained')
+
+for k in ('mean_rank', 'mrr', 'hits@1', 'hits@3', 'hits@10'):
+    if k == 'mean_rank':
+        print(f'{k}\t {int(np.mean(test_baseline[k]))}\t\t {int(np.mean(test_cpp[k]))}')
+    else:
+        print(f'{k}\t\t {np.mean(test_baseline[k]):.3f}\t\t {np.mean(test_cpp[k]):.3f}')
+
+if len(test_baseline['ranks']) > 0:
+    bins = 100000
+    cut = 25
+    ranks_baseline = torch.as_tensor(test_baseline['ranks']).flatten()
+    #ranks_baseline = ranks_baseline[ranks_baseline < cut]
+    ranks_cpp = torch.as_tensor(test_cpp['ranks']).flatten()
+    #ranks_cpp = ranks_cpp[ranks_cpp < cut]
+    plt.hist(ranks_baseline.numpy(), density=True, alpha=0.5, bins=bins)
+    plt.hist(ranks_cpp.numpy(), density=True, alpha=0.5, bins=bins)
+    plt.xlim(0,cut)
+    plt.show()
+
+

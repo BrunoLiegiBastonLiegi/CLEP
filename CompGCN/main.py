@@ -49,7 +49,7 @@ def predict(model, graph, device, data_iter, split="valid", mode="tail"):
                 )[b_range, obj]
             )
             ranks = ranks.float()
-            results["ranks"] = ranks.tolist()
+            results["ranks"] = ranks.tolist() + results.get("ranks", [])
             results["count"] = th.numel(ranks) + results.get("count", 0.0)
             results["mr"] = th.sum(ranks).item() + results.get("mr", 0.0)
             results["mrr"] = th.sum(1.0 / ranks).item() + results.get(
@@ -59,7 +59,6 @@ def predict(model, graph, device, data_iter, split="valid", mode="tail"):
                 results["hits@{}".format(k)] = th.numel(
                     ranks[ranks <= (k)]
                 ) + results.get("hits@{}".format(k), 0.0)
-
     return results
 
 
@@ -225,6 +224,8 @@ def main(args):
         val_results = evaluate(
             compgcn_model, graph, device, data_iter, split="valid"
         )
+        val_results.pop('left_ranks')
+        val_results.pop('right_ranks')
         t2 = time()
         results[epoch] = val_results
 
@@ -265,7 +266,7 @@ def main(args):
         )
     )
     if args.save_res is None:
-        args.save_res = "lp_results_" + saved_model_name
+        args.save_res = "lp_results_" + saved_model_name.replace('comp_link', '')
     print(f'Saving results to: {args.save_res}')
     with open(args.save_res, 'w') as f:
         json.dump(results, f, indent=2)
@@ -295,7 +296,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--opn",
         dest="opn",
-        default="ccorr",
+        default="sub",
         help="Composition Operation to be used in CompGCN",
     )
 
@@ -352,7 +353,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--init_dim",
         dest="init_dim",
-        default=100,
+        default=200,
         type=int,
         help="Initial dimension size for entities and relations",
     )
