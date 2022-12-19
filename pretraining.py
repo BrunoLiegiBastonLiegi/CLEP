@@ -43,12 +43,19 @@ if args.dataset is not None:
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
 
 if args.save_model is None:
-    args.save_model = '{}_{}bs_{}e_{}'.format(args.graph_encoder, args.batchsize, args.epochs, args.dataset)
+    args.save_model = 'saved/models/{}/pretraining/{}/{}_{}bs_{}e_{}'.format(
+        args.dataset,
+        args.graph_encoder,
+        args.graph_encoder,
+        args.batchsize,
+        args.epochs,
+        args.dataset
+    )
     if args.head_to_tail:
         args.save_model += '_h_to_t'
     args.save_model += '.pt'
 
-print(args.save_model)
+print(f'> Saving model to: {args.save_model}')
         
 # Set device for computation
 if torch.cuda.is_available():
@@ -292,8 +299,8 @@ if args.load_model == None:
         accum_iter = 1,
         dev = dev
     )
-    model_name = '{}_{}bs_{}e_{}.pt'.format(args.graph_encoder, args.batchsize, args.epochs, args.dataset) if args.save_model is None else args.save_model#input('> Save model to:\n\t')
-    torch.save(model.state_dict(), model_name)
+    os.makedirs(os.path.dirname(args.save_model), exist_ok=True)
+    torch.save(model.state_dict(), args.save_model)
     #torch.save(model.state_dict(),
     #           '{}_fb15k237_{}_layers-{}_{}-{}_epochs.pt'.format(
     #               model_name, rgcn_conf['n_layers'], rgcn_conf['rel_regularizer'], rgcn_conf['num_bases'], epochs)
@@ -365,26 +372,4 @@ with torch.no_grad():
     plt.show()
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')
 
-    # Latent space visualization
-    from utils import visualize_embeddings
-    fig, ax = plt.subplots(1,2, figsize=(24,16))
-    points = torch.vstack(points).numpy()
-    original_points = torch.vstack(original_points).numpy()
-    entities = torch.vstack(entities).numpy().flatten()
-    n_clusters = 30 # 50-60 appears to be the optimal number
-    c1 = visualize_embeddings(points, n_clusters, ax[0])
-    c2 = visualize_embeddings(original_points, n_clusters, ax[1])
-    plt.show()
-    
-    clusters_1 = {i:[] for i in range(n_clusters)}
-    clusters_2 = {i:[] for i in range(n_clusters)}
-    idx2wid = dict(zip(wid2idx.values(), wid2idx.keys()))
-    for e, c, cap in zip(entities, c1, captions):
-        clusters_1[c].append((idx2wid[e], cap))
-    for e, c, cap in zip(entities, c2, captions):
-        clusters_2[c].append((idx2wid[e], cap))
-    for k,v in clusters_1.items():
-        print(f'# CLUSTER {k}')
-        for c in random.choices(v, k=5):
-            print(c)
 

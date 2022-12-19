@@ -1,4 +1,4 @@
-import argparse, torch, json, pickle, time, random
+import argparse, torch, json, pickle, time, random, numpy
 from dataset import LinkPredictionDataset
 from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from torch.utils.data import DataLoader
@@ -7,6 +7,7 @@ from tqdm import tqdm
 from torchmetrics import F1Score
 from utils import training_routine, KG
 import matplotlib.pyplot as plt
+from os.path import basename
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--dataset', default=None)
@@ -27,6 +28,7 @@ parser.add_argument('--valid_corrupted_triples', help='Path to valid corrupted t
 parser.add_argument('--LP_head', default='Distmult')
 parser.add_argument('--batchsize', default=128, type=int)
 parser.add_argument('--epochs', default=50, type=int)
+parser.add_argument('--seed', type=int)
 
 args = parser.parse_args()
 
@@ -43,12 +45,28 @@ if args.dataset is not None:
     
 
 if args.save_results is None:
-    args.save_results = 'lp_results_{}_{}+{}_{}bs_{}e'.format(args.dataset, args.graph_encoder, args.LP_head, args.batchsize, args.epochs)
+    args.save_results = 'saved/LP_results/{}/{}/lp_results_{}_{}+{}_{}bs_{}e'.format(
+        args.dataset,
+        args.graph_encoder,
+        args.dataset,
+        args.graph_encoder,
+        args.LP_head,
+        args.batchsize,
+        args.epochs
+    )
     if args.one_to_N_scoring:
         args.save_results += '_1_to_N'
     args.save_results += '.json'
 
-print(args.save_results)    
+print(args)
+    
+print(f'Saving results to: {args.save_results}')    
+
+if args.seed is not None:
+    numpy.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+print(f'> Seed: {torch.seed()}')
+
     
 # Set device for computation
 if torch.cuda.is_available():
@@ -152,7 +170,7 @@ elif graph_model == 'CompGCN':
 # going to use that. A possible solution would be to save the complete model instead of saving
 # just the state_dict, that would require more disk space though.
 
-if args.load_model != None:
+if args.load_model is not None:
     
     _ = GPT2CaptionEncoder(pretrained_model='gpt2')
     #_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
@@ -290,7 +308,7 @@ def eval_f(model, data):
                 metrics[type][side+'_'+k] = v
     return metrics
 
-def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
+def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
         graph_embedding_model = model,
@@ -312,28 +330,52 @@ def experiment(model, train_data, test_data, dev=dev, rel2idx=rel2idx):
         epochs = epochs,
         batchsize = batchsize,
         learning_rate = lr,
+        valid_data = valid_data,
         eval_f = eval_f,
         eval_each = 1,# epochs, # evaluate the metrics each n epoch/s
         accum_iter = 1,
         dev = dev
     )
+    metrics['test'] = eval_f(LPmodel, test_data)
+    print('\n###### Test Metrics ######')
+    print(json.dumps(metrics['test'], indent=2))
+
+    name = 'saved/models/{}/link-prediction/{}/LP_{}+{}_{}bs_{}e_{}'.format(
+        args.dataset,
+        args.graph_encoder,
+        args.graph_encoder,
+        args.LP_head,
+        args.batchsize,
+        args.epochs,
+        args.dataset
+    )
+    if isinstance(LPmodel.model, vstack):
+        name += '_Finetuned_from_{}'.format(basename(args.load_model))
+    else:
+        name += '_Baseline.pt'
+    os.makedirs(os.path.dirname(name), exist_ok=True)
+    torch.save(LPmodel.state_dict(), name)
+    print(f'> Model saved to: {name}')
     return metrics
 
 
 # Finetuning
 results = {'{} Caption Pretraining'.format(graph_model): {}, '{} Baseline'.format(graph_model): {}}
 for m, name in zip((SemanticAugmentedModel, BaselineModel), results.keys()):
-    if m != None:
+    if m is not None:
         results[name] = experiment(
             model = m,
             train_data = train_data,
             test_data = test_data,
+            valid_data = valid_data,
             dev = dev,
             rel2idx = rel2idx
         )
     else:
         results[name] = None
 
+
+os.makedirs(os.path.dirname(args.save_results), exist_ok=True)        
 with open(args.save_results, 'w') as f:
     json.dump(results, f, indent=2)
 

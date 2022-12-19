@@ -33,9 +33,9 @@ from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, eval_f=None, eval_each=-1, accum_iter=1, dev=torch.device('cpu')):
+def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, valid_data=None, eval_f=None, eval_each=-1, accum_iter=1, dev=torch.device('cpu')):
     
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.)
     scaler = GradScaler()
 
@@ -52,8 +52,18 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         shuffle = True,
         collate_fn = test_data.collate_fn
     )
+    
+    if valid_data is None:
+        valid_loader = test_loader
+    else:
+        valid_loader = DataLoader(
+            valid_data,
+            batch_size = batchsize,
+            shuffle = True,
+            collate_fn = test_data.collate_fn
+        )
 
-    train_loss, test_loss, metrics = [], [], {}
+    train_loss, valid_loss, metrics = [], [], {}
     print_steps = int(len(train_loader)/5)
     for e in range(epochs):
         print(f'\n### EPOCH {e}')
@@ -78,18 +88,18 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
                 running_loss = 0.
         running_loss = 0.
         model.eval()
-        for i, (batch, label) in enumerate(test_loader):
+        for i, (batch, label) in enumerate(valid_loader):
             with torch.no_grad():
                 loss = step_f(model, batch, label, dev)
                 running_loss += loss.item()
-        test_loss.append(running_loss/(len(test_loader)))
+        valid_loss.append(running_loss/(len(valid_loader)))
         train_loss.append(epoch_loss/len(train_loader))
-        print(f'> Test Loss: {running_loss/(len(test_loader)):.4f}')
+        print(f'> Valid Loss: {running_loss/(len(valid_loader)):.4f}')
         if e % eval_each == eval_each -1 and eval_f != None: # run evaluation every eval_each epochs
-            metrics['Epoch '+str(e)] = eval_f(model, test_data)
+            metrics['Epoch '+str(e)] = eval_f(model, valid_data)
             print(f'### Evaluation Metrics after {e+1} epochs:')
             print(json.dumps(metrics['Epoch '+str(e)], indent=2))
-    return train_loss, test_loss, metrics
+    return train_loss, valid_loss, metrics
 
 # Graph
 from dgl import graph, heterograph
