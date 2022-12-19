@@ -1,5 +1,8 @@
 import json, random, os, sys
 
+if sys.argv[1][-1] != '/':
+    sys.argv[1] += '/'
+
 os.chdir(sys.argv[1])
 
 print(f'---- Data Generation ---- \n\n> Opening {sys.argv[1]}entities.json .')
@@ -27,6 +30,10 @@ test.update(ents)
 
 print(f'> Generated test set of {len(test)} entities. ( {sys.argv[1]}pretraining/test.json )')
 
+try:
+    os.mkdir('pretraining')
+except:
+    pass
 for s,d in zip(('train', 'test'), (train, test)):
     with open('pretraining/'+ s + '.json', 'w') as f:
         json.dump(d, f, indent=2)
@@ -38,6 +45,10 @@ with open ('ent2idx.json', 'w') as f:
 
 print(f'> Generated entity index file. ( {sys.argv[1]}ent2idx.json )')
 print('---- Link Prediction Data ----')
+try:
+    os.mkdir('link-prediction')
+except:
+    pass
 
 triples = {}
 relations = set()
