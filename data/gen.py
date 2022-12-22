@@ -53,12 +53,17 @@ except:
 triples = {}
 relations = set()
 for s in ('train', 'test', 'valid'):
-    with open('link-prediction/{}_original.txt'.format(s), 'r') as f:
-        triples[s] = []
-        for l in f:
-            h,r,t = l.replace('\n', '').split('\t')
-            triples[s].append([train[h]['entity_id'], r, train[t]['entity_id']])
-            relations.add(r)
+    try:
+        f = open('link-prediction/{}_original.txt'.format(s), 'r')
+    except:
+        os.rename('link-prediction/{}.txt'.format(s), 'link-prediction/{}_original.txt'.format(s))
+        f = open('link-prediction/{}_original.txt'.format(s), 'r')
+    triples[s] = []
+    for l in f:
+        h,r,t = l.replace('\n', '').split('\t')
+        triples[s].append([train[h]['entity_id'], r, train[t]['entity_id']])
+        relations.add(r)
+    f.close()
     with open('link-prediction/{}.txt'.format(s), 'w') as f:
         for l in triples[s]:
             f.write(l[0])
@@ -68,6 +73,11 @@ for s in ('train', 'test', 'valid'):
             f.write(l[2])
             f.write('\n')
     print(f'> Generated {s} set of {len(triples[s])} triples. ( {sys.argv[1]}link-prediction/{s}.txt )')
+    try:
+        os.rename('link-prediction/corrupted_{}_triples+inverse.pt'.format(s), 'link-prediction/corrupted_{}_triples+inverse.pt.bak'.format(s))
+        print('Found corrupted triples file, creating a backup (link-prediction/corrupted_{}_triples+inverse.pt.bak).'.format(s))
+    except:
+        pass
             
 rel2idx = dict(zip(relations, range(len(relations))))
 with open('rel2idx.json', 'w') as f:
