@@ -1,4 +1,4 @@
-import argparse, torch, json, pickle, time, random, numpy
+import argparse, torch, json, pickle, time, random, numpy, os
 from dataset import LinkPredictionDataset
 from model import LinkPredictionModel, PretrainedGraphEncoder, MLP, CLIP_KB, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from torch.utils.data import DataLoader
