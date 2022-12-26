@@ -35,7 +35,11 @@ def get_caption(entity):
         if caption is None:
             a = soup.find('div', {'class':'card-action'})
             a = a.find_all('a', href=True)
-            wikidata_id = a[1]['href'][31:]
+            try:
+                wikidata_id = a[1]['href'][31:]
+            except:
+                print(a)
+                print(entity)
             url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql'
             query = 'SELECT ?a WHERE {{ wd:{} schema:description ?a FILTER (LANG(?a) = "en").}}'.format(wikidata_id)
             r = requests.get(url, params = {'format': 'json', 'query': query})
