@@ -18,7 +18,10 @@ print(f'> {len(entities)} different entities found.')
 
 def get_caption(entity):
     url = "https://yago-knowledge.org/resource/"
-    r = requests.get(url + entity)
+    try:
+        r = requests.get(url + entity)
+    except:
+        return None
     if r.status_code != 200:
         print(f'> Got {r.status_code} response.')
         time.sleep(1)
