@@ -9,7 +9,7 @@ from utils import training_routine, KG
 import matplotlib.pyplot as plt
 from os.path import basename
 
-parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
+parser = argparse.ArgumentParser(description='Link Prediction.')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
@@ -349,7 +349,7 @@ def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2id
         args.epochs,
         args.dataset
     )
-    if isinstance(LPmodel.model, vstack):
+    if args.load_model is not None:
         name += '_Finetuned_from_{}'.format(basename(args.load_model))
     else:
         name += '_Baseline.pt'

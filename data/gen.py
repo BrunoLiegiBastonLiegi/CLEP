@@ -1,4 +1,7 @@
-import json, random, os, sys
+import json, random, os, sys, argparse
+
+parser = argparse.ArgumentParser(description='Data Generation')
+parser.add_argument('--cut', action='store_true')
 
 if sys.argv[1][-1] != '/':
     sys.argv[1] += '/'
@@ -11,6 +14,17 @@ with open('entities.json', 'r') as f:
 
 print(f'> {len(ents)} entities found.')
 print('---- Pretraining Data ----')
+
+if args.cut:
+    cut_dir = '../{}-cut'.format(sys.argv[1])
+    os.mkdir(cut_dir)
+    ents = {
+        k: v
+        for k,v in ents.items() if v['caption'] is not None
+    }
+    with open(cut_dir+'/entities.json', 'w') as f:
+        json.dump(ents, f, indent=2)
+    
 test = {
     k: v
     for k,v in ents.items() if v['caption'] is None
