@@ -9,6 +9,7 @@ from utils import training_routine, KG
 import matplotlib.pyplot as plt
 from os.path import basename
 
+
 parser = argparse.ArgumentParser(description='Link Prediction.')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('--train_data', help='Path to train data file.')

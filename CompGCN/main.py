@@ -1,4 +1,4 @@
-import argparse, json
+import argparse, json, os
 from time import time
 
 import numpy as np
@@ -17,6 +17,8 @@ sys.path.append('../')
 from model import CLIP_KB, GPT2CaptionEncoder, CompGCNWrapper
 from utils import KG
 from dataset import LinkPredictionDataset
+from os.path import basename
+
 
 # predict the tail for (head, rel, -1) or head for (-1, rel, tail)
 def predict(model, graph, device, data_iter, split="valid", mode="tail"):
@@ -111,9 +113,9 @@ def main(args):
     else:
         device = "cpu"
 
-    with open(args.entity_index, 'r') as f:
+    with open('../data/{}/ent2idx.json'.format(args.dataset), 'r') as f:
         ent2idx = json.load(f)
-    with open (args.rel_index, 'r') as f:
+    with open('../data/{}/rel2idx.json'.format(args.dataset), 'r') as f:
         rel2idx = json.load(f)
 
     # construct graph, split in/out edges and prepare train/validation/test data_loader
@@ -187,13 +189,14 @@ def main(args):
     best_mrr = 0.0
     kill_cnt = 0
     results = {}
-    saved_model_name = "comp_link_"
+    saved_model_name = "../saved/models/{}/link-prediction/CompGCN/comp_link_".format(args.dataset)
     if args.load_model is None:
         saved_model_name += "Baseline"
     else:
-        tmp = args.load_model.split('/')[-1]
+        tmp = '_Finetuned_from_{}'.format(basename(args.load_model))
         saved_model_name += tmp
-    saved_model_name += "_{}_{}bs_{}e.json".format(args.dataset, args.batch_size, args.max_epochs)
+    saved_model_name += "_{}_{}bs_{}e".format(args.dataset, args.batch_size, args.max_epochs)
+    os.makedirs(os.path.dirname(saved_model_name), exist_ok=True)
     for epoch in range(args.max_epochs):
         # Training and validation using a full graph
         compgcn_model.train()
@@ -266,8 +269,9 @@ def main(args):
         )
     )
     if args.save_res is None:
-        args.save_res = "lp_results_" + saved_model_name.replace('comp_link', '')
+        args.save_res = "../saved/LP_results/{}/CompGCN/lp_results_".format(args.dataset) + basename(saved_model_name).replace('comp_link', '') + '.json'
     print(f'Saving results to: {args.save_res}')
+    os.makedirs(os.path.dirname(args.save_res), exist_ok=True)
     with open(args.save_res, 'w') as f:
         json.dump(results, f, indent=2)
 
@@ -418,8 +422,8 @@ if __name__ == "__main__":
         help='Path to model to load.'
     )
     parser.add_argument('--save_res')
-    parser.add_argument('--entity_index')
-    parser.add_argument('--rel_index')
+    #parser.add_argument('--entity_index')
+    #parser.add_argument('--rel_index')
 
     args = parser.parse_args()
 
