@@ -216,40 +216,23 @@ class LinkPredictionModel(torch.nn.Module):
         idx, idx_pair = (2, [0,1]) if mode == 'tail' else (0, [1,2])
         mask = (triples[:,idx].view(-1,1) == candidates) 
         if filter != None:
-            t = time.time()
-            #filter_mask = (triples.view(-1,1,3)[:,:,idx_pair].detach().cpu() == filter[:,idx_pair]).all(-1)
             filter_mask = (triples.view(-1,1,3)[:,:,idx_pair] == filter[:,idx_pair]).all(-1)
-            #tmp_cand = candidates.detach().cpu()
             filter_mask = torch.vstack([
-                #(filter[filter_mask[i]][:,idx].view(-1,1) == tmp_cand).sum(0).bool()
                 (filter[filter_mask[i]][:,idx].view(-1,1) == candidates).sum(0).bool()
                 for i in range(filter_mask.shape[0])
             ])
             filter_mask = (mask.logical_not() * filter_mask.to(mask.device)).bool()
-            #del tmp_cand
-            #print('time: ', time.time()-t)
         else:
             filter_mask = torch.zeros(triples.shape[0], candidates.shape[0]).bool()
         if self.external_rel_embs:
             node_embs, rel = self.get_embedding(self.model.kg.g.nodes())
-            #ht, rel = self.get_embedding(torch.cat((triples[:,0], triples[:,2])))
-            #h, t = ht.view(2,-1, self.hdim)
-            #del ht
             r = rel[triples[:,1]]
         else:
             node_embs = self.get_embedding(self.model.kg.g.nodes())
-            #h, t = self.get_embedding(torch.cat((triples[:,0], triples[:,2]))).view(2,-1, self.hdim)
             r = self.R[triples[:,1]]
         h, t = node_embs[triples[:,0]], node_embs[triples[:,2]]
-        #prior = self.prior[mode](h, r) if mode == 'tail' else self.prior[mode](t, r)
-        #prior = torch.hstack([prior for i in range(len(candidates))]).view(-1, prior.shape[-1])
-        #if self.external_rel_embs:
-        #    candidates, _ = self.get_embedding(candidates)
-        #else:
-        #    candidates = self.get_embedding(candidates)
-        #candidates = torch.vstack([candidates for i in range(triples.shape[0])])
-        #scores = self.fast_f(prior, candidates).view(triples.shape[0], -1)
-        scores = self.f(h, r, node_embs) if mode == 'tail' else self.f(t, r, node_embs)
+        #scores = self.f(h, r, node_embs) if mode == 'tail' else self.f(t, r, node_embs)
+        scores = self.f(h, r, node_embs) if mode == 'tail' else self.f(node_embs, r, t)
         if not self.one_to_N:
             self.f.one_to_N = False
         if filter != None:
@@ -257,6 +240,7 @@ class LinkPredictionModel(torch.nn.Module):
             filter_scores[filter_mask] = -1e8 # really small value to move everything at the back
         else:
             filter_scores = None
+
         return mask, scores, filter_scores
 
 class RGCN(torch.nn.Module):
