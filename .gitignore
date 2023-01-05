@@ -11,3 +11,4 @@ __pycache__
 *.txt~
 *.bak
 *.tar.gz
+saved/
