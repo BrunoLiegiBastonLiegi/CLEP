@@ -11,16 +11,30 @@ import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
+parser.add_argument('--dataset', default=None)
 parser.add_argument('--train_data', help='Path to train data file.')
 parser.add_argument('--test_data', help='Path to test data file.')
 parser.add_argument('--valid_data', help='Path to test data file.')
 parser.add_argument('--entity_index', default=None, help='Path to entity index file.')
 parser.add_argument('--rel_index', help='Path to relations index file.')
-parser.add_argument('--id2cap', help='Path to captions index file.')
+parser.add_argument('--entities', help='Path to captions index file.')
 parser.add_argument('--load_model', help='Path to caption pretrained model.')
 parser.add_argument('--graph', default=None, help='Path to graph triples file.')
 parser.add_argument('--save_results', default='lp_results.json')
 args = parser.parse_args()
+
+if args.dataset is not None:
+    args.entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
+    args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
+    #args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
+    args.valid_data = 'data/{}/link-prediction/valid.txt'.format(args.dataset)
+    args.train_corrupted_triples = 'data/{}/link-prediction/corrupted_train_triples+inverse.pt'.format(args.dataset)
+    args.test_corrupted_triples = 'data/{}/link-prediction/corrupted_test_triples+inverse.pt'.format(args.dataset)
+    args.valid_corrupted_triples = 'data/{}/link-prediction/corrupted_valid_triples+inverse.pt'.format(args.dataset)
+    args.entities = 'data/{}/entities.json'.format(args.dataset)
+
 
 # Set device for computation
 if torch.cuda.is_available():
@@ -125,9 +139,16 @@ class CaptionEncodingData(Dataset):
     def get_loader(self, batchsize=128):
         return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
 
-with open(args.id2cap, 'r') as f:
-    ids, cap = list(zip(*json.load(f).items()))
-    ids = [ wid2idx[i] for i in ids ]
+with open(args.entities, 'r') as f:
+    id2cap = {}
+    for v in json.load(f).values():
+        k = wid2idx[v['entity_id']]
+        if v['caption'] is None:
+            id2cap.update({k: 'Caption not available.'})
+        else:
+            id2cap.update({k: v['caption']})
+    ids, cap = list(zip(*id2cap.items()))
+
 
 print('> Loading Tokenizer.')
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
@@ -172,7 +193,9 @@ for batch, _ in tqdm(LP_loader):
         r = rel[r]
         h = torch.nn.functional.normalize(clip.g_mlp(h + r), p=2, dim=-1)
         # Normalization ?? Is it needed?
-        distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
+        #distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
+        #print(h.view(batch.shape[0],1,-1).shape, caption_encodings.shape)
+        distances = (h.view(batch.shape[0],1,-1) * caption_encodings).sum(-1)
         distances[mask] = 1e8
         prediction = index[distances.sort(-1)[1]]
         ranks.append((t.view(-1,1) == prediction).nonzero()[:,1])

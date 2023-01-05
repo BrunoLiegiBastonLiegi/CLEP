@@ -143,17 +143,17 @@ class Data(object):
         ent_set, rel_set = OrderedSet(), OrderedSet()
         for split in ["train", "test", "valid"]:
             for line in open("./{}/{}.txt".format(self.dataset, split)):
-                sub, rel, obj = map(str.lower, line.strip().split("\t"))
+                sub, rel, obj = map(str, line.strip().split("\t"))
                 ent_set.add(sub)
                 rel_set.add(rel)
                 ent_set.add(obj)
 
         if ent2idx != None:
-            self.ent2id = {k.lower(): v for k,v in ent2idx.items()}
+            self.ent2id = {k: v for k,v in ent2idx.items()}
         else:
             self.ent2id = {ent: idx for idx, ent in enumerate(ent_set)}
         if rel2idx != None:
-            self.rel2id = {k.lower(): v for k,v in rel2idx.items()}
+            self.rel2id = {k: v for k,v in rel2idx.items()}
         else:
             self.rel2id = {rel: idx for idx, rel in enumerate(rel_set)}
         self.rel2id.update(
@@ -184,7 +184,7 @@ class Data(object):
 
         for split in ["train", "test", "valid"]:
             for line in open("./{}/{}.txt".format(self.dataset, split)):
-                sub, rel, obj = map(str.lower, line.strip().split("\t"))
+                sub, rel, obj = map(str, line.strip().split("\t"))
                 sub_id, rel_id, obj_id = (
                     self.ent2id[sub],
                     self.rel2id[rel],

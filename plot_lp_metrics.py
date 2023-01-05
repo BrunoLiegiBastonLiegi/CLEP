@@ -68,7 +68,9 @@ for m in metrics:
         if 'test' in v.keys():
             d.update({k:v.pop('test')})
         else:
-            ep = input(f'Missing \'test\' key, specify which epoch to calculate performance at.\n Possible choiches: {list(v.keys())}\n> ')
+            ep = input(f'Missing \'test\' key, specify which epoch to calculate performance at.\n Possible choiches: {list(v.keys())}\n(Default: last one)\n> ')
+            if ep == '':
+                ep = list(v.keys())[-1]
             d.update({k:v[ep]})
     test.append(d)
             
