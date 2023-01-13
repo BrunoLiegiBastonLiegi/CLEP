@@ -9,7 +9,7 @@ from dgl.sampling import global_uniform_negative_sampling
 
 class CLIPDataset(Dataset):
 
-    def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, device: torch.device = torch.device('cpu')):
+    def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, filter_triples = None, device: torch.device = torch.device('cpu')):
         self.h_to_t = False
         if triples == None:
             if datafile[-4:] == '.pkl': 
@@ -23,6 +23,8 @@ class CLIPDataset(Dataset):
                     d['caption'] = 'Caption not available.'
         else:
             self.h_to_t = True
+            assert filter_triples is not None
+            self.filter_triples = filter_triples
             with open(datafile, 'r') as f:
                 self.idx2cap = {
                     entity2idx[v['entity_id']]: v['caption']
@@ -32,38 +34,18 @@ class CLIPDataset(Dataset):
             for t in triples:
                 cap = self.idx2cap[t[2].item()]
                 if cap is not None:
-                    self.data.append((t[:2], cap))
+                    self.data.append((t, cap))
                 else:
-                    self.data.append((t[:2], 'Caption not available.'))
+                    self.data.append((t, 'Caption not available.'))
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
-        #self.discard_incomplete()
         
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx: int):
         return self.data[idx]
-
-    def discard_incomplete(self):
-        incomplete_idx = []
-        for i,d in enumerate(self.data):
-            flag = False
-            if isinstance(d,dict):
-                eid = d['wikidata_id'] if 'wikidata_id' in d.keys() else d['entity_id']
-                if eid == None or d['caption'] == None:
-                    flag = True
-            else:
-                flag = True
-            incomplete_idx.append(flag)
-            #if flag:
-            #    try:
-            #        self.e2idx.pop(d['wikidata_id'])
-            #    except:
-            #        continue
-        self.data = [ d for d,f in zip(self.data, incomplete_idx) if not f ]
-        #self.e2idx = dict(zip(self.e2idx.keys(), range(len(self.e2idx))))
 
     def collate_fn(self, batch: list):
         inputs = {'captions':[], 'entities':[]}
@@ -76,9 +58,14 @@ class CLIPDataset(Dataset):
                 eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
                 inputs['entities'].append(self.e2idx[eid])
         inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
-        #inputs['entities'] = torch.as_tensor(inputs['entities'])#.to(self.dev)
         inputs['entities'] = torch.vstack(inputs['entities']) if self.h_to_t else torch.as_tensor(inputs['entities'])
-        labels = torch.arange(len(batch))#.to(self.dev)
+        if self.h_to_t:
+            head_mask = (inputs['entities'][:,[0,1]].view(-1,1,2).to(self.dev) == self.filter_triples[:,[0,1]]).all(-1)
+            tail_mask = inputs['entities'][:,2].view(-1,1).to(self.dev) == self.filter_triples[:,2]
+            labels = head_mask.float() @ tail_mask.T.float()
+            inputs['entities'] = inputs['entities'][:,:2]
+        else:
+            labels = torch.arange(len(batch))
         return inputs, labels
         
 

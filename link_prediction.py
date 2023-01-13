@@ -58,10 +58,13 @@ if args.save_results is None:
     if args.one_to_N_scoring:
         args.save_results += '_1_to_N'
     args.save_results += '.json'
-
-print(args)
     
-print(f'Saving results to: {args.save_results}')    
+print('---------------- Arguments -----------------')
+for k,v in vars(args).items():
+    print(f'{k}: {v}')
+print('--------------------------------------------')
+    
+print(f'> Gonna save results to: {args.save_results}')    
 
 if args.seed is not None:
     numpy.random.seed(args.seed)
@@ -200,6 +203,7 @@ if args.load_model is not None:
                 return self.nn(x)
     SemanticAugmentedModel = vstack(clip.g_encoder, clip.g_mlp)
     SemanticAugmentedModel.return_rel_embs = True if graph_model == 'CompGCN' and conf['return_rel_embs'] else False
+    BaselineModel = vstack(BaselineModel, torch.nn.Linear(clip.g_encoder.hdim, clip.g_mlp.hdim))
 
 else:
     SemanticAugmentedModel = None
@@ -309,6 +313,11 @@ def eval_f(model, data):
                 metrics[type][side+'_'+k] = v
     return metrics
 
+def unfreezing_f(model, epoch):
+    if epoch == 1:
+        for p in model.model.parameters():
+            p.requires_grad = True
+
 def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2idx):
     # build LP model
     LPmodel = LinkPredictionModel(
@@ -318,6 +327,8 @@ def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2id
         external_rel_embs = conf['return_rel_embs'] if graph_model == 'CompGCN' else False,
         one_to_N_scoring = args.one_to_N_scoring
     ).to(dev)
+    for p in LPmodel.model.parameters():
+        p.requires_grad = False
     # train
     epochs = args.epochs
     batchsize = args.batchsize
@@ -334,6 +345,8 @@ def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2id
         valid_data = valid_data,
         eval_f = eval_f,
         eval_each = 1,# epochs, # evaluate the metrics each n epoch/s
+        unfreezing_f = unfreezing_f,
+        #unfreezing_f = None,
         accum_iter = 1,
         dev = dev
     )

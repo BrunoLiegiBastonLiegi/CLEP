@@ -32,7 +32,7 @@ args = parser.parse_args()
 if args.dataset is not None:
     args.entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
     args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
-    args.entities = 'data/{}/pretraining/entities.json'.format(args.dataset)
+    args.entities = 'data/{}/entities.json'.format(args.dataset)
     args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
     if args.head_to_tail:
         args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
@@ -86,36 +86,36 @@ if args.head_to_tail:
         rel2idx = rel2idx,
         add_inverse_edges = True
     )
-    train_data = CLIPDataset(
-        datafile = args.entities,
-        tokenizer = tokenizer,
-        entity2idx = wid2idx,
-        triples = train_triples.triples,
-        device = dev
-    )
-
     test_triples = LinkPredictionDataset(
         datafile = args.test_data, 
         entity2idx = wid2idx,
         rel2idx = rel2idx,
         add_inverse_edges = True
     )
-    test_data = CLIPDataset(
-        datafile = args.entities,
-        tokenizer = tokenizer,
-        entity2idx = wid2idx,
-        triples = test_triples.triples,
-        device = dev
-    )
-
     valid_triples = LinkPredictionDataset(
         datafile = args.val_data, 
         entity2idx = wid2idx,
         rel2idx = rel2idx,
         add_inverse_edges = True
     )
-
     filter_triples = torch.cat([train_triples.triples, test_triples.triples, valid_triples.triples])[:,:3].to(dev)
+    
+    train_data = CLIPDataset(
+        datafile = args.entities,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        triples = train_triples.triples,
+        filter_triples = filter_triples,
+        device = dev
+    )
+    test_data = CLIPDataset(
+        datafile = args.entities,
+        tokenizer = tokenizer,
+        entity2idx = wid2idx,
+        triples = test_triples.triples,
+        filter_triples = filter_triples,
+        device = dev
+    )
 
 else:
     train_data = CLIPDataset(
@@ -200,53 +200,60 @@ def step_f(model, batch, label, dev):
     del text_out
     torch.cuda.empty_cache()
     loss = 0.5 * ( torch.nn.functional.cross_entropy(logits, label) + torch.nn.functional.cross_entropy(logits.T, label) )
+    #loss = 0.5 * (
+        #torch.nn.functional.binary_cross_entropy_with_logits(logits, label)
+        #+ torch.nn.functional.binary_cross_entropy_with_logits(logits.T, label)
+        #)
     del logits
     torch.cuda.empty_cache()
     return loss
 
+
+LP_loader = DataLoader(
+        valid_triples,
+        batch_size = 256,
+        shuffle = True,
+        collate_fn = valid_triples.collate_fn
+    )
+
+class CaptionEncodingData(Dataset):
+    
+    def __init__(self, captions, ids, tokenizer):
+        self.ids = ids
+        self.captions = list(zip(ids,captions))
+        self.tok = tokenizer
+
+    def __len__(self):
+        return len(self.captions)
+        
+    def __getitem__(self, i):
+        return self.captions[i]
+        
+    def collate_fn(self, batch):
+        ids, captions = [], []
+        for item in batch:
+            ids.append(item[0])
+            captions.append(item[1])
+        captions = self.tok(text=captions, padding=True, return_tensors='pt')
+        return captions, torch.as_tensor(ids)
+
+    def get_loader(self, batchsize=128):
+        return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
+
+capdata = CaptionEncodingData(list(test_data.idx2cap.values()), ids=list(test_data.idx2cap.keys()), tokenizer=test_data.tok)
+    
 # Define Evaluation
 def eval_f(model, data):
-    global test_triples, filter_triples, dev
+    global test_triples, filter_triples, dev, capdata
     
-    LP_loader = DataLoader(
-        test_triples,
-        batch_size = 32,
-        shuffle = True,
-        collate_fn = data.collate_fn
-    )
-    
-    class CaptionEncodingData(Dataset):
-
-        def __init__(self, captions, ids, tokenizer):
-            self.ids = ids
-            self.captions = list(zip(ids,captions))
-            self.tok = tokenizer
-
-        def __len__(self):
-            return len(self.captions)
-        
-        def __getitem__(self, i):
-            return self.captions[i]
-        
-        def collate_fn(self, batch):
-            ids, captions = [], []
-            for item in batch:
-                ids.append(item[0])
-                captions.append(item[1])
-            captions = self.tok(text=captions, padding=True, return_tensors='pt')
-            return captions, torch.as_tensor(ids)
-
-        def get_loader(self, batchsize=128):
-            return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
-
-    capdata = CaptionEncodingData(list(data.idx2cap.values()), ids=list(data.idx2cap.keys()), tokenizer=data.tok)
     index, caption_encodings = [], []
-    with torch.no_grad() and autocast():
-        for batch in tqdm(capdata.get_loader(batchsize=64)):
-            captions, ids = batch[0].to(dev), batch[1].to(dev)
-            captions = model.t_nn(captions)
+    for batch in tqdm(capdata.get_loader(batchsize=64)):
+        with torch.no_grad() and autocast():
+            captions = model.t_nn(batch[0].to(dev)).detach()
             caption_encodings.append(captions)
-            index.append(ids)
+            del captions
+            torch.cuda.empty_cache()
+            index.append(batch[1].to(dev))
     index, caption_encodings = torch.cat(index), torch.nn.functional.normalize(torch.cat(caption_encodings), p=2, dim=-1)
             
     ranks = []
@@ -265,9 +272,12 @@ def eval_f(model, data):
             r = rel[r]
             h = torch.nn.functional.normalize(model.g_mlp(h + r), p=2, dim=-1)
             # Normalization ?? Is it needed?
-            distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
-            distances[mask] = 1e8
-            prediction = index[distances.sort(-1)[1]]
+            #scores = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt() # L1 distance 
+            scores = (h.view(batch.shape[0],1,-1) * caption_encodings).sum(-1) # cosine similarity
+            #scores[mask] = 1e8
+            scores[mask] = -1
+            #prediction = index[scores.sort(-1)[1]]
+            prediction = index[scores.sort(-1, descending=True)[1]]
             ranks.append((t.view(-1,1) == prediction).nonzero()[:,1])
         
     ranks = torch.cat(ranks).view(-1) + 1
@@ -286,7 +296,7 @@ if args.load_model == None:
     epochs = args.epochs
     batchsize = args.batchsize
     
-    training_routine(
+    _, _, metrics = training_routine(
         model = model,
         step_f = step_f,
         eval_f = eval_f if args.head_to_tail else None,
@@ -301,12 +311,19 @@ if args.load_model == None:
     )
     os.makedirs(os.path.dirname(args.save_model), exist_ok=True)
     torch.save(model.state_dict(), args.save_model)
-    #torch.save(model.state_dict(),
-    #           '{}_fb15k237_{}_layers-{}_{}-{}_epochs.pt'.format(
-    #               model_name, rgcn_conf['n_layers'], rgcn_conf['rel_regularizer'], rgcn_conf['num_bases'], epochs)
-    #           )
-
-    #print(graph_encoder.model.n_embds.cpu() - original_node_feat)
+    if args.head_to_tail:
+        LP_loader = DataLoader(
+            test_triples,
+            batch_size = 256,
+            shuffle = True,
+            collate_fn = valid_triples.collate_fn
+        )
+        metrics['test'] = eval_f(model, None)
+        res_file = 'saved/LP_results/{}/CompGCN/head_to_tail/lp_results_CompGCN_{}bs_{}e_{}_h_to_t.json'.format(args.dataset, args.batchsize, args.epochs, args.dataset)
+        print(f'> Saving LP results to {res_file}.')
+        os.makedirs(os.path.dirname(res_file), exist_ok=True)
+        with open(res_file, 'w') as f:
+            json.dump(metrics, f, indent=2)
 else:
     model.load_state_dict(torch.load(args.load_model))
 
@@ -334,6 +351,7 @@ with torch.no_grad():
         captions += tokenizer.batch_decode(batch['captions']['input_ids'].detach().cpu(), skip_special_tokens=True, clean_up_tokenization_spaces=True)
         # Distance of correct pairs
         on_diag_dist.append(((graph_out-text_out)**2).sum(-1).sqrt())
+        #on_diag_dist.append((graph_out * text_out).sum(-1).sqrt())
         # Distance of offdiagonal pairs
         idx = set(range(graph_out.shape[0]))
         j = random.sample(list(idx), k=graph_out.shape[0]) # randomly sample a subset of offdiagonal pairs

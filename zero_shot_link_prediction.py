@@ -35,7 +35,11 @@ if args.dataset is not None:
     args.valid_corrupted_triples = 'data/{}/link-prediction/corrupted_valid_triples+inverse.pt'.format(args.dataset)
     args.entities = 'data/{}/entities.json'.format(args.dataset)
 
-
+print('---------------- Arguments -----------------')
+for k,v in vars(args).items():
+    print(f'{k}: {v}')
+print('--------------------------------------------')
+    
 # Set device for computation
 if torch.cuda.is_available():
     dev = torch.device('cuda:0')
@@ -193,11 +197,11 @@ for batch, _ in tqdm(LP_loader):
         r = rel[r]
         h = torch.nn.functional.normalize(clip.g_mlp(h + r), p=2, dim=-1)
         # Normalization ?? Is it needed?
-        #distances = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
-        #print(h.view(batch.shape[0],1,-1).shape, caption_encodings.shape)
-        distances = (h.view(batch.shape[0],1,-1) * caption_encodings).sum(-1)
-        distances[mask] = 1e8
-        prediction = index[distances.sort(-1)[1]]
+        #scores = ((h.view(batch.shape[0],1,-1) - caption_encodings)**2).sum(-1).sqrt()
+        scores = (h.view(batch.shape[0],1,-1) * caption_encodings).sum(-1)
+        scores[mask] = 1e8
+        #prediction = index[scores.sort(-1)[1]]
+        prediction = index[scores.sort(-1, descending=True)[1]]
         ranks.append((t.view(-1,1) == prediction).nonzero()[:,1])
         
 ranks = torch.cat(ranks).view(-1) + 1
@@ -284,11 +288,11 @@ print(json.dumps({k:v for k, v in baseline_metrics['filtered'].items() if 'right
 print('--- CP Pretrained CompGCN ---')
 print(json.dumps(metrics, indent=2))
 
-print(ranks.shape)
-print(baseline_ranks.shape)
 bins = 100
 dens = True
 plt.hist(baseline_ranks.cpu().numpy(), bins=bins, density=dens, alpha=0.5)
 plt.hist(ranks.cpu().numpy(), bins=bins, density=dens, alpha=0.5)
 #plt.yscale('log')
+plt.xlabel('rank')
+plt.savefig('zero_shot_lp_{}.pdf'.format(args.dataset), dpi=300, format='pdf')
 plt.show()
