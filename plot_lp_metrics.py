@@ -1,5 +1,6 @@
 import json, sys, torch
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 22})
 import numpy as np
 
 metrics = []
@@ -115,9 +116,9 @@ reshape(caption_pretraining, len(metrics))
 
 metric_type = 'filtered'
 
-fig, axs = plt.subplots(2, 3, figsize=(16,9))
+fig, axs = plt.subplots(1, 4, figsize=(38,9))
 
-for metric, ax in zip(baseline[metric_type].keys(), axs.flatten()[:-1]):
+for metric, ax in zip([ k for k in baseline[metric_type].keys() if k!='hits@3'] , axs.flatten()):
     for d in (baseline, caption_pretraining):
         mean = d[metric_type][metric].mean(0)
         #top = d[metric_type][metric].max(0).values
@@ -128,6 +129,7 @@ for metric, ax in zip(baseline[metric_type].keys(), axs.flatten()[:-1]):
         #ax.fill_between(range(len(metrics)), mean+std, mean-std, alpha=0.3)
         #ax.plot(caption_pretraining[metric_type][metric].mean(0), c='orange')
         ax.set_title(metric)
+        ax.set_xlabel('Epoch')
 plt.savefig('lp_metrics.pdf', dpi=300, format='pdf', bbox_inches='tight')
 plt.show()
 

@@ -2,7 +2,7 @@ import torch, time
 import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model, BertModel
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, GPT2Model, BertModel, AutoModel
 from dgl.nn import RelGraphConv
 
 import sys
@@ -144,8 +144,12 @@ class BertCaptionEncoder(torch.nn.Module):
 
     def __init__(self, pretrained_model: str = 'bert-base-cased'):
         super().__init__()
-        self.model = BertModel.from_pretrained(pretrained_model)       
-        for m in self.model.encoder.layer[:-4]: # freezing every layer but the last 4
+        self.model = AutoModel.from_pretrained(pretrained_model)
+        try:
+            layers = self.model.encoder.layer[:-4]
+        except:
+            layers = self.model.transformer.layer[:-4]
+        for m in layers: # freezing every layer but the last 4
             for p in m.parameters():
                 p.requires_grad = False
         

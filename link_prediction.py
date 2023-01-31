@@ -30,6 +30,8 @@ parser.add_argument('--LP_head', default='Distmult')
 parser.add_argument('--batchsize', default=128, type=int)
 parser.add_argument('--epochs', default=50, type=int)
 parser.add_argument('--seed', type=int)
+parser.add_argument('--text_encoder', default='gpt2')
+
 
 args = parser.parse_args()
 
@@ -175,8 +177,12 @@ elif graph_model == 'CompGCN':
 # just the state_dict, that would require more disk space though.
 
 if args.load_model is not None:
-    
-    _ = GPT2CaptionEncoder(pretrained_model='gpt2')
+
+    if args.text_encoder == 'gpt2':
+        _ = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
+    else:
+        _ = BertCaptionEncoder(pretrained_model=args.text_encoder)
+    #_ = GPT2CaptionEncoder(pretrained_model='gpt2')
     #_ = BertCaptionEncoder(pretrained_model='bert-base-cased')
     
     g_encoder = CompGCNWrapper(**conf) if graph_model == 'CompGCN' else RGCN(**conf)
@@ -346,7 +352,6 @@ def experiment(model, train_data, test_data, valid_data, dev=dev, rel2idx=rel2id
         eval_f = eval_f,
         eval_each = 1,# epochs, # evaluate the metrics each n epoch/s
         unfreezing_f = unfreezing_f,
-        #unfreezing_f = None,
         accum_iter = 1,
         dev = dev
     )

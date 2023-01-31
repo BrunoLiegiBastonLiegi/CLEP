@@ -1,10 +1,11 @@
 import torch, argparse, json, random, time, pickle, numpy, os
 from dataset import CLIPDataset, LinkPredictionDataset
 from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
-from transformers import GPT2Tokenizer, BertTokenizer
+from transformers import GPT2Tokenizer, BertTokenizer, AutoTokenizer, DistilBertTokenizerFast
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 22})
 from scipy.stats import ttest_ind, mannwhitneyu
 from tqdm import tqdm
 from utils import training_routine, KG
@@ -26,6 +27,7 @@ parser.add_argument('--batchsize', help='Batchsize.', default=128, type=int)
 parser.add_argument('--save_model', help='Save model to.')
 parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
+parser.add_argument('--text_encoder', default='gpt2')
 
 args = parser.parse_args()
 
@@ -43,10 +45,11 @@ if args.dataset is not None:
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
 
 if args.save_model is None:
-    args.save_model = 'saved/models/{}/pretraining/{}/{}_{}bs_{}e_{}'.format(
+    args.save_model = 'saved/models/{}/pretraining/{}/{}-{}_{}bs_{}e_{}'.format(
         args.dataset,
         args.graph_encoder,
         args.graph_encoder,
+        args.text_encoder,
         args.batchsize,
         args.epochs,
         args.dataset
@@ -66,9 +69,12 @@ print(f'\n> Setting device {dev} for computation.')
 
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
-tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
-#tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
+#tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
+if args.text_encoder == 'gpt2':
+    tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+#tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
+#tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
 
 print('> Preparing the data.')
 # Load index mapping
@@ -105,7 +111,7 @@ if args.head_to_tail:
         tokenizer = tokenizer,
         entity2idx = wid2idx,
         triples = train_triples.triples,
-        filter_triples = filter_triples,
+        filter_triples = train_triples.triples[:,:3].to(dev),
         device = dev
     )
     test_data = CLIPDataset(
@@ -138,7 +144,7 @@ if  args.graph_embeddings != None:
         node_embeddings = pickle.load(f)
         
 inverse_edges = True
-if  args.graph != None:
+if args.graph != None:
     kg = KG(embedding_dim=200, ent2idx=wid2idx, rel2idx=rel2idx, dev=dev, add_inverse_edges=inverse_edges)
     kg.build_from_file(args.graph)
 else:
@@ -177,8 +183,10 @@ elif graph_model == 'RGCN':
 if args.head_to_tail:
     assert graph_model == 'CompGCN' and graph_encoder.return_rel_embs, "Head-to-Tail pretraining is only supported for CompGCN models with return_rel_embs=True"
 # Caption encoder
-text_encoder = GPT2CaptionEncoder(pretrained_model='gpt2')
-#text_encoder = BertCaptionEncoder(pretrained_model='bert-base-cased')
+if args.text_encoder == 'gpt2':
+    text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
+else:
+    text_encoder = BertCaptionEncoder(pretrained_model=args.text_encoder)
 # CLIP
 model = CLIP_KB(
     graph_encoder=graph_encoder,
@@ -208,39 +216,40 @@ def step_f(model, batch, label, dev):
     torch.cuda.empty_cache()
     return loss
 
+if args.head_to_tail:
 
-LP_loader = DataLoader(
+    LP_loader = DataLoader(
         valid_triples,
         batch_size = 256,
         shuffle = True,
         collate_fn = valid_triples.collate_fn
     )
 
-class CaptionEncodingData(Dataset):
-    
-    def __init__(self, captions, ids, tokenizer):
-        self.ids = ids
-        self.captions = list(zip(ids,captions))
-        self.tok = tokenizer
-
-    def __len__(self):
-        return len(self.captions)
+    class CaptionEncodingData(Dataset):
         
-    def __getitem__(self, i):
-        return self.captions[i]
+        def __init__(self, captions, ids, tokenizer):
+            self.ids = ids
+            self.captions = list(zip(ids,captions))
+            self.tok = tokenizer
+
+        def __len__(self):
+            return len(self.captions)
         
-    def collate_fn(self, batch):
-        ids, captions = [], []
-        for item in batch:
-            ids.append(item[0])
-            captions.append(item[1])
-        captions = self.tok(text=captions, padding=True, return_tensors='pt')
-        return captions, torch.as_tensor(ids)
+        def __getitem__(self, i):
+            return self.captions[i]
+        
+        def collate_fn(self, batch):
+            ids, captions = [], []
+            for item in batch:
+                ids.append(item[0])
+                captions.append(item[1])
+            captions = self.tok(text=captions, padding=True, return_tensors='pt')
+            return captions, torch.as_tensor(ids)
 
-    def get_loader(self, batchsize=128):
-        return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
+        def get_loader(self, batchsize=128):
+            return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
 
-capdata = CaptionEncodingData(list(test_data.idx2cap.values()), ids=list(test_data.idx2cap.keys()), tokenizer=test_data.tok)
+        capdata = CaptionEncodingData(list(test_data.idx2cap.values()), ids=list(test_data.idx2cap.keys()), tokenizer=test_data.tok)
     
 # Define Evaluation
 def eval_f(model, data):
@@ -327,7 +336,7 @@ if args.load_model == None:
 else:
     model.load_state_dict(torch.load(args.load_model))
 
-batchsize = 256
+batchsize = args.batchsize#256
 
 test_loader = DataLoader(
         test_data,
@@ -340,15 +349,10 @@ with torch.no_grad():
     sm = torch.nn.Softmax(1)
     acc, tot = 0, 0
     on_diag_dist, off_diag_dist = [], []
-    original_points, points, entities, captions = [], [], [], []
     fig, ax = plt.subplots(1,1)
     model.eval()
     for batch, label in test_loader:
         graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
-        original_points.append(graph_encoder(batch['entities'])[0].detach().cpu())
-        points.append(graph_out.detach().cpu()) # points for space visualization
-        entities.append(batch['entities'].detach().cpu())
-        captions += tokenizer.batch_decode(batch['captions']['input_ids'].detach().cpu(), skip_special_tokens=True, clean_up_tokenization_spaces=True)
         # Distance of correct pairs
         on_diag_dist.append(((graph_out-text_out)**2).sum(-1).sqrt())
         #on_diag_dist.append((graph_out * text_out).sum(-1).sqrt())
@@ -357,6 +361,7 @@ with torch.no_grad():
         j = random.sample(list(idx), k=graph_out.shape[0]) # randomly sample a subset of offdiagonal pairs
         k = list(map(lambda x: random.choice(list(idx-{x})), j))
         off_diag_dist.append(((graph_out[j]-text_out[k])**2).sum(-1).sqrt())
+        #off_diag_dist.append((graph_out[j] * text_out[k]).sum(-1).sqrt())
         #off_diag_dist.append(((graph_out[k]-text_out[j])**2).sum(-1).sqrt()) # asymettric in principle
         # Accuracy
         logits = torch.tensordot(graph_out, text_out.T, dims=1) #* torch.exp(model.T)
@@ -371,22 +376,47 @@ with torch.no_grad():
     #print(mannwhitneyu(distance, off_diag_dist, alternative='less'))
     #print(mannwhitneyu(distance, off_diag_dist, alternative='greater'))
     #print(sorted(distance))
+    #import matplotlib.patches as mpatches
+    #on_diag_patch = mpatches.Patch(color='lightgreen', label=r'$P\bigg(\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|\bigg)$')
+    #off_diag_patch = mpatches.Patch(color='salmon', label=r'$P\bigg(\|\tilde{x}_i^{(g)}-\tilde{x}_j^{(t)}\|_{i\neq j}\bigg)$')
+    #plt.legend(handles=[on_diag_patch, off_diag_patch])
     print(f'left mean: {on_diag_dist.mean()}\t right mean: {off_diag_dist.mean()}')
     print(f'Distance of the means: {off_diag_dist.mean() - on_diag_dist.mean():.3f}')
     # Get area of histogram overlap
     hist_range = (0.,2.)
     bins = 100
-    on_diag_hist, _, _ = ax.hist(on_diag_dist, bins=bins, range=hist_range, alpha=0.5, density=True)
-    off_diag_hist, _, _ = ax.hist(off_diag_dist, bins=bins, range=hist_range, alpha=0.5, density=True)
+    on_diag_hist, _, _ = ax.hist(
+        on_diag_dist,
+        bins=bins,
+        range=hist_range,
+        alpha=0.5,
+        density=True,
+        color='mediumseagreen',
+        label=r'$P(\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|)$'
+    )
+    off_diag_hist, _, _ = ax.hist(
+        off_diag_dist,
+        bins=bins,
+        range=hist_range,
+        alpha=0.5,
+        density=True,
+        color='salmon',
+        label=r'$P(\|\tilde{x}_i^{(g)}-\tilde{x}_j^{(t)}\|_{i\neq j})$'
+    )
+    ax.legend()
     area = []
     for on, off in zip(on_diag_hist, off_diag_hist):
         if on > 0 and off > 0:
             area.append(min(on, off))
     area = (torch.as_tensor(area) * (hist_range[1] - hist_range[0])/100).sum()
     print(f'Overlapping area: {area:.3f}')
-    ax.annotate(f'Left mean: {on_diag_dist.mean():.2f}     Right mean: {off_diag_dist.mean():.2f}', (0.1,0.9), xycoords='axes fraction')
-    ax.annotate(f'Overlapping area: {area:.3f}', (0.1,0.8), xycoords='axes fraction')
+    plt.axvline(on_diag_dist.mean(), linestyle='--', alpha=0.5, c='mediumseagreen')
+    plt.axvline(off_diag_dist.mean(), linestyle='--', alpha=0.5, c='salmon')
+    ax.set_xlabel(r'$\|\tilde x^{(g)} - \tilde x^{(t)}\|$')
+    #ax.annotate(f'Left mean: {on_diag_dist.mean():.2f}     Right mean: {off_diag_dist.mean():.2f}', (0.1,0.9), xycoords='axes fraction')
+    #ax.annotate(f'Overlapping area: {area:.3f}', (0.1,0.8), xycoords='axes fraction')
     #plt.savefig(f'distance_histogram_batchsize_{batchsize}.png')
+    plt.savefig('euclidean_dist_{}.pdf'.format(args.dataset), dpi=300, format='pdf', bbox_inches='tight')
     plt.show()
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')
 
