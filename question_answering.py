@@ -239,7 +239,12 @@ for batch in tqdm(val_loader):
         )))
         ans = get_answers(input_ids, outputs)
         answers.update(dict(zip(batch['id'], ans)))
-
+        
+for k,v in gt.items():
+    gt[k] = v
+for k,v in answers.items():
+    answers[k] = v
+    
 with open('data/squad/answers.json', 'w') as f:
     json.dump(answers, f)
 
