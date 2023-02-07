@@ -1,14 +1,15 @@
 import json, sys, argparse
 from pathlib import Path
 from tqdm import tqdm
+from os.path import basename
 
 
 parser = argparse.ArgumentParser(description='Question Answering.')
 parser.add_argument('--load_model', default=None, help='Path to pretrained model.')
 parser.add_argument('--text_encoder', default='distilbert-base-uncased')
 parser.add_argument('--clip', action='store_true')
-parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--skip_training', action='store_true')
+parser.add_argument('--epochs', default=3, type=int)
 
 args = parser.parse_args()
 
@@ -212,11 +213,14 @@ model.to(device)
 model.train()
 
 if (args.load_model is None or args.clip) and not args.skip_training:
-    epochs = 3
+    for p in model.parameters():
+        p.requires_grad = True
+    epochs = args.epochs
     train(model, train_loader, val_loader, epochs=epochs)
-    filename = 'data/squad/qa_squad_{}_{}'.format(args.text_encoder, epochs)
+    filename = 'data/squad/qa_squad_{}'.format(epochs)
     if args.clip:
         filename += '_clip'
+        filename += '_{}'.format(basename(args.load_model))
     torch.save(model.state_dict(), filename + '.pt')
 
 answers = {}
@@ -244,8 +248,11 @@ for k,v in gt.items():
     gt[k] = v
 for k,v in answers.items():
     answers[k] = v
-    
-with open('data/squad/answers.json', 'w') as f:
+
+ans_file = 'data/squad/answers'
+if args.clip:
+    ans_file += '_{}'.format(basename(args.load_model))
+with open(ans_file + '.json', 'w') as f:
     json.dump(answers, f)
 
 with open('data/squad/answers_true.json', 'w') as f:

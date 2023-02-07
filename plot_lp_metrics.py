@@ -1,10 +1,16 @@
-import json, sys, torch
+import json, sys, torch, argparse
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 22})
 import numpy as np
 
+parser = argparse.ArgumentParser(description='Plotting results.')
+parser.add_argument('in_files', nargs='+')
+parser.add_argument('--log_scale', action='store_true')
+
+args = parser.parse_args()
+
 metrics = []
-for filename in sys.argv[1:]:
+for filename in args.in_files:
     with open(filename, 'r') as f:
         metrics.append(json.load(f))
         
@@ -117,15 +123,19 @@ reshape(caption_pretraining, len(metrics))
 metric_type = 'filtered'
 
 fig, axs = plt.subplots(1, 4, figsize=(38,9))
-
+if args.log_scale:
+    scale = lambda x: np.log(x + 1e-6)
+else:
+    scale = lambda x: x
+    
 for metric, ax in zip([ k for k in baseline[metric_type].keys() if k!='hits@3'] , axs.flatten()):
     for d in (baseline, caption_pretraining):
         mean = d[metric_type][metric].mean(0)
         #top = d[metric_type][metric].max(0).values
         #bottom = d[metric_type][metric].min(0).values
         std = d[metric_type][metric].std(0)
-        ax.plot(mean)
-        ax.fill_between(range(max_n_epochs), mean+std, mean-std, alpha=0.3)
+        ax.plot(scale(mean))
+        ax.fill_between(range(max_n_epochs), scale(mean+std), scale(mean-std), alpha=0.3)
         #ax.fill_between(range(len(metrics)), mean+std, mean-std, alpha=0.3)
         #ax.plot(caption_pretraining[metric_type][metric].mean(0), c='orange')
         ax.set_title(metric)
