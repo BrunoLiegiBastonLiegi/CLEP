@@ -1,7 +1,9 @@
 *.py~
 *.json
+*.json~
 *.pkl
 *.txt
+*.txt~
 *.pt
 *.png
 __pycache__
@@ -12,3 +14,4 @@ __pycache__
 *.bak
 *.tar.gz
 saved/
+*.html

@@ -183,7 +183,7 @@ class Data(object):
         inver_rels = []
 
         for split in ["train", "test", "valid"]:
-            for line in open("./{}/{}.txt".format(self.dataset, split)):
+            for line in open("../data/{}/link-prediction/{}.txt".format(self.dataset, split)):
                 sub, rel, obj = map(str, line.strip().split("\t"))
                 sub_id, rel_id, obj_id = (
                     self.ent2id[sub],

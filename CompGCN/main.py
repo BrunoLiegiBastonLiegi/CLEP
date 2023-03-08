@@ -364,7 +364,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--layer_size",
         nargs="?",
-        default="[200]",
+        default="[200,200]",
         help="List of output size for each compGCN layer",
     )
     parser.add_argument(
