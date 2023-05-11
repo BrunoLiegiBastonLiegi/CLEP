@@ -172,3 +172,21 @@ class KG(object):
     @property
     def embedding_dim(self):
         return self.emb_dim
+
+
+class SimilarityQA(object):
+
+    def __init__(self, clep_model, tokenizer):
+        super(self, ).__init__()
+        self.clep = clep_model
+        self.tok = tokenizer
+
+    def answer(self, query, top_k=10):
+        query = self.tok(query)
+        query_emb = torch.nn.functional.normalize(self.clep.t_nn(query, p=2, dim=-1))
+        node_embs = torch.nn.functional.normalize(self.clep.g_nn(:))
+        similarities = (query_emb*node_embs).sum(-1)
+        values, indices = similarities.sort(descending=True)
+        return list(zip(indices[:top_k], values[:top_k]))
+                                                  
+        

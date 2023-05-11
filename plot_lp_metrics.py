@@ -1,6 +1,6 @@
 import json, sys, torch, argparse
 import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 22})
+plt.rcParams.update({'font.size': 28})
 import numpy as np
 
 parser = argparse.ArgumentParser(description='Plotting results.')
@@ -80,7 +80,6 @@ for m in metrics:
                 ep = list(v.keys())[-1]
             d.update({k:v[ep]})
     test.append(d)
-            
 max_n_epochs = 0
 for m in metrics:
     for i in (0,1):
@@ -174,7 +173,7 @@ for k in ('ranks','mean_rank', 'mrr', 'hits@1', 'hits@3', 'hits@10'):
                 test_baseline[k].append(d[k])
             else:
                 test_cpp[k].append(d[k])
-
+                
 
 print('\t\t Baseline\t Caption Pretrained')
 
@@ -185,15 +184,21 @@ for k in ('mean_rank', 'mrr', 'hits@1', 'hits@3', 'hits@10'):
         print(f'{k}\t\t {np.mean(test_baseline[k]):.3f}\t\t {np.mean(test_cpp[k]):.3f}')
 
 if len(test_baseline['ranks']) > 0:
-    bins = 100000
+    plt.rcParams.update({'font.size': 42})
+    fig, ax = plt.subplots(1, 1, figsize=(20,16))
+    bins = 50#'auto'
     cut = 25
+    dens = True
     ranks_baseline = torch.as_tensor(test_baseline['ranks']).flatten()
     #ranks_baseline = ranks_baseline[ranks_baseline < cut]
     ranks_cpp = torch.as_tensor(test_cpp['ranks']).flatten()
     #ranks_cpp = ranks_cpp[ranks_cpp < cut]
-    plt.hist(ranks_baseline.numpy(), density=True, alpha=0.5, bins=bins)
-    plt.hist(ranks_cpp.numpy(), density=True, alpha=0.5, bins=bins)
-    plt.xlim(0,cut)
+    ax.hist(ranks_baseline.numpy(), density=dens, alpha=0.3, bins=bins)
+    ax.hist(ranks_cpp.numpy(), density=dens, alpha=0.3, bins=bins)
+    #plt.xlim(0,cut)
+    #plt.xscale('log')
+    plt.xlabel('Ranks')
+    plt.ylabel('P')
+    plt.yscale('log')
+    plt.savefig('ranks_hist.pdf', format='pdf', dpi=300)
     plt.show()
-
-

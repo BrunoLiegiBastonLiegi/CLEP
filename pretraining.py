@@ -249,7 +249,7 @@ if args.head_to_tail:
         def get_loader(self, batchsize=128):
             return DataLoader(self.captions, batch_size=batchsize, shuffle=False, collate_fn=self.collate_fn)
 
-        capdata = CaptionEncodingData(list(test_data.idx2cap.values()), ids=list(test_data.idx2cap.keys()), tokenizer=test_data.tok)
+    capdata = CaptionEncodingData(list(test_data.idx2cap.values()), ids=list(test_data.idx2cap.keys()), tokenizer=test_data.tok)
     
 # Define Evaluation
 def eval_f(model, data):
