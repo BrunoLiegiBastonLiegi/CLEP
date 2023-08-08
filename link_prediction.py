@@ -179,7 +179,7 @@ elif graph_model == 'CompGCN':
 if args.load_model is not None:
 
     if args.text_encoder == 'gpt2':
-        _ = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
+        _ = GPT2CaptionEncoder(pretrained_model=args.text_encoder+'-large')
     else:
         _ = BertCaptionEncoder(pretrained_model=args.text_encoder)
     #_ = GPT2CaptionEncoder(pretrained_model='gpt2')

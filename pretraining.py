@@ -183,7 +183,7 @@ elif graph_model == 'RGCN':
 if args.head_to_tail:
     assert graph_model == 'CompGCN' and graph_encoder.return_rel_embs, "Head-to-Tail pretraining is only supported for CompGCN models with return_rel_embs=True"
 # Caption encoder
-if args.text_encoder == 'gpt2':
+if 'gpt2' in args.text_encoder:
     text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 else:
     text_encoder = BertCaptionEncoder(pretrained_model=args.text_encoder)
@@ -340,7 +340,7 @@ batchsize = args.batchsize#256
 
 test_loader = DataLoader(
         test_data,
-        batch_size = batchsize,
+        batch_size = 256,#batchsize,
         shuffle = True,
         collate_fn = test_data.collate_fn
     )
@@ -359,6 +359,8 @@ with torch.no_grad():
         # Distance of offdiagonal pairs
         idx = set(range(graph_out.shape[0]))
         j = random.sample(list(idx), k=graph_out.shape[0]) # randomly sample a subset of offdiagonal pairs
+        #print(idx)
+        #print(j)
         k = list(map(lambda x: random.choice(list(idx-{x})), j))
         off_diag_dist.append(((graph_out[j]-text_out[k])**2).sum(-1).sqrt())
         #off_diag_dist.append((graph_out[j] * text_out[k]).sum(-1).sqrt())

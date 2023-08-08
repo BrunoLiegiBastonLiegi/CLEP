@@ -72,12 +72,12 @@ class CLIP_KB(torch.nn.Module):
         self.t_encoder = text_encoder
         self.t_mlp = MLP(1, self.t_encoder.hdim, hdim) # Switch dropout with BatchNorm!?
         #self.t_mlp = TransformerEncoder(1, self.t_encoder.hdim, hdim)
-        self.t_nn = Sequential(self.t_encoder, self.t_mlp)
+        #self.t_nn = Sequential(self.t_encoder, self.t_mlp)
         # graph encoding
         self.g_encoder = graph_encoder
         self.g_mlp = MLP(1, self.g_encoder.hdim, hdim)
         #self.g_mlp = TransformerEncoder(1, self.g_encoder.hdim, hdim)
-        self.g_nn = Sequential(self.g_encoder, self.g_mlp)
+        #self.g_nn = Sequential(self.g_encoder, self.g_mlp)
 
     def forward(self, nodes, captions):
         self.T = min(self.T, 100)
@@ -87,8 +87,8 @@ class CLIP_KB(torch.nn.Module):
             nodes = ents + rel
             nodes = self.g_mlp(nodes)
         else:
-            nodes = self.g_nn(nodes)
-        captions = self.t_nn(captions)
+            nodes = self.g_mlp(self.g_encoder(nodes))
+        captions = self.t_mlp(self.t_encoder(captions))
         return normalize(nodes, p=2, dim=-1), normalize(captions, p=2, dim=-1)
         #return ( normalize(self.g_nn(nodes), p=2, dim=-1),
         #         normalize(self.t_nn(captions), p=2, dim=-1) )

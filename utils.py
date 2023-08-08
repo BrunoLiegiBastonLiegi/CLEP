@@ -7,6 +7,7 @@ from sklearn.metrics import silhouette_score
 import numpy as np
 import colorcet as cc
 import json
+import bitsandbytes as bnb
 
 def visualize_embeddings(embeddings, n_clusters=None, clusters=None, ax=plt.subplots()[1]):
     if n_clusters !=None:
@@ -35,7 +36,8 @@ from tqdm import tqdm
 
 def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, valid_data=None, eval_f=None, eval_each=-1, unfreezing_f=None, accum_iter=1, dev=torch.device('cpu')):
     
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    #optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    optimizer = bnb.optim.Adam8bit(model.parameters(), lr=learning_rate)
     #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.)
     scaler = GradScaler()
 
