@@ -397,3 +397,29 @@ class Distmult(torch.nn.Module):
                 return (t*r).mm(h.T)
         else:
             return (h*r*t).sum(-1)
+
+
+class EntityLinkingModel:
+
+    def __init__(self, graph_model, text_model, tokenizer):
+        self.g_model = graph_model
+        self.t_model = text_model
+        self.tokenizer = tokenizer
+
+    def forward(self, entity_mention, entity, top_k=1):
+        tokenized_mention = self.tokenizer(entity_mention)
+        tokenized_entity = self.tokenizer(entity)
+        span = self.find_entity_span(tokenized_mention, tokenized_entity)
+        text_embedding = self.t_model(tokenized_mention)[span[0]:span[1]].mean()
+        graph_embeddings = self.g_model()
+        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding, graph_embeddings).sort(descending=True)
+        return node_indices[:top_k]
+
+    def find_entity_span(self, entity_mention, entity):
+        l = len(entity)
+        i = 0 
+        while i < len(entity_mention):
+            if entity_mention[i:i+l] == entity:
+                return (i, i+l)
+            i += 1
+        
