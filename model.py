@@ -399,27 +399,28 @@ class Distmult(torch.nn.Module):
             return (h*r*t).sum(-1)
 
 
-class EntityLinkingModel:
+class EntityLinkingModel(torch.nn.Module):
 
-    def __init__(self, graph_model, text_model, tokenizer):
-        self.g_model = graph_model
-        self.t_model = text_model
+    def __init__(self, clep_model, tokenizer):
+        self.clep_model = clep_model
         self.tokenizer = tokenizer
 
     def forward(self, entity_mention, entity, top_k=1):
         tokenized_mention = self.tokenizer(entity_mention)
         tokenized_entity = self.tokenizer(entity)
         span = self.find_entity_span(tokenized_mention, tokenized_entity)
-        text_embedding = self.t_model(tokenized_mention)[span[0]:span[1]].mean()
-        graph_embeddings = self.g_model()
-        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding, graph_embeddings).sort(descending=True)
+        text_embedding = self.clep_model.t_encoder(tokenized_mention)[span[0]:span[1]].mean()
+        text_embedding = self.clep_model.t_mlp(text_embedding)
+        graph_embedding = self.clep_model.g_encoder(None)
+        graph_embedding = self.clep_model.g_mlp(graph_embedding)
+        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding, graph_embedding).sort(descending=True)
         return node_indices[:top_k]
 
     def find_entity_span(self, entity_mention, entity):
         l = len(entity)
         i = 0 
         while i < len(entity_mention):
-            if entity_mention[i:i+l] == entity:
+            if all(entity_mention[i:i+l] == entity):
                 return (i, i+l)
             i += 1
         
