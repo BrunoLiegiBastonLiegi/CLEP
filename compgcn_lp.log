@@ -1,0 +1,2877 @@
+/home/remote/u7177797/git/CLIP-KB
+bigdata-1
+Mon Jan 15 01:55:44 AEDT 2024
+../CompGCN-gpt2-xl_64bs_7e_FB15k-237-cut.pt
+---- Link Prediction ----
+../saved/models/FB15k-237-cut/pretraining/CompGCN/CompGCN-gpt2-xl_64bs_7e_FB15k-237-cut.pt
+Namespace(dataset='FB15k-237-cut', model='compgcn', score_func='conve', opn='sub', batch_size=1024, gpu=0, max_epochs=1000, l2=0.0, lr=0.001, lbl_smooth=0.1, num_workers=2, seed=42, num_bases=-1, init_dim=200, layer_size='[200,200]', dropout=0.1, layer_dropout='[0.3,0.3]', hid_drop=0.3, feat_drop=0.3, k_w=10, k_h=20, num_filt=200, ker_sz=7, load_model='../saved/models/FB15k-237-cut/pretraining/CompGCN/CompGCN-gpt2-xl_64bs_7e_FB15k-237-cut.pt', save_res='../saved/LP_results/FB15k-237-cut/CompGCN/lp_results_FB15k-237-cut_CompGCN-cpp_1024bs_1000e.json')
+Num ent: 14296, Num rel: 235
+Traceback (most recent call last):
+  File "/home/remote/u7177797/git/CLIP-KB/CompGCN/main.py", line 438, in <module>
+    main(args)
+  File "/home/remote/u7177797/git/CLIP-KB/CompGCN/main.py", line 153, in main
+    clip.load_state_dict(torch.load(args.load_model))
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 2041, in load_state_dict
+    raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
+RuntimeError: Error(s) in loading state_dict for CLIP_KB:
+	Unexpected key(s) in state_dict: "t_encoder.model.h.12.ln_1.weight", "t_encoder.model.h.12.ln_1.bias", "t_encoder.model.h.12.attn.c_attn.weight", "t_encoder.model.h.12.attn.c_attn.bias", "t_encoder.model.h.12.attn.c_proj.weight", "t_encoder.model.h.12.attn.c_proj.bias", "t_encoder.model.h.12.ln_2.weight", "t_encoder.model.h.12.ln_2.bias", "t_encoder.model.h.12.mlp.c_fc.weight", "t_encoder.model.h.12.mlp.c_fc.bias", "t_encoder.model.h.12.mlp.c_proj.weight", "t_encoder.model.h.12.mlp.c_proj.bias", "t_encoder.model.h.13.ln_1.weight", "t_encoder.model.h.13.ln_1.bias", "t_encoder.model.h.13.attn.c_attn.weight", "t_encoder.model.h.13.attn.c_attn.bias", "t_encoder.model.h.13.attn.c_proj.weight", "t_encoder.model.h.13.attn.c_proj.bias", "t_encoder.model.h.13.ln_2.weight", "t_encoder.model.h.13.ln_2.bias", "t_encoder.model.h.13.mlp.c_fc.weight", "t_encoder.model.h.13.mlp.c_fc.bias", "t_encoder.model.h.13.mlp.c_proj.weight", "t_encoder.model.h.13.mlp.c_proj.bias", "t_encoder.model.h.14.ln_1.weight", "t_encoder.model.h.14.ln_1.bias", "t_encoder.model.h.14.attn.c_attn.weight", "t_encoder.model.h.14.attn.c_attn.bias", "t_encoder.model.h.14.attn.c_proj.weight", "t_encoder.model.h.14.attn.c_proj.bias", "t_encoder.model.h.14.ln_2.weight", "t_encoder.model.h.14.ln_2.bias", "t_encoder.model.h.14.mlp.c_fc.weight", "t_encoder.model.h.14.mlp.c_fc.bias", "t_encoder.model.h.14.mlp.c_proj.weight", "t_encoder.model.h.14.mlp.c_proj.bias", "t_encoder.model.h.15.ln_1.weight", "t_encoder.model.h.15.ln_1.bias", "t_encoder.model.h.15.attn.c_attn.weight", "t_encoder.model.h.15.attn.c_attn.bias", "t_encoder.model.h.15.attn.c_proj.weight", "t_encoder.model.h.15.attn.c_proj.bias", "t_encoder.model.h.15.ln_2.weight", "t_encoder.model.h.15.ln_2.bias", "t_encoder.model.h.15.mlp.c_fc.weight", "t_encoder.model.h.15.mlp.c_fc.bias", "t_encoder.model.h.15.mlp.c_proj.weight", "t_encoder.model.h.15.mlp.c_proj.bias", "t_encoder.model.h.16.ln_1.weight", "t_encoder.model.h.16.ln_1.bias", "t_encoder.model.h.16.attn.c_attn.weight", "t_encoder.model.h.16.attn.c_attn.bias", "t_encoder.model.h.16.attn.c_proj.weight", "t_encoder.model.h.16.attn.c_proj.bias", "t_encoder.model.h.16.ln_2.weight", "t_encoder.model.h.16.ln_2.bias", "t_encoder.model.h.16.mlp.c_fc.weight", "t_encoder.model.h.16.mlp.c_fc.bias", "t_encoder.model.h.16.mlp.c_proj.weight", "t_encoder.model.h.16.mlp.c_proj.bias", "t_encoder.model.h.17.ln_1.weight", "t_encoder.model.h.17.ln_1.bias", "t_encoder.model.h.17.attn.c_attn.weight", "t_encoder.model.h.17.attn.c_attn.bias", "t_encoder.model.h.17.attn.c_proj.weight", "t_encoder.model.h.17.attn.c_proj.bias", "t_encoder.model.h.17.ln_2.weight", "t_encoder.model.h.17.ln_2.bias", "t_encoder.model.h.17.mlp.c_fc.weight", "t_encoder.model.h.17.mlp.c_fc.bias", "t_encoder.model.h.17.mlp.c_proj.weight", "t_encoder.model.h.17.mlp.c_proj.bias", "t_encoder.model.h.18.ln_1.weight", "t_encoder.model.h.18.ln_1.bias", "t_encoder.model.h.18.attn.c_attn.weight", "t_encoder.model.h.18.attn.c_attn.bias", "t_encoder.model.h.18.attn.c_proj.weight", "t_encoder.model.h.18.attn.c_proj.bias", "t_encoder.model.h.18.ln_2.weight", "t_encoder.model.h.18.ln_2.bias", "t_encoder.model.h.18.mlp.c_fc.weight", "t_encoder.model.h.18.mlp.c_fc.bias", "t_encoder.model.h.18.mlp.c_proj.weight", "t_encoder.model.h.18.mlp.c_proj.bias", "t_encoder.model.h.19.ln_1.weight", "t_encoder.model.h.19.ln_1.bias", "t_encoder.model.h.19.attn.c_attn.weight", "t_encoder.model.h.19.attn.c_attn.bias", "t_encoder.model.h.19.attn.c_proj.weight", "t_encoder.model.h.19.attn.c_proj.bias", "t_encoder.model.h.19.ln_2.weight", "t_encoder.model.h.19.ln_2.bias", "t_encoder.model.h.19.mlp.c_fc.weight", "t_encoder.model.h.19.mlp.c_fc.bias", "t_encoder.model.h.19.mlp.c_proj.weight", "t_encoder.model.h.19.mlp.c_proj.bias", "t_encoder.model.h.20.ln_1.weight", "t_encoder.model.h.20.ln_1.bias", "t_encoder.model.h.20.attn.c_attn.weight", "t_encoder.model.h.20.attn.c_attn.bias", "t_encoder.model.h.20.attn.c_proj.weight", "t_encoder.model.h.20.attn.c_proj.bias", "t_encoder.model.h.20.ln_2.weight", "t_encoder.model.h.20.ln_2.bias", "t_encoder.model.h.20.mlp.c_fc.weight", "t_encoder.model.h.20.mlp.c_fc.bias", "t_encoder.model.h.20.mlp.c_proj.weight", "t_encoder.model.h.20.mlp.c_proj.bias", "t_encoder.model.h.21.ln_1.weight", "t_encoder.model.h.21.ln_1.bias", "t_encoder.model.h.21.attn.c_attn.weight", "t_encoder.model.h.21.attn.c_attn.bias", "t_encoder.model.h.21.attn.c_proj.weight", "t_encoder.model.h.21.attn.c_proj.bias", "t_encoder.model.h.21.ln_2.weight", "t_encoder.model.h.21.ln_2.bias", "t_encoder.model.h.21.mlp.c_fc.weight", "t_encoder.model.h.21.mlp.c_fc.bias", "t_encoder.model.h.21.mlp.c_proj.weight", "t_encoder.model.h.21.mlp.c_proj.bias", "t_encoder.model.h.22.ln_1.weight", "t_encoder.model.h.22.ln_1.bias", "t_encoder.model.h.22.attn.c_attn.weight", "t_encoder.model.h.22.attn.c_attn.bias", "t_encoder.model.h.22.attn.c_proj.weight", "t_encoder.model.h.22.attn.c_proj.bias", "t_encoder.model.h.22.ln_2.weight", "t_encoder.model.h.22.ln_2.bias", "t_encoder.model.h.22.mlp.c_fc.weight", "t_encoder.model.h.22.mlp.c_fc.bias", "t_encoder.model.h.22.mlp.c_proj.weight", "t_encoder.model.h.22.mlp.c_proj.bias", "t_encoder.model.h.23.ln_1.weight", "t_encoder.model.h.23.ln_1.bias", "t_encoder.model.h.23.attn.c_attn.weight", "t_encoder.model.h.23.attn.c_attn.bias", "t_encoder.model.h.23.attn.c_proj.weight", "t_encoder.model.h.23.attn.c_proj.bias", "t_encoder.model.h.23.ln_2.weight", "t_encoder.model.h.23.ln_2.bias", "t_encoder.model.h.23.mlp.c_fc.weight", "t_encoder.model.h.23.mlp.c_fc.bias", "t_encoder.model.h.23.mlp.c_proj.weight", "t_encoder.model.h.23.mlp.c_proj.bias", "t_encoder.model.h.24.ln_1.weight", "t_encoder.model.h.24.ln_1.bias", "t_encoder.model.h.24.attn.c_attn.weight", "t_encoder.model.h.24.attn.c_attn.bias", "t_encoder.model.h.24.attn.c_proj.weight", "t_encoder.model.h.24.attn.c_proj.bias", "t_encoder.model.h.24.ln_2.weight", "t_encoder.model.h.24.ln_2.bias", "t_encoder.model.h.24.mlp.c_fc.weight", "t_encoder.model.h.24.mlp.c_fc.bias", "t_encoder.model.h.24.mlp.c_proj.weight", "t_encoder.model.h.24.mlp.c_proj.bias", "t_encoder.model.h.25.ln_1.weight", "t_encoder.model.h.25.ln_1.bias", "t_encoder.model.h.25.attn.c_attn.weight", "t_encoder.model.h.25.attn.c_attn.bias", "t_encoder.model.h.25.attn.c_proj.weight", "t_encoder.model.h.25.attn.c_proj.bias", "t_encoder.model.h.25.ln_2.weight", "t_encoder.model.h.25.ln_2.bias", "t_encoder.model.h.25.mlp.c_fc.weight", "t_encoder.model.h.25.mlp.c_fc.bias", "t_encoder.model.h.25.mlp.c_proj.weight", "t_encoder.model.h.25.mlp.c_proj.bias", "t_encoder.model.h.26.ln_1.weight", "t_encoder.model.h.26.ln_1.bias", "t_encoder.model.h.26.attn.c_attn.weight", "t_encoder.model.h.26.attn.c_attn.bias", "t_encoder.model.h.26.attn.c_proj.weight", "t_encoder.model.h.26.attn.c_proj.bias", "t_encoder.model.h.26.ln_2.weight", "t_encoder.model.h.26.ln_2.bias", "t_encoder.model.h.26.mlp.c_fc.weight", "t_encoder.model.h.26.mlp.c_fc.bias", "t_encoder.model.h.26.mlp.c_proj.weight", "t_encoder.model.h.26.mlp.c_proj.bias", "t_encoder.model.h.27.ln_1.weight", "t_encoder.model.h.27.ln_1.bias", "t_encoder.model.h.27.attn.c_attn.weight", "t_encoder.model.h.27.attn.c_attn.bias", "t_encoder.model.h.27.attn.c_proj.weight", "t_encoder.model.h.27.attn.c_proj.bias", "t_encoder.model.h.27.ln_2.weight", "t_encoder.model.h.27.ln_2.bias", "t_encoder.model.h.27.mlp.c_fc.weight", "t_encoder.model.h.27.mlp.c_fc.bias", "t_encoder.model.h.27.mlp.c_proj.weight", "t_encoder.model.h.27.mlp.c_proj.bias", "t_encoder.model.h.28.ln_1.weight", "t_encoder.model.h.28.ln_1.bias", "t_encoder.model.h.28.attn.c_attn.weight", "t_encoder.model.h.28.attn.c_attn.bias", "t_encoder.model.h.28.attn.c_proj.weight", "t_encoder.model.h.28.attn.c_proj.bias", "t_encoder.model.h.28.ln_2.weight", "t_encoder.model.h.28.ln_2.bias", "t_encoder.model.h.28.mlp.c_fc.weight", "t_encoder.model.h.28.mlp.c_fc.bias", "t_encoder.model.h.28.mlp.c_proj.weight", "t_encoder.model.h.28.mlp.c_proj.bias", "t_encoder.model.h.29.ln_1.weight", "t_encoder.model.h.29.ln_1.bias", "t_encoder.model.h.29.attn.c_attn.weight", "t_encoder.model.h.29.attn.c_attn.bias", "t_encoder.model.h.29.attn.c_proj.weight", "t_encoder.model.h.29.attn.c_proj.bias", "t_encoder.model.h.29.ln_2.weight", "t_encoder.model.h.29.ln_2.bias", "t_encoder.model.h.29.mlp.c_fc.weight", "t_encoder.model.h.29.mlp.c_fc.bias", "t_encoder.model.h.29.mlp.c_proj.weight", "t_encoder.model.h.29.mlp.c_proj.bias", "t_encoder.model.h.30.ln_1.weight", "t_encoder.model.h.30.ln_1.bias", "t_encoder.model.h.30.attn.c_attn.weight", "t_encoder.model.h.30.attn.c_attn.bias", "t_encoder.model.h.30.attn.c_proj.weight", "t_encoder.model.h.30.attn.c_proj.bias", "t_encoder.model.h.30.ln_2.weight", "t_encoder.model.h.30.ln_2.bias", "t_encoder.model.h.30.mlp.c_fc.weight", "t_encoder.model.h.30.mlp.c_fc.bias", "t_encoder.model.h.30.mlp.c_proj.weight", "t_encoder.model.h.30.mlp.c_proj.bias", "t_encoder.model.h.31.ln_1.weight", "t_encoder.model.h.31.ln_1.bias", "t_encoder.model.h.31.attn.c_attn.weight", "t_encoder.model.h.31.attn.c_attn.bias", "t_encoder.model.h.31.attn.c_proj.weight", "t_encoder.model.h.31.attn.c_proj.bias", "t_encoder.model.h.31.ln_2.weight", "t_encoder.model.h.31.ln_2.bias", "t_encoder.model.h.31.mlp.c_fc.weight", "t_encoder.model.h.31.mlp.c_fc.bias", "t_encoder.model.h.31.mlp.c_proj.weight", "t_encoder.model.h.31.mlp.c_proj.bias", "t_encoder.model.h.32.ln_1.weight", "t_encoder.model.h.32.ln_1.bias", "t_encoder.model.h.32.attn.c_attn.weight", "t_encoder.model.h.32.attn.c_attn.bias", "t_encoder.model.h.32.attn.c_proj.weight", "t_encoder.model.h.32.attn.c_proj.bias", "t_encoder.model.h.32.ln_2.weight", "t_encoder.model.h.32.ln_2.bias", "t_encoder.model.h.32.mlp.c_fc.weight", "t_encoder.model.h.32.mlp.c_fc.bias", "t_encoder.model.h.32.mlp.c_proj.weight", "t_encoder.model.h.32.mlp.c_proj.bias", "t_encoder.model.h.33.ln_1.weight", "t_encoder.model.h.33.ln_1.bias", "t_encoder.model.h.33.attn.c_attn.weight", "t_encoder.model.h.33.attn.c_attn.bias", "t_encoder.model.h.33.attn.c_proj.weight", "t_encoder.model.h.33.attn.c_proj.bias", "t_encoder.model.h.33.ln_2.weight", "t_encoder.model.h.33.ln_2.bias", "t_encoder.model.h.33.mlp.c_fc.weight", "t_encoder.model.h.33.mlp.c_fc.bias", "t_encoder.model.h.33.mlp.c_proj.weight", "t_encoder.model.h.33.mlp.c_proj.bias", "t_encoder.model.h.34.ln_1.weight", "t_encoder.model.h.34.ln_1.bias", "t_encoder.model.h.34.attn.c_attn.weight", "t_encoder.model.h.34.attn.c_attn.bias", "t_encoder.model.h.34.attn.c_proj.weight", "t_encoder.model.h.34.attn.c_proj.bias", "t_encoder.model.h.34.ln_2.weight", "t_encoder.model.h.34.ln_2.bias", "t_encoder.model.h.34.mlp.c_fc.weight", "t_encoder.model.h.34.mlp.c_fc.bias", "t_encoder.model.h.34.mlp.c_proj.weight", "t_encoder.model.h.34.mlp.c_proj.bias", "t_encoder.model.h.35.ln_1.weight", "t_encoder.model.h.35.ln_1.bias", "t_encoder.model.h.35.attn.c_attn.weight", "t_encoder.model.h.35.attn.c_attn.bias", "t_encoder.model.h.35.attn.c_proj.weight", "t_encoder.model.h.35.attn.c_proj.bias", "t_encoder.model.h.35.ln_2.weight", "t_encoder.model.h.35.ln_2.bias", "t_encoder.model.h.35.mlp.c_fc.weight", "t_encoder.model.h.35.mlp.c_fc.bias", "t_encoder.model.h.35.mlp.c_proj.weight", "t_encoder.model.h.35.mlp.c_proj.bias", "t_encoder.model.h.36.ln_1.weight", "t_encoder.model.h.36.ln_1.bias", "t_encoder.model.h.36.attn.c_attn.weight", "t_encoder.model.h.36.attn.c_attn.bias", "t_encoder.model.h.36.attn.c_proj.weight", "t_encoder.model.h.36.attn.c_proj.bias", "t_encoder.model.h.36.ln_2.weight", "t_encoder.model.h.36.ln_2.bias", "t_encoder.model.h.36.mlp.c_fc.weight", "t_encoder.model.h.36.mlp.c_fc.bias", "t_encoder.model.h.36.mlp.c_proj.weight", "t_encoder.model.h.36.mlp.c_proj.bias", "t_encoder.model.h.37.ln_1.weight", "t_encoder.model.h.37.ln_1.bias", "t_encoder.model.h.37.attn.c_attn.weight", "t_encoder.model.h.37.attn.c_attn.bias", "t_encoder.model.h.37.attn.c_proj.weight", "t_encoder.model.h.37.attn.c_proj.bias", "t_encoder.model.h.37.ln_2.weight", "t_encoder.model.h.37.ln_2.bias", "t_encoder.model.h.37.mlp.c_fc.weight", "t_encoder.model.h.37.mlp.c_fc.bias", "t_encoder.model.h.37.mlp.c_proj.weight", "t_encoder.model.h.37.mlp.c_proj.bias", "t_encoder.model.h.38.ln_1.weight", "t_encoder.model.h.38.ln_1.bias", "t_encoder.model.h.38.attn.c_attn.weight", "t_encoder.model.h.38.attn.c_attn.bias", "t_encoder.model.h.38.attn.c_proj.weight", "t_encoder.model.h.38.attn.c_proj.bias", "t_encoder.model.h.38.ln_2.weight", "t_encoder.model.h.38.ln_2.bias", "t_encoder.model.h.38.mlp.c_fc.weight", "t_encoder.model.h.38.mlp.c_fc.bias", "t_encoder.model.h.38.mlp.c_proj.weight", "t_encoder.model.h.38.mlp.c_proj.bias", "t_encoder.model.h.39.ln_1.weight", "t_encoder.model.h.39.ln_1.bias", "t_encoder.model.h.39.attn.c_attn.weight", "t_encoder.model.h.39.attn.c_attn.bias", "t_encoder.model.h.39.attn.c_proj.weight", "t_encoder.model.h.39.attn.c_proj.bias", "t_encoder.model.h.39.ln_2.weight", "t_encoder.model.h.39.ln_2.bias", "t_encoder.model.h.39.mlp.c_fc.weight", "t_encoder.model.h.39.mlp.c_fc.bias", "t_encoder.model.h.39.mlp.c_proj.weight", "t_encoder.model.h.39.mlp.c_proj.bias", "t_encoder.model.h.40.ln_1.weight", "t_encoder.model.h.40.ln_1.bias", "t_encoder.model.h.40.attn.c_attn.weight", "t_encoder.model.h.40.attn.c_attn.bias", "t_encoder.model.h.40.attn.c_proj.weight", "t_encoder.model.h.40.attn.c_proj.bias", "t_encoder.model.h.40.ln_2.weight", "t_encoder.model.h.40.ln_2.bias", "t_encoder.model.h.40.mlp.c_fc.weight", "t_encoder.model.h.40.mlp.c_fc.bias", "t_encoder.model.h.40.mlp.c_proj.weight", "t_encoder.model.h.40.mlp.c_proj.bias", "t_encoder.model.h.41.ln_1.weight", "t_encoder.model.h.41.ln_1.bias", "t_encoder.model.h.41.attn.c_attn.weight", "t_encoder.model.h.41.attn.c_attn.bias", "t_encoder.model.h.41.attn.c_proj.weight", "t_encoder.model.h.41.attn.c_proj.bias", "t_encoder.model.h.41.ln_2.weight", "t_encoder.model.h.41.ln_2.bias", "t_encoder.model.h.41.mlp.c_fc.weight", "t_encoder.model.h.41.mlp.c_fc.bias", "t_encoder.model.h.41.mlp.c_proj.weight", "t_encoder.model.h.41.mlp.c_proj.bias", "t_encoder.model.h.42.ln_1.weight", "t_encoder.model.h.42.ln_1.bias", "t_encoder.model.h.42.attn.c_attn.weight", "t_encoder.model.h.42.attn.c_attn.bias", "t_encoder.model.h.42.attn.c_proj.weight", "t_encoder.model.h.42.attn.c_proj.bias", "t_encoder.model.h.42.ln_2.weight", "t_encoder.model.h.42.ln_2.bias", "t_encoder.model.h.42.mlp.c_fc.weight", "t_encoder.model.h.42.mlp.c_fc.bias", "t_encoder.model.h.42.mlp.c_proj.weight", "t_encoder.model.h.42.mlp.c_proj.bias", "t_encoder.model.h.43.ln_1.weight", "t_encoder.model.h.43.ln_1.bias", "t_encoder.model.h.43.attn.c_attn.weight", "t_encoder.model.h.43.attn.c_attn.bias", "t_encoder.model.h.43.attn.c_proj.weight", "t_encoder.model.h.43.attn.c_proj.bias", "t_encoder.model.h.43.ln_2.weight", "t_encoder.model.h.43.ln_2.bias", "t_encoder.model.h.43.mlp.c_fc.weight", "t_encoder.model.h.43.mlp.c_fc.bias", "t_encoder.model.h.43.mlp.c_proj.weight", "t_encoder.model.h.43.mlp.c_proj.bias", "t_encoder.model.h.44.ln_1.weight", "t_encoder.model.h.44.ln_1.bias", "t_encoder.model.h.44.attn.c_attn.weight", "t_encoder.model.h.44.attn.c_attn.bias", "t_encoder.model.h.44.attn.c_proj.weight", "t_encoder.model.h.44.attn.c_proj.bias", "t_encoder.model.h.44.ln_2.weight", "t_encoder.model.h.44.ln_2.bias", "t_encoder.model.h.44.mlp.c_fc.weight", "t_encoder.model.h.44.mlp.c_fc.bias", "t_encoder.model.h.44.mlp.c_proj.weight", "t_encoder.model.h.44.mlp.c_proj.bias", "t_encoder.model.h.45.ln_1.weight", "t_encoder.model.h.45.ln_1.bias", "t_encoder.model.h.45.attn.c_attn.weight", "t_encoder.model.h.45.attn.c_attn.bias", "t_encoder.model.h.45.attn.c_proj.weight", "t_encoder.model.h.45.attn.c_proj.bias", "t_encoder.model.h.45.ln_2.weight", "t_encoder.model.h.45.ln_2.bias", "t_encoder.model.h.45.mlp.c_fc.weight", "t_encoder.model.h.45.mlp.c_fc.bias", "t_encoder.model.h.45.mlp.c_proj.weight", "t_encoder.model.h.45.mlp.c_proj.bias", "t_encoder.model.h.46.ln_1.weight", "t_encoder.model.h.46.ln_1.bias", "t_encoder.model.h.46.attn.c_attn.weight", "t_encoder.model.h.46.attn.c_attn.bias", "t_encoder.model.h.46.attn.c_proj.weight", "t_encoder.model.h.46.attn.c_proj.bias", "t_encoder.model.h.46.ln_2.weight", "t_encoder.model.h.46.ln_2.bias", "t_encoder.model.h.46.mlp.c_fc.weight", "t_encoder.model.h.46.mlp.c_fc.bias", "t_encoder.model.h.46.mlp.c_proj.weight", "t_encoder.model.h.46.mlp.c_proj.bias", "t_encoder.model.h.47.ln_1.weight", "t_encoder.model.h.47.ln_1.bias", "t_encoder.model.h.47.attn.c_attn.weight", "t_encoder.model.h.47.attn.c_attn.bias", "t_encoder.model.h.47.attn.c_proj.weight", "t_encoder.model.h.47.attn.c_proj.bias", "t_encoder.model.h.47.ln_2.weight", "t_encoder.model.h.47.ln_2.bias", "t_encoder.model.h.47.mlp.c_fc.weight", "t_encoder.model.h.47.mlp.c_fc.bias", "t_encoder.model.h.47.mlp.c_proj.weight", "t_encoder.model.h.47.mlp.c_proj.bias". 
+	size mismatch for t_encoder.model.wte.weight: copying a param with shape torch.Size([50257, 1600]) from checkpoint, the shape in current model is torch.Size([50257, 768]).
+	size mismatch for t_encoder.model.wpe.weight: copying a param with shape torch.Size([1024, 1600]) from checkpoint, the shape in current model is torch.Size([1024, 768]).
+	size mismatch for t_encoder.model.h.0.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.0.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.0.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.0.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.0.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.0.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.0.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.0.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.0.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.0.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.0.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.0.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.1.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.1.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.1.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.1.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.1.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.1.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.1.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.2.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.2.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.2.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.2.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.2.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.2.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.2.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.3.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.3.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.3.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.3.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.3.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.3.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.3.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.4.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.4.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.4.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.4.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.4.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.4.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.4.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.5.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.5.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.5.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.5.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.5.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.5.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.5.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.6.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.6.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.6.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.6.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.6.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.6.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.6.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.7.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.7.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.7.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.7.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.7.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.7.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.7.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.8.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.8.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.8.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.8.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.8.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.8.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.8.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.9.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.9.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.9.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.9.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.9.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.9.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.9.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.10.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.10.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.10.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.10.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.10.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.10.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.10.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.ln_1.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.ln_1.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.attn.c_attn.weight: copying a param with shape torch.Size([1600, 4800]) from checkpoint, the shape in current model is torch.Size([768, 2304]).
+	size mismatch for t_encoder.model.h.11.attn.c_attn.bias: copying a param with shape torch.Size([4800]) from checkpoint, the shape in current model is torch.Size([2304]).
+	size mismatch for t_encoder.model.h.11.attn.c_proj.weight: copying a param with shape torch.Size([1600, 1600]) from checkpoint, the shape in current model is torch.Size([768, 768]).
+	size mismatch for t_encoder.model.h.11.attn.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.ln_2.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.ln_2.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.h.11.mlp.c_fc.weight: copying a param with shape torch.Size([1600, 6400]) from checkpoint, the shape in current model is torch.Size([768, 3072]).
+	size mismatch for t_encoder.model.h.11.mlp.c_fc.bias: copying a param with shape torch.Size([6400]) from checkpoint, the shape in current model is torch.Size([3072]).
+	size mismatch for t_encoder.model.h.11.mlp.c_proj.weight: copying a param with shape torch.Size([6400, 1600]) from checkpoint, the shape in current model is torch.Size([3072, 768]).
+	size mismatch for t_encoder.model.h.11.mlp.c_proj.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.ln_f.weight: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_encoder.model.ln_f.bias: copying a param with shape torch.Size([1600]) from checkpoint, the shape in current model is torch.Size([768]).
+	size mismatch for t_mlp.nn.0.weight: copying a param with shape torch.Size([200, 1600]) from checkpoint, the shape in current model is torch.Size([200, 768]).
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+In epoch 370, Train Loss: 0.2071, Valid MRR: 0.34037
+, Train time: 48.795469999313354, Valid time: 12.161238431930542
+Namespace(dataset='FB15k-237-cut', model='compgcn', score_func='conve', opn='sub', batch_size=1024, gpu=0, max_epochs=1000, l2=0.0, lr=0.001, lbl_smooth=0.1, num_workers=2, seed=42, num_bases=-1, init_dim=200, layer_size='[200,200]', dropout=0.1, layer_dropout='[0.3,0.3]', hid_drop=0.3, feat_drop=0.3, k_w=10, k_h=20, num_filt=200, ker_sz=7, load_model=None, save_res='../saved/LP_results/FB15k-237-cut/CompGCN/lp_results_FB15k-237-cut_CompGCN-base_1024bs_1000e.json')
+Num ent: 14296, Num rel: 235
+/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/dgl/backend/pytorch/tensor.py:449: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  assert input.numel() == input.storage().size(), (
+/home/remote/u7177797/git/CLIP-KB/CompGCN/main.py:41: UserWarning: where received a uint8 condition tensor. This behavior is deprecated and will be removed in a future version of PyTorch. Use a boolean condition instead. (Triggered internally at ../aten/src/ATen/native/TensorCompare.cpp:493.)
+  pred = th.where(label.byte(), -th.ones_like(pred) * 10000000, pred)
+In epoch 371, Train Loss: 0.2069, Valid MRR: 0.34084
+, Train time: 49.90599322319031, Valid time: 12.920755386352539
+saving model...
+In epoch 0, Train Loss: 56.9539, Valid MRR: 0.00512
+, Train time: 51.12795114517212, Valid time: 12.723142385482788
+In epoch 372, Train Loss: 0.2066, Valid MRR: 0.34192
+, Train time: 50.50674104690552, Valid time: 12.537744522094727
+In epoch 1, Train Loss: 2.0350, Valid MRR: 0.00334
+, Train time: 50.45168137550354, Valid time: 12.796281576156616
+In epoch 373, Train Loss: 0.2065, Valid MRR: 0.34079
+, Train time: 51.25045657157898, Valid time: 12.828770637512207
+In epoch 2, Train Loss: 1.1169, Valid MRR: 0.00459
+, Train time: 51.18170213699341, Valid time: 12.798623323440552
+In epoch 374, Train Loss: 0.2064, Valid MRR: 0.33903
+, Train time: 50.969029903411865, Valid time: 12.97946047782898
+In epoch 3, Train Loss: 0.8565, Valid MRR: 0.00438
+, Train time: 50.98042893409729, Valid time: 12.488625288009644
+In epoch 375, Train Loss: 0.2064, Valid MRR: 0.34212
+, Train time: 50.6697895526886, Valid time: 12.432248830795288
+saving model...
+In epoch 4, Train Loss: 0.7333, Valid MRR: 0.01048
+, Train time: 50.75049829483032, Valid time: 12.98756718635559
+In epoch 376, Train Loss: 0.2065, Valid MRR: 0.34067
+, Train time: 50.96864175796509, Valid time: 12.742721319198608
+saving model...
+In epoch 5, Train Loss: 0.6513, Valid MRR: 0.01615
+, Train time: 50.866039514541626, Valid time: 12.442321538925171
+saving model...
+In epoch 377, Train Loss: 0.2064, Valid MRR: 0.34282
+, Train time: 50.617690563201904, Valid time: 12.814542531967163
+In epoch 6, Train Loss: 0.5840, Valid MRR: 0.01572
+, Train time: 50.58322882652283, Valid time: 12.563566207885742
+In epoch 378, Train Loss: 0.2062, Valid MRR: 0.34138
+, Train time: 50.44426250457764, Valid time: 12.68681812286377
+In epoch 7, Train Loss: 0.5295, Valid MRR: 0.01554
+, Train time: 50.45405054092407, Valid time: 12.796371459960938
+In epoch 379, Train Loss: 0.2065, Valid MRR: 0.34275
+, Train time: 50.50052618980408, Valid time: 13.079887390136719
+saving model...
+In epoch 8, Train Loss: 0.4982, Valid MRR: 0.03713
+, Train time: 50.59888434410095, Valid time: 12.794389963150024
+In epoch 380, Train Loss: 0.2070, Valid MRR: 0.34137
+, Train time: 50.64680337905884, Valid time: 12.84663724899292
+In epoch 9, Train Loss: 0.4791, Valid MRR: 0.03383
+, Train time: 50.44298434257507, Valid time: 12.861264944076538
+In epoch 381, Train Loss: 0.2066, Valid MRR: 0.34139
+, Train time: 50.23260307312012, Valid time: 12.937398433685303
+In epoch 10, Train Loss: 0.4658, Valid MRR: 0.03245
+, Train time: 50.333563566207886, Valid time: 12.431739568710327
+In epoch 382, Train Loss: 0.2067, Valid MRR: 0.34159
+, Train time: 51.10264229774475, Valid time: 12.748050928115845
+In epoch 11, Train Loss: 0.4571, Valid MRR: 0.0367
+, Train time: 51.01420497894287, Valid time: 12.648176908493042
+saving model...
+In epoch 383, Train Loss: 0.2066, Valid MRR: 0.34345
+, Train time: 51.3316125869751, Valid time: 12.812854766845703
+saving model...
+In epoch 12, Train Loss: 0.4499, Valid MRR: 0.04224
+, Train time: 51.024749994277954, Valid time: 12.638440132141113
+In epoch 384, Train Loss: 0.2067, Valid MRR: 0.34158
+, Train time: 50.902005434036255, Valid time: 12.838218927383423
+In epoch 13, Train Loss: 0.4415, Valid MRR: 0.03402
+, Train time: 51.11163377761841, Valid time: 12.71119737625122
+In epoch 385, Train Loss: 0.2070, Valid MRR: 0.34229
+, Train time: 50.637235164642334, Valid time: 12.813804626464844
+saving model...
+In epoch 14, Train Loss: 0.4367, Valid MRR: 0.04452
+, Train time: 50.640273332595825, Valid time: 12.875133514404297
+In epoch 386, Train Loss: 0.2066, Valid MRR: 0.34101
+, Train time: 50.52952718734741, Valid time: 12.886911869049072
+saving model...
+In epoch 15, Train Loss: 0.4296, Valid MRR: 0.0471
+, Train time: 50.28960919380188, Valid time: 12.570695161819458
+In epoch 387, Train Loss: 0.2064, Valid MRR: 0.3428
+, Train time: 50.87062978744507, Valid time: 12.556036233901978
+saving model...
+In epoch 16, Train Loss: 0.4221, Valid MRR: 0.05943
+, Train time: 50.85771822929382, Valid time: 12.782580614089966
+In epoch 388, Train Loss: 0.2062, Valid MRR: 0.34329
+, Train time: 51.14537811279297, Valid time: 12.860960006713867
+In epoch 17, Train Loss: 0.4158, Valid MRR: 0.05764
+, Train time: 50.8916277885437, Valid time: 12.619743347167969
+In epoch 389, Train Loss: 0.2065, Valid MRR: 0.34084
+, Train time: 50.506386280059814, Valid time: 12.6838698387146
+saving model...
+In epoch 18, Train Loss: 0.4101, Valid MRR: 0.06497
+, Train time: 50.53360438346863, Valid time: 12.789751052856445
+In epoch 390, Train Loss: 0.2068, Valid MRR: 0.34113
+, Train time: 50.907140254974365, Valid time: 12.758709192276001
+In epoch 19, Train Loss: 0.4061, Valid MRR: 0.05982
+, Train time: 50.84458255767822, Valid time: 13.051871061325073
+In epoch 391, Train Loss: 0.2062, Valid MRR: 0.34323
+, Train time: 51.16893935203552, Valid time: 12.701164722442627
+saving model...
+In epoch 20, Train Loss: 0.4032, Valid MRR: 0.07815
+, Train time: 50.84147882461548, Valid time: 12.651047706604004
+In epoch 392, Train Loss: 0.2061, Valid MRR: 0.34235
+, Train time: 50.810832500457764, Valid time: 12.691834449768066
+In epoch 21, Train Loss: 0.3956, Valid MRR: 0.07202
+, Train time: 51.033576011657715, Valid time: 12.929163455963135
+In epoch 393, Train Loss: 0.2060, Valid MRR: 0.34285
+, Train time: 51.03053426742554, Valid time: 12.709680557250977
+saving model...
+In epoch 22, Train Loss: 0.3927, Valid MRR: 0.08501
+, Train time: 50.81299638748169, Valid time: 12.511430978775024
+In epoch 394, Train Loss: 0.2059, Valid MRR: 0.34104
+, Train time: 50.427682399749756, Valid time: 12.772490978240967
+In epoch 23, Train Loss: 0.3868, Valid MRR: 0.07555
+, Train time: 50.2338490486145, Valid time: 12.83796501159668
+In epoch 395, Train Loss: 0.2062, Valid MRR: 0.34255
+, Train time: 50.473347663879395, Valid time: 12.860568523406982
+saving model...
+In epoch 24, Train Loss: 0.3832, Valid MRR: 0.08681
+, Train time: 50.66333866119385, Valid time: 12.632237672805786
+In epoch 396, Train Loss: 0.2064, Valid MRR: 0.3424
+, Train time: 50.562220335006714, Valid time: 12.826879739761353
+In epoch 25, Train Loss: 0.3808, Valid MRR: 0.08415
+, Train time: 50.68340229988098, Valid time: 12.735990524291992
+In epoch 397, Train Loss: 0.2059, Valid MRR: 0.34338
+, Train time: 50.34423065185547, Valid time: 12.615914821624756
+saving model...
+In epoch 26, Train Loss: 0.3774, Valid MRR: 0.09247
+, Train time: 50.414886236190796, Valid time: 12.685562372207642
+In epoch 398, Train Loss: 0.2060, Valid MRR: 0.343
+, Train time: 51.43281364440918, Valid time: 12.9459810256958
+saving model...
+In epoch 27, Train Loss: 0.3739, Valid MRR: 0.10252
+, Train time: 51.28667449951172, Valid time: 12.818086385726929
+saving model...
+In epoch 399, Train Loss: 0.2060, Valid MRR: 0.34413
+, Train time: 50.89143395423889, Valid time: 12.66593050956726
+In epoch 28, Train Loss: 0.3701, Valid MRR: 0.09023
+, Train time: 50.9577431678772, Valid time: 12.705422639846802
+In epoch 400, Train Loss: 0.2059, Valid MRR: 0.34197
+, Train time: 50.657803773880005, Valid time: 12.70851755142212
+In epoch 29, Train Loss: 0.3652, Valid MRR: 0.09794
+, Train time: 50.71641492843628, Valid time: 12.69939923286438
+In epoch 401, Train Loss: 0.2059, Valid MRR: 0.34388
+, Train time: 51.356324434280396, Valid time: 12.60988163948059
+In epoch 30, Train Loss: 0.3630, Valid MRR: 0.09924
+, Train time: 51.34858250617981, Valid time: 12.721072912216187
+In epoch 402, Train Loss: 0.2061, Valid MRR: 0.34354
+, Train time: 50.3822557926178, Valid time: 12.687828063964844
+saving model...
+In epoch 31, Train Loss: 0.3604, Valid MRR: 0.1143
+, Train time: 50.47132921218872, Valid time: 13.014422416687012
+In epoch 403, Train Loss: 0.2059, Valid MRR: 0.34316
+, Train time: 51.1484272480011, Valid time: 12.76895260810852
+saving model...
+In epoch 32, Train Loss: 0.3575, Valid MRR: 0.12889
+, Train time: 51.22862768173218, Valid time: 12.624524593353271
+In epoch 404, Train Loss: 0.2059, Valid MRR: 0.34356
+, Train time: 51.66097712516785, Valid time: 12.920979738235474
+saving model...
+In epoch 33, Train Loss: 0.3544, Valid MRR: 0.13228
+, Train time: 51.68489050865173, Valid time: 12.672628164291382
+In epoch 405, Train Loss: 0.2057, Valid MRR: 0.34377
+, Train time: 50.62661600112915, Valid time: 12.68064022064209
+saving model...
+In epoch 34, Train Loss: 0.3509, Valid MRR: 0.13845
+, Train time: 50.6258487701416, Valid time: 12.698094129562378
+saving model...
+In epoch 406, Train Loss: 0.2061, Valid MRR: 0.34429
+, Train time: 51.433666944503784, Valid time: 12.598453044891357
+In epoch 35, Train Loss: 0.3480, Valid MRR: 0.13275
+, Train time: 51.45428657531738, Valid time: 12.876594305038452
+saving model...
+In epoch 407, Train Loss: 0.2060, Valid MRR: 0.34473
+, Train time: 51.19426393508911, Valid time: 12.8397855758667
+saving model...
+In epoch 36, Train Loss: 0.3457, Valid MRR: 0.1441
+, Train time: 51.31938433647156, Valid time: 12.720669269561768
+In epoch 408, Train Loss: 0.2061, Valid MRR: 0.34263
+, Train time: 51.30963611602783, Valid time: 12.796202659606934
+In epoch 37, Train Loss: 0.3434, Valid MRR: 0.14011
+, Train time: 51.1819965839386, Valid time: 12.820913791656494
+In epoch 409, Train Loss: 0.2057, Valid MRR: 0.34298
+, Train time: 50.535279273986816, Valid time: 12.69126296043396
+saving model...
+In epoch 38, Train Loss: 0.3410, Valid MRR: 0.14698
+, Train time: 50.64470100402832, Valid time: 12.779370784759521
+In epoch 410, Train Loss: 0.2057, Valid MRR: 0.34141
+, Train time: 50.39114952087402, Valid time: 13.065527200698853
+In epoch 39, Train Loss: 0.3391, Valid MRR: 0.14462
+, Train time: 50.55130887031555, Valid time: 12.648345470428467
+In epoch 411, Train Loss: 0.2056, Valid MRR: 0.3434
+, Train time: 50.43926405906677, Valid time: 12.856651067733765
+saving model...
+In epoch 40, Train Loss: 0.3342, Valid MRR: 0.16347
+, Train time: 50.56201243400574, Valid time: 12.815248489379883
+In epoch 412, Train Loss: 0.2056, Valid MRR: 0.34233
+, Train time: 51.49821376800537, Valid time: 12.922560691833496
+saving model...
+In epoch 41, Train Loss: 0.3332, Valid MRR: 0.17147
+, Train time: 51.50438356399536, Valid time: 12.628036737442017
+saving model...
+In epoch 413, Train Loss: 0.2057, Valid MRR: 0.34517
+, Train time: 51.39696764945984, Valid time: 12.929583549499512
+In epoch 42, Train Loss: 0.3299, Valid MRR: 0.1676
+, Train time: 51.27084255218506, Valid time: 12.850636959075928
+In epoch 414, Train Loss: 0.2056, Valid MRR: 0.3425
+, Train time: 51.434256076812744, Valid time: 12.602560997009277
+saving model...
+In epoch 43, Train Loss: 0.3255, Valid MRR: 0.17985
+, Train time: 51.214345932006836, Valid time: 12.605386734008789
+In epoch 415, Train Loss: 0.2054, Valid MRR: 0.34346
+, Train time: 50.38484454154968, Valid time: 12.649505138397217
+In epoch 44, Train Loss: 0.3229, Valid MRR: 0.17968
+, Train time: 50.46308088302612, Valid time: 12.62205719947815
+In epoch 416, Train Loss: 0.2057, Valid MRR: 0.34389
+, Train time: 50.68588352203369, Valid time: 12.975062608718872
+In epoch 45, Train Loss: 0.3189, Valid MRR: 0.1736
+, Train time: 50.76594591140747, Valid time: 12.79369306564331
+In epoch 417, Train Loss: 0.2057, Valid MRR: 0.34275
+, Train time: 50.69555735588074, Valid time: 12.851950883865356
+In epoch 46, Train Loss: 0.3172, Valid MRR: 0.17149
+, Train time: 50.500041007995605, Valid time: 12.703638315200806
+In epoch 418, Train Loss: 0.2056, Valid MRR: 0.34388
+, Train time: 51.13027501106262, Valid time: 12.888487339019775
+In epoch 47, Train Loss: 0.3179, Valid MRR: 0.17558
+, Train time: 51.07986497879028, Valid time: 12.7011399269104
+In epoch 419, Train Loss: 0.2054, Valid MRR: 0.34444
+, Train time: 50.781315088272095, Valid time: 12.926753759384155
+In epoch 48, Train Loss: 0.3125, Valid MRR: 0.17947
+, Train time: 50.83055543899536, Valid time: 12.578963279724121
+In epoch 420, Train Loss: 0.2054, Valid MRR: 0.34385
+, Train time: 50.16238617897034, Valid time: 12.725708961486816
+saving model...
+In epoch 49, Train Loss: 0.3121, Valid MRR: 0.18337
+, Train time: 50.534589767456055, Valid time: 12.774646043777466
+In epoch 421, Train Loss: 0.2056, Valid MRR: 0.34241
+, Train time: 50.69206237792969, Valid time: 12.631005048751831
+saving model...
+In epoch 50, Train Loss: 0.3093, Valid MRR: 0.18576
+, Train time: 50.478533029556274, Valid time: 12.664876222610474
+In epoch 422, Train Loss: 0.2054, Valid MRR: 0.34414
+, Train time: 50.556522369384766, Valid time: 12.916388511657715
+saving model...
+In epoch 51, Train Loss: 0.3081, Valid MRR: 0.19763
+, Train time: 50.36191129684448, Valid time: 12.78284478187561
+In epoch 423, Train Loss: 0.2052, Valid MRR: 0.34314
+, Train time: 50.813820123672485, Valid time: 12.569306373596191
+In epoch 52, Train Loss: 0.3061, Valid MRR: 0.19392
+, Train time: 50.923267126083374, Valid time: 12.641894102096558
+In epoch 424, Train Loss: 0.2056, Valid MRR: 0.34384
+, Train time: 50.95035934448242, Valid time: 12.569642305374146
+In epoch 53, Train Loss: 0.3054, Valid MRR: 0.19504
+, Train time: 50.9292151927948, Valid time: 12.822479963302612
+saving model...
+In epoch 425, Train Loss: 0.2055, Valid MRR: 0.34529
+, Train time: 50.466980934143066, Valid time: 12.831149101257324
+In epoch 54, Train Loss: 0.3046, Valid MRR: 0.19619
+, Train time: 50.46754574775696, Valid time: 12.67628288269043
+saving model...
+In epoch 426, Train Loss: 0.2051, Valid MRR: 0.34588
+, Train time: 51.229995250701904, Valid time: 12.556890964508057
+saving model...
+In epoch 55, Train Loss: 0.3021, Valid MRR: 0.20111
+, Train time: 50.97352194786072, Valid time: 12.557629585266113
+In epoch 427, Train Loss: 0.2052, Valid MRR: 0.3439
+, Train time: 51.219597816467285, Valid time: 12.798646688461304
+saving model...
+In epoch 56, Train Loss: 0.2999, Valid MRR: 0.20351
+, Train time: 51.13868737220764, Valid time: 12.70432710647583
+In epoch 428, Train Loss: 0.2056, Valid MRR: 0.34224
+, Train time: 51.39514970779419, Valid time: 12.800119400024414
+saving model...
+In epoch 57, Train Loss: 0.2991, Valid MRR: 0.20477
+, Train time: 51.001792192459106, Valid time: 12.844014644622803
+In epoch 429, Train Loss: 0.2054, Valid MRR: 0.34405
+, Train time: 50.34317135810852, Valid time: 12.757805824279785
+saving model...
+In epoch 58, Train Loss: 0.2971, Valid MRR: 0.20656
+, Train time: 50.40107727050781, Valid time: 12.451483249664307
+In epoch 430, Train Loss: 0.2054, Valid MRR: 0.3451
+, Train time: 50.456559896469116, Valid time: 12.961928129196167
+saving model...
+In epoch 59, Train Loss: 0.2945, Valid MRR: 0.21044
+, Train time: 50.7237823009491, Valid time: 12.782642126083374
+In epoch 431, Train Loss: 0.2052, Valid MRR: 0.34584
+, Train time: 50.55473566055298, Valid time: 12.950562000274658
+In epoch 60, Train Loss: 0.2932, Valid MRR: 0.20691
+, Train time: 50.608131647109985, Valid time: 12.856850385665894
+In epoch 432, Train Loss: 0.2051, Valid MRR: 0.34504
+, Train time: 50.882407903671265, Valid time: 12.984382152557373
+saving model...
+In epoch 61, Train Loss: 0.2914, Valid MRR: 0.2169
+, Train time: 51.086785554885864, Valid time: 12.861500978469849
+saving model...
+In epoch 433, Train Loss: 0.2052, Valid MRR: 0.34622
+, Train time: 51.24208474159241, Valid time: 12.92327618598938
+saving model...
+In epoch 62, Train Loss: 0.2888, Valid MRR: 0.21915
+, Train time: 51.27139735221863, Valid time: 12.94126009941101
+In epoch 434, Train Loss: 0.2056, Valid MRR: 0.34359
+, Train time: 50.4710259437561, Valid time: 13.093872785568237
+In epoch 63, Train Loss: 0.2869, Valid MRR: 0.21831
+, Train time: 50.64566493034363, Valid time: 12.858694076538086
+In epoch 435, Train Loss: 0.2054, Valid MRR: 0.34271
+, Train time: 50.70432758331299, Valid time: 12.76831865310669
+In epoch 64, Train Loss: 0.2866, Valid MRR: 0.21814
+, Train time: 50.59625506401062, Valid time: 12.912651300430298
+In epoch 436, Train Loss: 0.2053, Valid MRR: 0.34326
+, Train time: 50.6431143283844, Valid time: 12.868215560913086
+saving model...
+In epoch 65, Train Loss: 0.2848, Valid MRR: 0.22255
+, Train time: 50.861806869506836, Valid time: 13.034022331237793
+In epoch 437, Train Loss: 0.2054, Valid MRR: 0.34324
+, Train time: 50.338051319122314, Valid time: 12.956177949905396
+In epoch 66, Train Loss: 0.2838, Valid MRR: 0.22218
+, Train time: 50.326547622680664, Valid time: 12.989335536956787
+In epoch 438, Train Loss: 0.2047, Valid MRR: 0.3429
+, Train time: 50.449424505233765, Valid time: 12.761704444885254
+saving model...
+In epoch 67, Train Loss: 0.2815, Valid MRR: 0.22548
+, Train time: 50.38590669631958, Valid time: 12.883813619613647
+In epoch 439, Train Loss: 0.2049, Valid MRR: 0.34319
+, Train time: 50.37416100502014, Valid time: 12.785735845565796
+saving model...
+In epoch 68, Train Loss: 0.2804, Valid MRR: 0.22625
+, Train time: 50.58735680580139, Valid time: 12.929912567138672
+In epoch 440, Train Loss: 0.2052, Valid MRR: 0.34318
+, Train time: 51.445467472076416, Valid time: 12.97482943534851
+saving model...
+In epoch 69, Train Loss: 0.2784, Valid MRR: 0.22849
+, Train time: 51.68833827972412, Valid time: 12.91704797744751
+In epoch 441, Train Loss: 0.2052, Valid MRR: 0.34413
+, Train time: 51.601128578186035, Valid time: 12.811954498291016
+saving model...
+In epoch 70, Train Loss: 0.2780, Valid MRR: 0.23292
+, Train time: 51.5892231464386, Valid time: 12.680489540100098
+saving model...
+In epoch 442, Train Loss: 0.2052, Valid MRR: 0.34632
+, Train time: 51.78223538398743, Valid time: 12.872905492782593
+In epoch 71, Train Loss: 0.2764, Valid MRR: 0.23261
+, Train time: 51.75687313079834, Valid time: 12.826509952545166
+In epoch 443, Train Loss: 0.2052, Valid MRR: 0.34525
+, Train time: 50.92340707778931, Valid time: 12.599170923233032
+In epoch 72, Train Loss: 0.2753, Valid MRR: 0.23058
+, Train time: 51.055004358291626, Valid time: 12.532114028930664
+saving model...
+In epoch 444, Train Loss: 0.2049, Valid MRR: 0.34692
+, Train time: 50.605082273483276, Valid time: 12.58494758605957
+saving model...
+In epoch 73, Train Loss: 0.2737, Valid MRR: 0.23667
+, Train time: 50.98353385925293, Valid time: 12.760607242584229
+In epoch 445, Train Loss: 0.2047, Valid MRR: 0.34393
+, Train time: 51.69692373275757, Valid time: 12.819923400878906
+saving model...
+In epoch 74, Train Loss: 0.2713, Valid MRR: 0.23968
+, Train time: 51.56153202056885, Valid time: 12.855357646942139
+In epoch 446, Train Loss: 0.2054, Valid MRR: 0.34263
+, Train time: 51.51357698440552, Valid time: 12.929597616195679
+saving model...
+In epoch 75, Train Loss: 0.2714, Valid MRR: 0.23994
+, Train time: 51.66902804374695, Valid time: 12.66066026687622
+In epoch 447, Train Loss: 0.2054, Valid MRR: 0.34481
+, Train time: 51.40964603424072, Valid time: 12.472136735916138
+In epoch 76, Train Loss: 0.2696, Valid MRR: 0.2357
+, Train time: 51.54985499382019, Valid time: 12.831797122955322
+In epoch 448, Train Loss: 0.2048, Valid MRR: 0.34534
+, Train time: 50.19317698478699, Valid time: 12.745652914047241
+saving model...
+In epoch 77, Train Loss: 0.2680, Valid MRR: 0.24439
+, Train time: 50.088377237319946, Valid time: 12.927794218063354
+In epoch 449, Train Loss: 0.2046, Valid MRR: 0.34429
+, Train time: 50.55367302894592, Valid time: 12.826461553573608
+In epoch 78, Train Loss: 0.2669, Valid MRR: 0.24294
+, Train time: 51.02159333229065, Valid time: 12.89767575263977
+In epoch 450, Train Loss: 0.2050, Valid MRR: 0.34422
+, Train time: 50.75569939613342, Valid time: 12.77644968032837
+saving model...
+In epoch 79, Train Loss: 0.2658, Valid MRR: 0.24739
+, Train time: 50.508654832839966, Valid time: 12.869184494018555
+In epoch 451, Train Loss: 0.2050, Valid MRR: 0.3444
+, Train time: 50.584179639816284, Valid time: 12.786966562271118
+saving model...
+In epoch 80, Train Loss: 0.2644, Valid MRR: 0.24971
+, Train time: 50.7832818031311, Valid time: 12.847944021224976
+In epoch 452, Train Loss: 0.2050, Valid MRR: 0.3445
+, Train time: 50.6822874546051, Valid time: 12.590815305709839
+In epoch 81, Train Loss: 0.2628, Valid MRR: 0.2495
+, Train time: 50.9800181388855, Valid time: 12.713964700698853
+In epoch 453, Train Loss: 0.2050, Valid MRR: 0.34526
+, Train time: 51.272104024887085, Valid time: 12.91484260559082
+saving model...
+In epoch 82, Train Loss: 0.2622, Valid MRR: 0.25106
+, Train time: 51.267634868621826, Valid time: 12.48525857925415
+In epoch 454, Train Loss: 0.2046, Valid MRR: 0.34458
+, Train time: 50.72398138046265, Valid time: 12.996879577636719
+saving model...
+In epoch 83, Train Loss: 0.2614, Valid MRR: 0.25124
+, Train time: 50.86730432510376, Valid time: 12.76606798171997
+In epoch 455, Train Loss: 0.2051, Valid MRR: 0.34519
+, Train time: 50.90312337875366, Valid time: 12.890895128250122
+saving model...
+In epoch 84, Train Loss: 0.2612, Valid MRR: 0.25189
+, Train time: 51.03297019004822, Valid time: 12.822266101837158
+In epoch 456, Train Loss: 0.2048, Valid MRR: 0.34565
+, Train time: 51.291577100753784, Valid time: 12.874820232391357
+saving model...
+In epoch 85, Train Loss: 0.2608, Valid MRR: 0.25493
+, Train time: 51.353694677352905, Valid time: 12.871484994888306
+In epoch 457, Train Loss: 0.2052, Valid MRR: 0.34519
+, Train time: 51.33006811141968, Valid time: 12.71047568321228
+saving model...
+In epoch 86, Train Loss: 0.2595, Valid MRR: 0.25651
+, Train time: 50.96310997009277, Valid time: 12.700257539749146
+In epoch 458, Train Loss: 0.2046, Valid MRR: 0.34408
+, Train time: 51.315897941589355, Valid time: 12.906420946121216
+saving model...
+In epoch 87, Train Loss: 0.2579, Valid MRR: 0.25713
+, Train time: 51.106847286224365, Valid time: 12.715780258178711
+In epoch 459, Train Loss: 0.2046, Valid MRR: 0.3454
+, Train time: 50.56616401672363, Valid time: 12.978659629821777
+saving model...
+In epoch 88, Train Loss: 0.2581, Valid MRR: 0.25966
+, Train time: 50.83621335029602, Valid time: 12.65486454963684
+In epoch 460, Train Loss: 0.2046, Valid MRR: 0.34574
+, Train time: 51.684547901153564, Valid time: 12.602477312088013
+saving model...
+In epoch 89, Train Loss: 0.2564, Valid MRR: 0.25968
+, Train time: 51.78401827812195, Valid time: 12.763308048248291
+In epoch 461, Train Loss: 0.2047, Valid MRR: 0.34543
+, Train time: 50.74789357185364, Valid time: 12.751529693603516
+saving model...
+In epoch 90, Train Loss: 0.2559, Valid MRR: 0.26024
+, Train time: 50.88905453681946, Valid time: 12.846705436706543
+In epoch 462, Train Loss: 0.2047, Valid MRR: 0.3457
+, Train time: 50.75802540779114, Valid time: 12.74768328666687
+saving model...
+In epoch 91, Train Loss: 0.2548, Valid MRR: 0.26255
+, Train time: 50.966270446777344, Valid time: 12.731418371200562
+saving model...
+In epoch 463, Train Loss: 0.2045, Valid MRR: 0.3476
+, Train time: 51.03299617767334, Valid time: 12.965675354003906
+In epoch 92, Train Loss: 0.2537, Valid MRR: 0.26252
+, Train time: 51.05176568031311, Valid time: 12.504892587661743
+In epoch 464, Train Loss: 0.2046, Valid MRR: 0.34517
+, Train time: 51.518418073654175, Valid time: 12.986298084259033
+saving model...
+In epoch 93, Train Loss: 0.2529, Valid MRR: 0.26301
+, Train time: 51.34892153739929, Valid time: 12.68406867980957
+In epoch 465, Train Loss: 0.2047, Valid MRR: 0.34551
+, Train time: 51.556628942489624, Valid time: 12.920823097229004
+saving model...
+In epoch 94, Train Loss: 0.2525, Valid MRR: 0.26859
+, Train time: 51.47624588012695, Valid time: 12.541840553283691
+In epoch 466, Train Loss: 0.2045, Valid MRR: 0.3448
+, Train time: 51.010350465774536, Valid time: 12.812062740325928
+In epoch 95, Train Loss: 0.2522, Valid MRR: 0.26522
+, Train time: 50.59924840927124, Valid time: 12.64905333518982
+In epoch 467, Train Loss: 0.2048, Valid MRR: 0.34386
+, Train time: 50.50451850891113, Valid time: 12.519941806793213
+In epoch 96, Train Loss: 0.2512, Valid MRR: 0.26638
+, Train time: 50.84096670150757, Valid time: 12.85781192779541
+In epoch 468, Train Loss: 0.2044, Valid MRR: 0.34585
+, Train time: 51.36985993385315, Valid time: 12.903569221496582
+In epoch 97, Train Loss: 0.2512, Valid MRR: 0.26821
+, Train time: 51.488117694854736, Valid time: 12.791756391525269
+In epoch 469, Train Loss: 0.2046, Valid MRR: 0.3455
+, Train time: 51.435826778411865, Valid time: 12.817602634429932
+saving model...
+In epoch 98, Train Loss: 0.2498, Valid MRR: 0.26965
+, Train time: 51.46093559265137, Valid time: 12.898661375045776
+In epoch 470, Train Loss: 0.2044, Valid MRR: 0.34563
+, Train time: 51.3633029460907, Valid time: 12.912591457366943
+In epoch 99, Train Loss: 0.2494, Valid MRR: 0.26902
+, Train time: 51.57224369049072, Valid time: 12.849650382995605
+In epoch 471, Train Loss: 0.2046, Valid MRR: 0.34566
+, Train time: 50.4378821849823, Valid time: 12.68599009513855
+saving model...
+In epoch 100, Train Loss: 0.2487, Valid MRR: 0.27397
+, Train time: 50.76743674278259, Valid time: 12.684492111206055
+In epoch 472, Train Loss: 0.2047, Valid MRR: 0.34591
+, Train time: 50.5587363243103, Valid time: 12.673965692520142
+In epoch 101, Train Loss: 0.2481, Valid MRR: 0.27202
+, Train time: 50.811829805374146, Valid time: 12.805444240570068
+In epoch 473, Train Loss: 0.2044, Valid MRR: 0.34688
+, Train time: 50.41762709617615, Valid time: 12.799233675003052
+saving model...
+In epoch 102, Train Loss: 0.2475, Valid MRR: 0.27622
+, Train time: 50.60872793197632, Valid time: 12.71937370300293
+In epoch 474, Train Loss: 0.2043, Valid MRR: 0.34451
+, Train time: 50.918973445892334, Valid time: 12.736711263656616
+In epoch 103, Train Loss: 0.2467, Valid MRR: 0.27509
+, Train time: 51.02825927734375, Valid time: 12.661030054092407
+In epoch 475, Train Loss: 0.2044, Valid MRR: 0.34527
+, Train time: 50.979206800460815, Valid time: 12.710402011871338
+saving model...
+In epoch 104, Train Loss: 0.2460, Valid MRR: 0.2769
+, Train time: 50.89881706237793, Valid time: 12.71587347984314
+In epoch 476, Train Loss: 0.2044, Valid MRR: 0.34429
+, Train time: 50.67348885536194, Valid time: 12.795077085494995
+saving model...
+In epoch 105, Train Loss: 0.2466, Valid MRR: 0.27911
+, Train time: 50.9863498210907, Valid time: 12.884108304977417
+In epoch 477, Train Loss: 0.2044, Valid MRR: 0.34421
+, Train time: 50.853089332580566, Valid time: 13.026881217956543
+saving model...
+In epoch 106, Train Loss: 0.2455, Valid MRR: 0.27934
+, Train time: 50.81406760215759, Valid time: 12.610682249069214
+In epoch 478, Train Loss: 0.2045, Valid MRR: 0.34474
+, Train time: 51.38145112991333, Valid time: 12.69337248802185
+In epoch 107, Train Loss: 0.2448, Valid MRR: 0.27766
+, Train time: 51.25710582733154, Valid time: 12.670068264007568
+In epoch 479, Train Loss: 0.2043, Valid MRR: 0.34443
+, Train time: 50.61529469490051, Valid time: 12.686832904815674
+In epoch 108, Train Loss: 0.2442, Valid MRR: 0.279
+, Train time: 50.97466206550598, Valid time: 12.92520546913147
+In epoch 480, Train Loss: 0.2042, Valid MRR: 0.34605
+, Train time: 51.08925461769104, Valid time: 12.892126083374023
+saving model...
+In epoch 109, Train Loss: 0.2443, Valid MRR: 0.28137
+, Train time: 51.195778369903564, Valid time: 12.53882360458374
+In epoch 481, Train Loss: 0.2044, Valid MRR: 0.34277
+, Train time: 50.29926776885986, Valid time: 12.692048788070679
+saving model...
+In epoch 110, Train Loss: 0.2441, Valid MRR: 0.28229
+, Train time: 50.83615183830261, Valid time: 12.716111660003662
+In epoch 482, Train Loss: 0.2045, Valid MRR: 0.34609
+, Train time: 50.84974026679993, Valid time: 12.962389469146729
+saving model...
+In epoch 111, Train Loss: 0.2430, Valid MRR: 0.28518
+, Train time: 50.86354207992554, Valid time: 12.775802612304688
+In epoch 483, Train Loss: 0.2047, Valid MRR: 0.34413
+, Train time: 51.158416748046875, Valid time: 12.615872383117676
+saving model...
+In epoch 112, Train Loss: 0.2425, Valid MRR: 0.28662
+, Train time: 51.07609677314758, Valid time: 12.767164468765259
+saving model...
+In epoch 484, Train Loss: 0.2044, Valid MRR: 0.34788
+, Train time: 51.357075691223145, Valid time: 12.86078429222107
+In epoch 113, Train Loss: 0.2426, Valid MRR: 0.28498
+, Train time: 51.12616801261902, Valid time: 12.834017992019653
+In epoch 485, Train Loss: 0.2040, Valid MRR: 0.3461
+, Train time: 50.8970308303833, Valid time: 13.188987255096436
+saving model...
+In epoch 114, Train Loss: 0.2421, Valid MRR: 0.28893
+, Train time: 51.136202812194824, Valid time: 12.741463899612427
+In epoch 486, Train Loss: 0.2042, Valid MRR: 0.34617
+, Train time: 50.93471884727478, Valid time: 13.159907341003418
+In epoch 115, Train Loss: 0.2417, Valid MRR: 0.28875
+, Train time: 51.12473154067993, Valid time: 12.677833318710327
+In epoch 487, Train Loss: 0.2045, Valid MRR: 0.34504
+, Train time: 51.119300365448, Valid time: 12.730936527252197
+saving model...
+In epoch 116, Train Loss: 0.2409, Valid MRR: 0.28991
+, Train time: 51.11949133872986, Valid time: 12.8319251537323
+In epoch 488, Train Loss: 0.2048, Valid MRR: 0.34474
+, Train time: 50.31270456314087, Valid time: 12.778437852859497
+saving model...
+In epoch 117, Train Loss: 0.2400, Valid MRR: 0.29059
+, Train time: 50.41715621948242, Valid time: 12.705365419387817
+In epoch 489, Train Loss: 0.2041, Valid MRR: 0.34436
+, Train time: 50.43716096878052, Valid time: 12.996972799301147
+In epoch 118, Train Loss: 0.2401, Valid MRR: 0.29035
+, Train time: 50.49844479560852, Valid time: 12.501012563705444
+In epoch 490, Train Loss: 0.2039, Valid MRR: 0.34601
+, Train time: 50.675341844558716, Valid time: 12.976625442504883
+saving model...
+In epoch 119, Train Loss: 0.2395, Valid MRR: 0.2929
+, Train time: 50.78704333305359, Valid time: 12.684674739837646
+In epoch 491, Train Loss: 0.2042, Valid MRR: 0.34779
+, Train time: 50.69444227218628, Valid time: 12.789101839065552
+saving model...
+In epoch 120, Train Loss: 0.2386, Valid MRR: 0.29475
+, Train time: 50.972683906555176, Valid time: 12.968430280685425
+In epoch 492, Train Loss: 0.2039, Valid MRR: 0.34623
+, Train time: 50.992080211639404, Valid time: 12.740890741348267
+In epoch 121, Train Loss: 0.2383, Valid MRR: 0.29276
+, Train time: 50.965765714645386, Valid time: 12.778575420379639
+In epoch 493, Train Loss: 0.2041, Valid MRR: 0.34441
+, Train time: 50.67607665061951, Valid time: 12.710232734680176
+saving model...
+In epoch 122, Train Loss: 0.2377, Valid MRR: 0.29484
+, Train time: 51.015878438949585, Valid time: 12.615082502365112
+In epoch 494, Train Loss: 0.2039, Valid MRR: 0.34577
+, Train time: 51.01510000228882, Valid time: 13.15631365776062
+saving model...
+In epoch 123, Train Loss: 0.2380, Valid MRR: 0.29581
+, Train time: 51.119696378707886, Valid time: 12.650060653686523
+In epoch 495, Train Loss: 0.2037, Valid MRR: 0.34609
+, Train time: 50.85850930213928, Valid time: 12.808862924575806
+saving model...
+In epoch 124, Train Loss: 0.2371, Valid MRR: 0.29754
+, Train time: 50.77025532722473, Valid time: 12.523867845535278
+In epoch 496, Train Loss: 0.2042, Valid MRR: 0.34555
+, Train time: 50.49614381790161, Valid time: 12.903522729873657
+saving model...
+In epoch 125, Train Loss: 0.2383, Valid MRR: 0.29848
+, Train time: 50.63900375366211, Valid time: 12.922823429107666
+In epoch 497, Train Loss: 0.2040, Valid MRR: 0.34715
+, Train time: 50.39573264122009, Valid time: 12.746854066848755
+saving model...
+In epoch 126, Train Loss: 0.2367, Valid MRR: 0.29893
+, Train time: 50.607571601867676, Valid time: 12.780200958251953
+In epoch 498, Train Loss: 0.2036, Valid MRR: 0.3453
+, Train time: 50.600396156311035, Valid time: 13.278449773788452
+saving model...
+In epoch 127, Train Loss: 0.2373, Valid MRR: 0.2999
+, Train time: 50.63272833824158, Valid time: 12.672912359237671
+In epoch 499, Train Loss: 0.2042, Valid MRR: 0.34648
+, Train time: 50.37352204322815, Valid time: 12.586109399795532
+saving model...
+In epoch 128, Train Loss: 0.2362, Valid MRR: 0.29994
+, Train time: 50.53081250190735, Valid time: 12.689123630523682
+In epoch 500, Train Loss: 0.2042, Valid MRR: 0.34511
+, Train time: 50.60612344741821, Valid time: 12.866954565048218
+saving model...
+In epoch 129, Train Loss: 0.2360, Valid MRR: 0.30049
+, Train time: 50.82324147224426, Valid time: 12.958302736282349
+In epoch 501, Train Loss: 0.2042, Valid MRR: 0.34634
+, Train time: 51.069904804229736, Valid time: 13.039398670196533
+In epoch 130, Train Loss: 0.2371, Valid MRR: 0.30003
+, Train time: 51.34922432899475, Valid time: 12.835286378860474
+In epoch 502, Train Loss: 0.2037, Valid MRR: 0.34444
+, Train time: 51.12213182449341, Valid time: 12.707178115844727
+saving model...
+In epoch 131, Train Loss: 0.2363, Valid MRR: 0.30076
+, Train time: 51.00968408584595, Valid time: 12.593417167663574
+In epoch 503, Train Loss: 0.2039, Valid MRR: 0.34661
+, Train time: 51.06415581703186, Valid time: 12.93615460395813
+saving model...
+In epoch 132, Train Loss: 0.2362, Valid MRR: 0.30096
+, Train time: 51.39024066925049, Valid time: 12.687461853027344
+In epoch 504, Train Loss: 0.2038, Valid MRR: 0.34779
+, Train time: 51.12725257873535, Valid time: 12.775495529174805
+In epoch 133, Train Loss: 0.2357, Valid MRR: 0.29967
+, Train time: 51.20999622344971, Valid time: 12.698030948638916
+In epoch 505, Train Loss: 0.2037, Valid MRR: 0.34583
+, Train time: 50.917006731033325, Valid time: 12.498204946517944
+In epoch 134, Train Loss: 0.2353, Valid MRR: 0.29815
+, Train time: 50.9618124961853, Valid time: 12.650771617889404
+In epoch 506, Train Loss: 0.2037, Valid MRR: 0.34648
+, Train time: 51.13332915306091, Valid time: 12.64229702949524
+saving model...
+In epoch 135, Train Loss: 0.2342, Valid MRR: 0.30265
+, Train time: 50.90472674369812, Valid time: 12.761898517608643
+In epoch 507, Train Loss: 0.2037, Valid MRR: 0.34785
+, Train time: 50.73708772659302, Valid time: 12.779541730880737
+saving model...
+In epoch 136, Train Loss: 0.2348, Valid MRR: 0.3046
+, Train time: 50.702741622924805, Valid time: 12.86566710472107
+In epoch 508, Train Loss: 0.2034, Valid MRR: 0.34673
+, Train time: 50.462719440460205, Valid time: 12.745363473892212
+In epoch 137, Train Loss: 0.2341, Valid MRR: 0.30229
+, Train time: 50.41102313995361, Valid time: 12.710999250411987
+In epoch 509, Train Loss: 0.2037, Valid MRR: 0.34568
+, Train time: 50.54819345474243, Valid time: 12.783297061920166
+In epoch 138, Train Loss: 0.2345, Valid MRR: 0.30411
+, Train time: 50.45098090171814, Valid time: 12.683596849441528
+In epoch 510, Train Loss: 0.2036, Valid MRR: 0.34694
+, Train time: 50.88073539733887, Valid time: 12.717408895492554
+In epoch 139, Train Loss: 0.2341, Valid MRR: 0.30206
+, Train time: 51.12810158729553, Valid time: 12.88283371925354
+saving model...
+In epoch 511, Train Loss: 0.2038, Valid MRR: 0.34848
+, Train time: 50.63337731361389, Valid time: 13.01406216621399
+saving model...
+In epoch 140, Train Loss: 0.2339, Valid MRR: 0.30654
+, Train time: 50.366619348526, Valid time: 12.514977216720581
+In epoch 512, Train Loss: 0.2036, Valid MRR: 0.34666
+, Train time: 50.654112339019775, Valid time: 12.95225477218628
+In epoch 141, Train Loss: 0.2333, Valid MRR: 0.30509
+, Train time: 51.03319597244263, Valid time: 13.064796924591064
+In epoch 513, Train Loss: 0.2039, Valid MRR: 0.34687
+, Train time: 50.986894845962524, Valid time: 12.677591800689697
+In epoch 142, Train Loss: 0.2330, Valid MRR: 0.30608
+, Train time: 51.231313705444336, Valid time: 12.880414009094238
+In epoch 514, Train Loss: 0.2037, Valid MRR: 0.34637
+, Train time: 50.97789430618286, Valid time: 12.985547542572021
+In epoch 143, Train Loss: 0.2332, Valid MRR: 0.30548
+, Train time: 50.75729942321777, Valid time: 12.949163436889648
+In epoch 515, Train Loss: 0.2037, Valid MRR: 0.34671
+, Train time: 50.49746370315552, Valid time: 12.83405876159668
+saving model...
+In epoch 144, Train Loss: 0.2334, Valid MRR: 0.30671
+, Train time: 50.46102023124695, Valid time: 12.72058391571045
+In epoch 516, Train Loss: 0.2037, Valid MRR: 0.34631
+, Train time: 51.32764506340027, Valid time: 12.6759614944458
+saving model...
+In epoch 145, Train Loss: 0.2321, Valid MRR: 0.30805
+, Train time: 51.07995104789734, Valid time: 12.856523036956787
+In epoch 517, Train Loss: 0.2037, Valid MRR: 0.34544
+, Train time: 50.61987924575806, Valid time: 12.959187269210815
+saving model...
+In epoch 146, Train Loss: 0.2323, Valid MRR: 0.30862
+, Train time: 50.49023222923279, Valid time: 12.776782035827637
+In epoch 518, Train Loss: 0.2035, Valid MRR: 0.34665
+, Train time: 51.02589201927185, Valid time: 12.900176525115967
+saving model...
+In epoch 147, Train Loss: 0.2321, Valid MRR: 0.31014
+, Train time: 51.04508900642395, Valid time: 12.685082197189331
+In epoch 519, Train Loss: 0.2039, Valid MRR: 0.34628
+, Train time: 50.55576419830322, Valid time: 12.77817416191101
+saving model...
+In epoch 148, Train Loss: 0.2313, Valid MRR: 0.31109
+, Train time: 50.745150327682495, Valid time: 12.607914447784424
+In epoch 520, Train Loss: 0.2036, Valid MRR: 0.34748
+, Train time: 50.73407959938049, Valid time: 12.691054344177246
+saving model...
+In epoch 149, Train Loss: 0.2321, Valid MRR: 0.31222
+, Train time: 50.90175461769104, Valid time: 12.507090330123901
+In epoch 521, Train Loss: 0.2038, Valid MRR: 0.34644
+, Train time: 51.28728270530701, Valid time: 12.846786260604858
+In epoch 150, Train Loss: 0.2312, Valid MRR: 0.31038
+, Train time: 51.42590641975403, Valid time: 12.898259401321411
+In epoch 522, Train Loss: 0.2038, Valid MRR: 0.34823
+, Train time: 51.365222454071045, Valid time: 12.663768768310547
+In epoch 151, Train Loss: 0.2320, Valid MRR: 0.31158
+, Train time: 51.3227756023407, Valid time: 12.630640506744385
+In epoch 523, Train Loss: 0.2034, Valid MRR: 0.34729
+, Train time: 51.09126281738281, Valid time: 12.901219367980957
+In epoch 152, Train Loss: 0.2305, Valid MRR: 0.31098
+, Train time: 50.919960260391235, Valid time: 12.812753438949585
+In epoch 524, Train Loss: 0.2037, Valid MRR: 0.34824
+, Train time: 50.63730788230896, Valid time: 13.0673348903656
+saving model...
+In epoch 153, Train Loss: 0.2308, Valid MRR: 0.31229
+, Train time: 51.129449129104614, Valid time: 12.80413269996643
+In epoch 525, Train Loss: 0.2034, Valid MRR: 0.34699
+, Train time: 50.57428741455078, Valid time: 12.786656618118286
+saving model...
+In epoch 154, Train Loss: 0.2308, Valid MRR: 0.31489
+, Train time: 51.06327772140503, Valid time: 12.644176244735718
+In epoch 526, Train Loss: 0.2036, Valid MRR: 0.3455
+, Train time: 51.18462944030762, Valid time: 12.95947003364563
+In epoch 155, Train Loss: 0.2303, Valid MRR: 0.31487
+, Train time: 51.33545279502869, Valid time: 12.82058596611023
+In epoch 527, Train Loss: 0.2037, Valid MRR: 0.34597
+, Train time: 51.10630917549133, Valid time: 12.8352792263031
+In epoch 156, Train Loss: 0.2304, Valid MRR: 0.31414
+, Train time: 50.888147592544556, Valid time: 12.820042610168457
+In epoch 528, Train Loss: 0.2035, Valid MRR: 0.34806
+, Train time: 50.79068565368652, Valid time: 12.722632646560669
+In epoch 157, Train Loss: 0.2302, Valid MRR: 0.31436
+, Train time: 51.075568199157715, Valid time: 12.786595582962036
+In epoch 529, Train Loss: 0.2034, Valid MRR: 0.34633
+, Train time: 50.94487738609314, Valid time: 12.93043327331543
+In epoch 158, Train Loss: 0.2300, Valid MRR: 0.31302
+, Train time: 50.7925009727478, Valid time: 12.577858924865723
+saving model...
+In epoch 530, Train Loss: 0.2034, Valid MRR: 0.34895
+, Train time: 51.54568529129028, Valid time: 12.801050901412964
+saving model...
+In epoch 159, Train Loss: 0.2304, Valid MRR: 0.31494
+, Train time: 51.26073622703552, Valid time: 13.14927053451538
+In epoch 531, Train Loss: 0.2036, Valid MRR: 0.34829
+, Train time: 51.19273829460144, Valid time: 12.618565082550049
+saving model...
+In epoch 160, Train Loss: 0.2296, Valid MRR: 0.31591
+, Train time: 51.37499189376831, Valid time: 12.666995286941528
+In epoch 532, Train Loss: 0.2030, Valid MRR: 0.34879
+, Train time: 50.978825092315674, Valid time: 12.88373589515686
+In epoch 161, Train Loss: 0.2304, Valid MRR: 0.31341
+, Train time: 51.27595543861389, Valid time: 12.706250667572021
+In epoch 533, Train Loss: 0.2033, Valid MRR: 0.34621
+, Train time: 51.241814613342285, Valid time: 12.76050066947937
+In epoch 162, Train Loss: 0.2301, Valid MRR: 0.31385
+, Train time: 51.24223065376282, Valid time: 12.869725465774536
+In epoch 534, Train Loss: 0.2033, Valid MRR: 0.34805
+, Train time: 50.64390587806702, Valid time: 12.734766244888306
+In epoch 163, Train Loss: 0.2287, Valid MRR: 0.31572
+, Train time: 50.71549844741821, Valid time: 12.719014406204224
+In epoch 535, Train Loss: 0.2032, Valid MRR: 0.34786
+, Train time: 51.27137804031372, Valid time: 12.749414920806885
+In epoch 164, Train Loss: 0.2296, Valid MRR: 0.31503
+, Train time: 51.40885901451111, Valid time: 12.92417860031128
+In epoch 536, Train Loss: 0.2032, Valid MRR: 0.34678
+, Train time: 51.28910732269287, Valid time: 12.728618383407593
+saving model...
+In epoch 165, Train Loss: 0.2291, Valid MRR: 0.31614
+, Train time: 51.08567523956299, Valid time: 12.588916063308716
+In epoch 537, Train Loss: 0.2034, Valid MRR: 0.34733
+, Train time: 50.733704805374146, Valid time: 12.666398048400879
+saving model...
+In epoch 166, Train Loss: 0.2291, Valid MRR: 0.31711
+, Train time: 50.98489689826965, Valid time: 12.822765350341797
+In epoch 538, Train Loss: 0.2031, Valid MRR: 0.34564
+, Train time: 51.06533241271973, Valid time: 12.942830801010132
+In epoch 167, Train Loss: 0.2283, Valid MRR: 0.31592
+, Train time: 50.87155318260193, Valid time: 12.551397800445557
+In epoch 539, Train Loss: 0.2031, Valid MRR: 0.34723
+, Train time: 51.17941117286682, Valid time: 12.787147283554077
+In epoch 168, Train Loss: 0.2280, Valid MRR: 0.31692
+, Train time: 51.140724897384644, Valid time: 12.775559902191162
+In epoch 540, Train Loss: 0.2029, Valid MRR: 0.34781
+, Train time: 51.250751972198486, Valid time: 13.075182676315308
+saving model...
+In epoch 169, Train Loss: 0.2287, Valid MRR: 0.31757
+, Train time: 51.290162563323975, Valid time: 12.770044803619385
+In epoch 541, Train Loss: 0.2030, Valid MRR: 0.34746
+, Train time: 51.3935661315918, Valid time: 12.886372566223145
+saving model...
+In epoch 170, Train Loss: 0.2285, Valid MRR: 0.31877
+, Train time: 51.73880624771118, Valid time: 12.71047306060791
+In epoch 542, Train Loss: 0.2033, Valid MRR: 0.34623
+, Train time: 50.93365812301636, Valid time: 12.707391262054443
+In epoch 171, Train Loss: 0.2280, Valid MRR: 0.31837
+, Train time: 50.74371099472046, Valid time: 12.800697803497314
+saving model...
+In epoch 543, Train Loss: 0.2035, Valid MRR: 0.34955
+, Train time: 50.78165650367737, Valid time: 12.72407865524292
+saving model...
+In epoch 172, Train Loss: 0.2276, Valid MRR: 0.31921
+, Train time: 50.83342123031616, Valid time: 12.563190937042236
+In epoch 544, Train Loss: 0.2029, Valid MRR: 0.34768
+, Train time: 50.88585901260376, Valid time: 13.075305938720703
+In epoch 173, Train Loss: 0.2275, Valid MRR: 0.31818
+, Train time: 51.006157875061035, Valid time: 12.810111999511719
+In epoch 545, Train Loss: 0.2032, Valid MRR: 0.34718
+, Train time: 50.32878804206848, Valid time: 12.889251470565796
+In epoch 174, Train Loss: 0.2274, Valid MRR: 0.3189
+, Train time: 50.62902545928955, Valid time: 12.71327257156372
+In epoch 546, Train Loss: 0.2032, Valid MRR: 0.34775
+, Train time: 50.73893857002258, Valid time: 12.906069040298462
+In epoch 175, Train Loss: 0.2277, Valid MRR: 0.31795
+, Train time: 50.77705240249634, Valid time: 12.776870965957642
+In epoch 547, Train Loss: 0.2032, Valid MRR: 0.34678
+, Train time: 50.58238410949707, Valid time: 12.540683269500732
+In epoch 176, Train Loss: 0.2303, Valid MRR: 0.31551
+, Train time: 50.46880078315735, Valid time: 12.578099727630615
+In epoch 548, Train Loss: 0.2032, Valid MRR: 0.34919
+, Train time: 51.2058310508728, Valid time: 13.02704906463623
+saving model...
+In epoch 177, Train Loss: 0.2269, Valid MRR: 0.32067
+, Train time: 51.3186092376709, Valid time: 12.439572811126709
+In epoch 549, Train Loss: 0.2031, Valid MRR: 0.34918
+, Train time: 50.94409370422363, Valid time: 12.95653486251831
+In epoch 178, Train Loss: 0.2272, Valid MRR: 0.31798
+, Train time: 50.900651693344116, Valid time: 12.741933345794678
+In epoch 550, Train Loss: 0.2030, Valid MRR: 0.34671
+, Train time: 50.532333850860596, Valid time: 12.825935125350952
+In epoch 179, Train Loss: 0.2268, Valid MRR: 0.31847
+, Train time: 50.666951179504395, Valid time: 12.563815832138062
+In epoch 551, Train Loss: 0.2033, Valid MRR: 0.34827
+, Train time: 50.45677590370178, Valid time: 12.741048812866211
+In epoch 180, Train Loss: 0.2268, Valid MRR: 0.32052
+, Train time: 50.770448207855225, Valid time: 12.693929433822632
+In epoch 552, Train Loss: 0.2028, Valid MRR: 0.34768
+, Train time: 51.186442136764526, Valid time: 12.89296293258667
+saving model...
+In epoch 181, Train Loss: 0.2263, Valid MRR: 0.32095
+, Train time: 51.235543966293335, Valid time: 12.838356971740723
+In epoch 553, Train Loss: 0.2027, Valid MRR: 0.34821
+, Train time: 50.923701763153076, Valid time: 12.908077239990234
+In epoch 182, Train Loss: 0.2265, Valid MRR: 0.31998
+, Train time: 50.68025851249695, Valid time: 12.7937753200531
+In epoch 554, Train Loss: 0.2029, Valid MRR: 0.34838
+, Train time: 50.292715072631836, Valid time: 12.797514915466309
+In epoch 183, Train Loss: 0.2268, Valid MRR: 0.32071
+, Train time: 50.70492458343506, Valid time: 12.901807308197021
+In epoch 555, Train Loss: 0.2030, Valid MRR: 0.34703
+, Train time: 50.84817051887512, Valid time: 12.90800952911377
+saving model...
+In epoch 184, Train Loss: 0.2266, Valid MRR: 0.3221
+, Train time: 50.638169288635254, Valid time: 12.626605033874512
+In epoch 556, Train Loss: 0.2029, Valid MRR: 0.34844
+, Train time: 50.5602970123291, Valid time: 12.736162900924683
+In epoch 185, Train Loss: 0.2263, Valid MRR: 0.32147
+, Train time: 50.729928970336914, Valid time: 12.358001232147217
+In epoch 557, Train Loss: 0.2029, Valid MRR: 0.34639
+, Train time: 50.7205536365509, Valid time: 12.90422797203064
+saving model...
+In epoch 186, Train Loss: 0.2263, Valid MRR: 0.32329
+, Train time: 50.59474539756775, Valid time: 13.046517372131348
+In epoch 558, Train Loss: 0.2031, Valid MRR: 0.34768
+, Train time: 51.05712556838989, Valid time: 12.759881973266602
+In epoch 187, Train Loss: 0.2261, Valid MRR: 0.32089
+, Train time: 51.37950897216797, Valid time: 12.666741609573364
+In epoch 559, Train Loss: 0.2027, Valid MRR: 0.34765
+, Train time: 51.04313278198242, Valid time: 12.815706491470337
+In epoch 188, Train Loss: 0.2259, Valid MRR: 0.32161
+, Train time: 50.95697474479675, Valid time: 12.803879737854004
+In epoch 560, Train Loss: 0.2028, Valid MRR: 0.34829
+, Train time: 50.637566804885864, Valid time: 12.923689603805542
+In epoch 189, Train Loss: 0.2257, Valid MRR: 0.32211
+, Train time: 51.229352951049805, Valid time: 12.72572660446167
+In epoch 561, Train Loss: 0.2031, Valid MRR: 0.34736
+, Train time: 51.205122232437134, Valid time: 12.671073198318481
+In epoch 190, Train Loss: 0.2255, Valid MRR: 0.32227
+, Train time: 51.37706995010376, Valid time: 12.627917528152466
+In epoch 562, Train Loss: 0.2029, Valid MRR: 0.34853
+, Train time: 50.32002091407776, Valid time: 12.902911186218262
+In epoch 191, Train Loss: 0.2257, Valid MRR: 0.32222
+, Train time: 50.582342863082886, Valid time: 12.964592456817627
+In epoch 563, Train Loss: 0.2034, Valid MRR: 0.34797
+, Train time: 51.32452154159546, Valid time: 12.854234218597412
+In epoch 192, Train Loss: 0.2252, Valid MRR: 0.32258
+, Train time: 51.515400648117065, Valid time: 12.782314777374268
+In epoch 564, Train Loss: 0.2029, Valid MRR: 0.34735
+, Train time: 50.94645357131958, Valid time: 12.709798574447632
+saving model...
+In epoch 193, Train Loss: 0.2251, Valid MRR: 0.32358
+, Train time: 50.96635460853577, Valid time: 12.95509934425354
+In epoch 565, Train Loss: 0.2029, Valid MRR: 0.34804
+, Train time: 51.02298069000244, Valid time: 12.658390760421753
+saving model...
+In epoch 194, Train Loss: 0.2249, Valid MRR: 0.3255
+, Train time: 50.87010645866394, Valid time: 13.095190048217773
+In epoch 566, Train Loss: 0.2030, Valid MRR: 0.3477
+, Train time: 50.69190168380737, Valid time: 12.774327993392944
+In epoch 195, Train Loss: 0.2246, Valid MRR: 0.3245
+, Train time: 51.01187753677368, Valid time: 12.858321189880371
+In epoch 567, Train Loss: 0.2028, Valid MRR: 0.34737
+, Train time: 50.800440073013306, Valid time: 13.143742561340332
+In epoch 196, Train Loss: 0.2243, Valid MRR: 0.32302
+, Train time: 50.87977886199951, Valid time: 12.740674018859863
+In epoch 568, Train Loss: 0.2025, Valid MRR: 0.34951
+, Train time: 51.14755296707153, Valid time: 13.18650507926941
+In epoch 197, Train Loss: 0.2246, Valid MRR: 0.32314
+, Train time: 51.19449210166931, Valid time: 12.701202630996704
+In epoch 569, Train Loss: 0.2029, Valid MRR: 0.34727
+, Train time: 50.78965663909912, Valid time: 12.82125186920166
+In epoch 198, Train Loss: 0.2244, Valid MRR: 0.32367
+, Train time: 50.793254137039185, Valid time: 12.82605528831482
+In epoch 570, Train Loss: 0.2031, Valid MRR: 0.34809
+, Train time: 50.89926218986511, Valid time: 13.241202354431152
+In epoch 199, Train Loss: 0.2246, Valid MRR: 0.32502
+, Train time: 50.86619424819946, Valid time: 12.816264867782593
+In epoch 571, Train Loss: 0.2031, Valid MRR: 0.34904
+, Train time: 51.02342486381531, Valid time: 12.914903163909912
+In epoch 200, Train Loss: 0.2242, Valid MRR: 0.32348
+, Train time: 50.9276819229126, Valid time: 12.89100956916809
+In epoch 572, Train Loss: 0.2026, Valid MRR: 0.34776
+, Train time: 51.34792637825012, Valid time: 12.859883785247803
+In epoch 201, Train Loss: 0.2245, Valid MRR: 0.32263
+, Train time: 51.52384305000305, Valid time: 13.05710744857788
+In epoch 573, Train Loss: 0.2026, Valid MRR: 0.3465
+, Train time: 50.757025957107544, Valid time: 12.674235582351685
+In epoch 202, Train Loss: 0.2247, Valid MRR: 0.32327
+, Train time: 50.769745111465454, Valid time: 12.795154094696045
+In epoch 574, Train Loss: 0.2029, Valid MRR: 0.34723
+, Train time: 50.847540616989136, Valid time: 12.67460322380066
+In epoch 203, Train Loss: 0.2245, Valid MRR: 0.32421
+, Train time: 50.96275568008423, Valid time: 12.769887685775757
+In epoch 575, Train Loss: 0.2026, Valid MRR: 0.34854
+, Train time: 51.19435262680054, Valid time: 13.118987083435059
+In epoch 204, Train Loss: 0.2240, Valid MRR: 0.32541
+, Train time: 51.290367603302, Valid time: 12.838391780853271
+In epoch 576, Train Loss: 0.2026, Valid MRR: 0.34864
+, Train time: 51.45706582069397, Valid time: 13.064269781112671
+saving model...
+In epoch 205, Train Loss: 0.2240, Valid MRR: 0.32595
+, Train time: 51.47259473800659, Valid time: 12.700737953186035
+In epoch 577, Train Loss: 0.2027, Valid MRR: 0.34729
+, Train time: 51.17496395111084, Valid time: 12.658693075180054
+saving model...
+In epoch 206, Train Loss: 0.2239, Valid MRR: 0.32738
+, Train time: 50.94406604766846, Valid time: 12.736915349960327
+In epoch 578, Train Loss: 0.2027, Valid MRR: 0.34624
+, Train time: 50.558409452438354, Valid time: 13.009391069412231
+In epoch 207, Train Loss: 0.2234, Valid MRR: 0.32607
+, Train time: 50.741106033325195, Valid time: 12.682395935058594
+In epoch 579, Train Loss: 0.2024, Valid MRR: 0.34935
+, Train time: 50.99792432785034, Valid time: 12.973794937133789
+In epoch 208, Train Loss: 0.2230, Valid MRR: 0.32628
+, Train time: 51.1889283657074, Valid time: 12.884026527404785
+In epoch 580, Train Loss: 0.2025, Valid MRR: 0.34752
+, Train time: 51.14881992340088, Valid time: 12.84585976600647
+In epoch 209, Train Loss: 0.2229, Valid MRR: 0.32731
+, Train time: 51.45163655281067, Valid time: 12.924361228942871
+In epoch 581, Train Loss: 0.2023, Valid MRR: 0.34892
+, Train time: 51.435306549072266, Valid time: 12.839124202728271
+In epoch 210, Train Loss: 0.2230, Valid MRR: 0.32594
+, Train time: 51.343501329422, Valid time: 12.76151180267334
+In epoch 582, Train Loss: 0.2027, Valid MRR: 0.34879
+, Train time: 51.214258432388306, Valid time: 12.879847526550293
+In epoch 211, Train Loss: 0.2230, Valid MRR: 0.32556
+, Train time: 51.25515103340149, Valid time: 12.921531438827515
+In epoch 583, Train Loss: 0.2026, Valid MRR: 0.34771
+, Train time: 51.3169047832489, Valid time: 12.84649133682251
+In epoch 212, Train Loss: 0.2228, Valid MRR: 0.32645
+, Train time: 51.56013631820679, Valid time: 12.748207569122314
+In epoch 584, Train Loss: 0.2027, Valid MRR: 0.3484
+, Train time: 51.30175995826721, Valid time: 12.852541208267212
+saving model...
+In epoch 213, Train Loss: 0.2228, Valid MRR: 0.32874
+, Train time: 51.376378536224365, Valid time: 12.819488525390625
+In epoch 585, Train Loss: 0.2026, Valid MRR: 0.34948
+, Train time: 51.113640546798706, Valid time: 13.008138656616211
+In epoch 214, Train Loss: 0.2225, Valid MRR: 0.32548
+, Train time: 50.87136101722717, Valid time: 13.140753984451294
+In epoch 586, Train Loss: 0.2024, Valid MRR: 0.34642
+, Train time: 51.059595823287964, Valid time: 12.909307479858398
+In epoch 215, Train Loss: 0.2224, Valid MRR: 0.32653
+, Train time: 51.15617299079895, Valid time: 13.149847030639648
+In epoch 587, Train Loss: 0.2023, Valid MRR: 0.34872
+, Train time: 51.35276412963867, Valid time: 13.034711360931396
+In epoch 216, Train Loss: 0.2222, Valid MRR: 0.32673
+, Train time: 51.333961486816406, Valid time: 12.816462278366089
+In epoch 588, Train Loss: 0.2025, Valid MRR: 0.34814
+, Train time: 51.34890151023865, Valid time: 12.886529445648193
+In epoch 217, Train Loss: 0.2217, Valid MRR: 0.32826
+, Train time: 51.28692102432251, Valid time: 12.71973180770874
+In epoch 589, Train Loss: 0.2022, Valid MRR: 0.34819
+, Train time: 50.833784341812134, Valid time: 13.083468437194824
+In epoch 218, Train Loss: 0.2219, Valid MRR: 0.32659
+, Train time: 50.79603576660156, Valid time: 12.961867809295654
+In epoch 590, Train Loss: 0.2025, Valid MRR: 0.34943
+, Train time: 51.435484409332275, Valid time: 12.737304210662842
+saving model...
+In epoch 219, Train Loss: 0.2221, Valid MRR: 0.32954
+, Train time: 51.49002432823181, Valid time: 12.560940265655518
+In epoch 591, Train Loss: 0.2027, Valid MRR: 0.34872
+, Train time: 51.137555837631226, Valid time: 12.631864786148071
+In epoch 220, Train Loss: 0.2220, Valid MRR: 0.32699
+, Train time: 51.28343987464905, Valid time: 12.896604061126709
+In epoch 592, Train Loss: 0.2023, Valid MRR: 0.34714
+, Train time: 50.675474643707275, Valid time: 12.811245918273926
+In epoch 221, Train Loss: 0.2214, Valid MRR: 0.32715
+, Train time: 50.73583221435547, Valid time: 12.9529709815979
+In epoch 593, Train Loss: 0.2024, Valid MRR: 0.34675
+, Train time: 51.275752544403076, Valid time: 12.855665683746338
+In epoch 222, Train Loss: 0.2210, Valid MRR: 0.32801
+, Train time: 51.42430233955383, Valid time: 12.885783195495605
+In epoch 594, Train Loss: 0.2023, Valid MRR: 0.34858
+, Train time: 50.93028712272644, Valid time: 12.895462989807129
+In epoch 223, Train Loss: 0.2209, Valid MRR: 0.32765
+, Train time: 51.07362484931946, Valid time: 12.628716468811035
+In epoch 595, Train Loss: 0.2026, Valid MRR: 0.3473
+, Train time: 51.56035089492798, Valid time: 12.829447507858276
+In epoch 224, Train Loss: 0.2211, Valid MRR: 0.32822
+, Train time: 51.3602511882782, Valid time: 12.810932397842407
+In epoch 596, Train Loss: 0.2023, Valid MRR: 0.3489
+, Train time: 50.620431900024414, Valid time: 13.086947679519653
+In epoch 225, Train Loss: 0.2206, Valid MRR: 0.3294
+, Train time: 50.81212329864502, Valid time: 12.771651983261108
+In epoch 597, Train Loss: 0.2021, Valid MRR: 0.34864
+, Train time: 50.66719579696655, Valid time: 12.738905906677246
+saving model...
+In epoch 226, Train Loss: 0.2206, Valid MRR: 0.3296
+, Train time: 50.49880576133728, Valid time: 12.75225043296814
+saving model...
+In epoch 598, Train Loss: 0.2024, Valid MRR: 0.3499
+, Train time: 51.314162731170654, Valid time: 12.881070375442505
+In epoch 227, Train Loss: 0.2200, Valid MRR: 0.329
+, Train time: 51.12156534194946, Valid time: 12.741352796554565
+In epoch 599, Train Loss: 0.2022, Valid MRR: 0.34819
+, Train time: 51.1337993144989, Valid time: 12.66575837135315
+In epoch 228, Train Loss: 0.2202, Valid MRR: 0.32844
+, Train time: 51.24186301231384, Valid time: 12.689704895019531
+In epoch 600, Train Loss: 0.2023, Valid MRR: 0.34955
+, Train time: 51.53126358985901, Valid time: 12.893134117126465
+In epoch 229, Train Loss: 0.2200, Valid MRR: 0.32829
+, Train time: 51.56179475784302, Valid time: 12.689359903335571
+In epoch 601, Train Loss: 0.2026, Valid MRR: 0.34893
+, Train time: 50.591718912124634, Valid time: 12.957407236099243
+In epoch 230, Train Loss: 0.2202, Valid MRR: 0.3294
+, Train time: 50.54490923881531, Valid time: 12.84531283378601
+saving model...
+In epoch 602, Train Loss: 0.2024, Valid MRR: 0.35062
+, Train time: 51.12942028045654, Valid time: 13.23267388343811
+saving model...
+In epoch 231, Train Loss: 0.2196, Valid MRR: 0.33085
+, Train time: 51.1109185218811, Valid time: 12.899656057357788
+In epoch 603, Train Loss: 0.2024, Valid MRR: 0.3498
+, Train time: 51.55740571022034, Valid time: 12.955477476119995
+In epoch 232, Train Loss: 0.2193, Valid MRR: 0.33029
+, Train time: 51.28671908378601, Valid time: 13.116616010665894
+In epoch 604, Train Loss: 0.2022, Valid MRR: 0.35006
+, Train time: 50.7799117565155, Valid time: 13.066819906234741
+In epoch 233, Train Loss: 0.2190, Valid MRR: 0.33019
+, Train time: 50.75250220298767, Valid time: 12.749356746673584
+saving model...
+In epoch 605, Train Loss: 0.2021, Valid MRR: 0.3507
+, Train time: 51.11524295806885, Valid time: 12.925093650817871
+In epoch 234, Train Loss: 0.2189, Valid MRR: 0.33052
+, Train time: 51.183127880096436, Valid time: 12.896137237548828
+In epoch 606, Train Loss: 0.2025, Valid MRR: 0.34916
+, Train time: 50.71603965759277, Valid time: 12.754963159561157
+In epoch 235, Train Loss: 0.2191, Valid MRR: 0.33038
+, Train time: 50.86067795753479, Valid time: 12.958643198013306
+In epoch 607, Train Loss: 0.2018, Valid MRR: 0.34968
+, Train time: 51.28245162963867, Valid time: 12.875718593597412
+In epoch 236, Train Loss: 0.2185, Valid MRR: 0.32969
+, Train time: 51.43970537185669, Valid time: 12.730496406555176
+In epoch 608, Train Loss: 0.2022, Valid MRR: 0.3493
+, Train time: 50.73170304298401, Valid time: 12.903592348098755
+In epoch 237, Train Loss: 0.2185, Valid MRR: 0.32965
+, Train time: 50.86886644363403, Valid time: 12.695066452026367
+In epoch 609, Train Loss: 0.2023, Valid MRR: 0.34772
+, Train time: 50.994438886642456, Valid time: 13.059565544128418
+saving model...
+In epoch 238, Train Loss: 0.2183, Valid MRR: 0.33119
+, Train time: 51.075023889541626, Valid time: 12.822521448135376
+In epoch 610, Train Loss: 0.2026, Valid MRR: 0.34755
+, Train time: 51.19508743286133, Valid time: 12.661529064178467
+In epoch 239, Train Loss: 0.2178, Valid MRR: 0.33075
+, Train time: 51.24229979515076, Valid time: 12.82953429222107
+In epoch 611, Train Loss: 0.2023, Valid MRR: 0.34844
+, Train time: 51.05376696586609, Valid time: 12.804126739501953
+In epoch 240, Train Loss: 0.2174, Valid MRR: 0.33094
+, Train time: 50.959763288497925, Valid time: 12.905611753463745
+In epoch 612, Train Loss: 0.2020, Valid MRR: 0.34958
+, Train time: 51.32888603210449, Valid time: 12.819685697555542
+In epoch 241, Train Loss: 0.2176, Valid MRR: 0.33113
+, Train time: 51.02810478210449, Valid time: 12.54966425895691
+In epoch 613, Train Loss: 0.2021, Valid MRR: 0.34873
+, Train time: 50.559117794036865, Valid time: 12.804247856140137
+saving model...
+In epoch 242, Train Loss: 0.2177, Valid MRR: 0.3323
+, Train time: 50.83596420288086, Valid time: 12.863574504852295
+In epoch 614, Train Loss: 0.2023, Valid MRR: 0.34904
+, Train time: 50.735984802246094, Valid time: 12.81236481666565
+In epoch 243, Train Loss: 0.2170, Valid MRR: 0.33219
+, Train time: 50.63570785522461, Valid time: 13.105000972747803
+In epoch 615, Train Loss: 0.2019, Valid MRR: 0.34827
+, Train time: 51.4304313659668, Valid time: 13.064563512802124
+In epoch 244, Train Loss: 0.2168, Valid MRR: 0.33158
+, Train time: 51.30572533607483, Valid time: 12.867471933364868
+In epoch 616, Train Loss: 0.2018, Valid MRR: 0.34873
+, Train time: 51.052364110946655, Valid time: 12.956984758377075
+In epoch 245, Train Loss: 0.2165, Valid MRR: 0.33108
+, Train time: 51.265284061431885, Valid time: 13.081179857254028
+In epoch 617, Train Loss: 0.2021, Valid MRR: 0.35011
+, Train time: 50.71558332443237, Valid time: 12.959933519363403
+In epoch 246, Train Loss: 0.2167, Valid MRR: 0.33045
+, Train time: 50.57883143424988, Valid time: 13.097440242767334
+In epoch 618, Train Loss: 0.2020, Valid MRR: 0.35062
+, Train time: 51.08146786689758, Valid time: 13.041940689086914
+In epoch 247, Train Loss: 0.2158, Valid MRR: 0.33065
+, Train time: 51.07964253425598, Valid time: 12.996017932891846
+In epoch 619, Train Loss: 0.2019, Valid MRR: 0.34819
+, Train time: 51.16612362861633, Valid time: 12.904324293136597
+saving model...
+In epoch 248, Train Loss: 0.2156, Valid MRR: 0.33345
+, Train time: 51.168601512908936, Valid time: 12.723832130432129
+In epoch 620, Train Loss: 0.2020, Valid MRR: 0.34874
+, Train time: 51.0464506149292, Valid time: 13.112591028213501
+In epoch 249, Train Loss: 0.2148, Valid MRR: 0.331
+, Train time: 50.98081135749817, Valid time: 12.688924789428711
+saving model...
+In epoch 621, Train Loss: 0.2023, Valid MRR: 0.35146
+, Train time: 50.495038747787476, Valid time: 13.00859522819519
+In epoch 250, Train Loss: 0.2126, Valid MRR: 0.33157
+, Train time: 50.66639518737793, Valid time: 12.837595224380493
+In epoch 622, Train Loss: 0.2018, Valid MRR: 0.35062
+, Train time: 51.04610633850098, Valid time: 12.802059650421143
+In epoch 251, Train Loss: 0.2123, Valid MRR: 0.3309
+, Train time: 50.782997369766235, Valid time: 12.973388195037842
+In epoch 623, Train Loss: 0.2018, Valid MRR: 0.34996
+, Train time: 50.87888741493225, Valid time: 12.955528020858765
+In epoch 252, Train Loss: 0.2121, Valid MRR: 0.3307
+, Train time: 51.208428144454956, Valid time: 12.947234153747559
+In epoch 624, Train Loss: 0.2020, Valid MRR: 0.34849
+, Train time: 50.70249915122986, Valid time: 13.088932991027832
+In epoch 253, Train Loss: 0.2117, Valid MRR: 0.33047
+, Train time: 50.96716904640198, Valid time: 12.790462970733643
+In epoch 625, Train Loss: 0.2021, Valid MRR: 0.34789
+, Train time: 50.706706285476685, Valid time: 13.055181980133057
+In epoch 254, Train Loss: 0.2115, Valid MRR: 0.33193
+, Train time: 50.80584120750427, Valid time: 13.012717485427856
+In epoch 626, Train Loss: 0.2020, Valid MRR: 0.34839
+, Train time: 50.81439423561096, Valid time: 13.0301353931427
+In epoch 255, Train Loss: 0.2112, Valid MRR: 0.33147
+, Train time: 50.746500968933105, Valid time: 12.90834641456604
+In epoch 627, Train Loss: 0.2019, Valid MRR: 0.3513
+, Train time: 51.31301522254944, Valid time: 12.892117023468018
+In epoch 256, Train Loss: 0.2113, Valid MRR: 0.33178
+, Train time: 51.19690275192261, Valid time: 12.794349431991577
+In epoch 628, Train Loss: 0.2014, Valid MRR: 0.34882
+, Train time: 50.7373366355896, Valid time: 12.754271984100342
+In epoch 257, Train Loss: 0.2114, Valid MRR: 0.33165
+, Train time: 50.61693978309631, Valid time: 13.102020978927612
+saving model...
+In epoch 629, Train Loss: 0.2020, Valid MRR: 0.35165
+, Train time: 50.594836950302124, Valid time: 13.48673129081726
+saving model...
+In epoch 258, Train Loss: 0.2113, Valid MRR: 0.33405
+, Train time: 50.73591232299805, Valid time: 12.754402160644531
+In epoch 630, Train Loss: 0.2015, Valid MRR: 0.34946
+, Train time: 50.57282996177673, Valid time: 12.99383544921875
+In epoch 259, Train Loss: 0.2113, Valid MRR: 0.33252
+, Train time: 50.52932095527649, Valid time: 12.614148616790771
+In epoch 631, Train Loss: 0.2019, Valid MRR: 0.34948
+, Train time: 50.932573318481445, Valid time: 12.939340114593506
+In epoch 260, Train Loss: 0.2110, Valid MRR: 0.33339
+, Train time: 50.70200157165527, Valid time: 12.871472358703613
+In epoch 632, Train Loss: 0.2019, Valid MRR: 0.34969
+, Train time: 51.45971870422363, Valid time: 12.829326868057251
+In epoch 261, Train Loss: 0.2114, Valid MRR: 0.33179
+, Train time: 51.70559525489807, Valid time: 12.905171871185303
+In epoch 633, Train Loss: 0.2020, Valid MRR: 0.35048
+, Train time: 51.13544416427612, Valid time: 12.912414789199829
+In epoch 262, Train Loss: 0.2110, Valid MRR: 0.33334
+, Train time: 50.909404039382935, Valid time: 13.088469982147217
+In epoch 634, Train Loss: 0.2017, Valid MRR: 0.34914
+, Train time: 50.695563077926636, Valid time: 12.904499053955078
+In epoch 263, Train Loss: 0.2110, Valid MRR: 0.33245
+, Train time: 50.651477098464966, Valid time: 13.21928596496582
+In epoch 635, Train Loss: 0.2019, Valid MRR: 0.34926
+, Train time: 50.83970522880554, Valid time: 12.73998761177063
+In epoch 264, Train Loss: 0.2110, Valid MRR: 0.33231
+, Train time: 51.191319942474365, Valid time: 12.786182641983032
+In epoch 636, Train Loss: 0.2021, Valid MRR: 0.34857
+, Train time: 51.39875555038452, Valid time: 12.969341516494751
+In epoch 265, Train Loss: 0.2109, Valid MRR: 0.33292
+, Train time: 51.365777254104614, Valid time: 12.776914119720459
+In epoch 637, Train Loss: 0.2017, Valid MRR: 0.34867
+, Train time: 51.31331014633179, Valid time: 12.748491764068604
+In epoch 266, Train Loss: 0.2111, Valid MRR: 0.33371
+, Train time: 51.146148443222046, Valid time: 13.057435035705566
+In epoch 638, Train Loss: 0.2016, Valid MRR: 0.34964
+, Train time: 51.355384349823, Valid time: 12.96506643295288
+In epoch 267, Train Loss: 0.2111, Valid MRR: 0.33205
+, Train time: 51.44023561477661, Valid time: 12.989930868148804
+In epoch 639, Train Loss: 0.2018, Valid MRR: 0.34754
+, Train time: 50.67147374153137, Valid time: 12.852930784225464
+In epoch 268, Train Loss: 0.2108, Valid MRR: 0.33257
+, Train time: 50.87502098083496, Valid time: 12.66344690322876
+In epoch 640, Train Loss: 0.2021, Valid MRR: 0.34825
+, Train time: 51.48072624206543, Valid time: 12.648045778274536
+In epoch 269, Train Loss: 0.2108, Valid MRR: 0.33264
+, Train time: 51.361268758773804, Valid time: 12.793696165084839
+In epoch 641, Train Loss: 0.2015, Valid MRR: 0.3491
+, Train time: 50.59663248062134, Valid time: 12.937458038330078
+In epoch 270, Train Loss: 0.2103, Valid MRR: 0.33357
+, Train time: 50.70054388046265, Valid time: 12.925778150558472
+In epoch 642, Train Loss: 0.2014, Valid MRR: 0.35072
+, Train time: 50.69450330734253, Valid time: 12.894959926605225
+In epoch 271, Train Loss: 0.2107, Valid MRR: 0.3329
+, Train time: 50.72631883621216, Valid time: 12.827255725860596
+In epoch 643, Train Loss: 0.2017, Valid MRR: 0.34894
+, Train time: 51.503514528274536, Valid time: 12.774168491363525
+saving model...
+In epoch 272, Train Loss: 0.2100, Valid MRR: 0.33508
+, Train time: 51.66858959197998, Valid time: 12.945849418640137
+In epoch 644, Train Loss: 0.2014, Valid MRR: 0.35015
+, Train time: 51.03517389297485, Valid time: 12.966667652130127
+saving model...
+In epoch 273, Train Loss: 0.2102, Valid MRR: 0.33535
+, Train time: 51.3779296875, Valid time: 12.91490387916565
+In epoch 645, Train Loss: 0.2017, Valid MRR: 0.34969
+, Train time: 50.77796506881714, Valid time: 13.07655930519104
+In epoch 274, Train Loss: 0.2103, Valid MRR: 0.33492
+, Train time: 50.96932411193848, Valid time: 12.97891640663147
+In epoch 646, Train Loss: 0.2018, Valid MRR: 0.35074
+, Train time: 50.91468524932861, Valid time: 13.016342163085938
+In epoch 275, Train Loss: 0.2101, Valid MRR: 0.33435
+, Train time: 51.155041217803955, Valid time: 13.055930137634277
+In epoch 647, Train Loss: 0.2019, Valid MRR: 0.35024
+, Train time: 50.82031750679016, Valid time: 12.77176547050476
+In epoch 276, Train Loss: 0.2102, Valid MRR: 0.33535
+, Train time: 51.02583885192871, Valid time: 13.071787357330322
+In epoch 648, Train Loss: 0.2016, Valid MRR: 0.35035
+, Train time: 50.46021056175232, Valid time: 12.973618030548096
+saving model...
+In epoch 277, Train Loss: 0.2100, Valid MRR: 0.33538
+, Train time: 50.89419484138489, Valid time: 12.676320552825928
+In epoch 649, Train Loss: 0.2017, Valid MRR: 0.35025
+, Train time: 50.71760654449463, Valid time: 12.903018236160278
+In epoch 278, Train Loss: 0.2102, Valid MRR: 0.3338
+, Train time: 50.90247082710266, Valid time: 12.829602003097534
+In epoch 650, Train Loss: 0.2015, Valid MRR: 0.3495
+, Train time: 51.064902782440186, Valid time: 12.789764642715454
+saving model...
+In epoch 279, Train Loss: 0.2100, Valid MRR: 0.33552
+, Train time: 51.253113746643066, Valid time: 12.754659652709961
+In epoch 651, Train Loss: 0.2019, Valid MRR: 0.34986
+, Train time: 51.49749135971069, Valid time: 12.86557412147522
+In epoch 280, Train Loss: 0.2098, Valid MRR: 0.33359
+, Train time: 51.44830298423767, Valid time: 12.798527240753174
+In epoch 652, Train Loss: 0.2015, Valid MRR: 0.3498
+, Train time: 50.82592463493347, Valid time: 12.69297480583191
+In epoch 281, Train Loss: 0.2100, Valid MRR: 0.33401
+, Train time: 51.106465578079224, Valid time: 12.774794816970825
+In epoch 653, Train Loss: 0.2016, Valid MRR: 0.35143
+, Train time: 50.9905481338501, Valid time: 12.91562795639038
+In epoch 282, Train Loss: 0.2098, Valid MRR: 0.33546
+, Train time: 51.003193855285645, Valid time: 12.729960441589355
+In epoch 654, Train Loss: 0.2014, Valid MRR: 0.34995
+, Train time: 51.44476318359375, Valid time: 12.833823919296265
+saving model...
+In epoch 283, Train Loss: 0.2100, Valid MRR: 0.33588
+, Train time: 51.71035099029541, Valid time: 12.802061319351196
+In epoch 655, Train Loss: 0.2016, Valid MRR: 0.3488
+, Train time: 51.44729971885681, Valid time: 12.923255920410156
+saving model...
+In epoch 284, Train Loss: 0.2102, Valid MRR: 0.3359
+, Train time: 51.10423517227173, Valid time: 13.04401445388794
+In epoch 656, Train Loss: 0.2017, Valid MRR: 0.35008
+, Train time: 50.90559649467468, Valid time: 12.846925020217896
+In epoch 285, Train Loss: 0.2099, Valid MRR: 0.33504
+, Train time: 51.12461495399475, Valid time: 12.580050230026245
+saving model...
+In epoch 657, Train Loss: 0.2015, Valid MRR: 0.35277
+, Train time: 50.82052707672119, Valid time: 12.855273485183716
+In epoch 286, Train Loss: 0.2101, Valid MRR: 0.33534
+, Train time: 51.16552710533142, Valid time: 12.772724628448486
+In epoch 658, Train Loss: 0.2017, Valid MRR: 0.35085
+, Train time: 51.26014447212219, Valid time: 13.050826787948608
+In epoch 287, Train Loss: 0.2099, Valid MRR: 0.3349
+, Train time: 50.84815073013306, Valid time: 12.9042329788208
+In epoch 659, Train Loss: 0.2015, Valid MRR: 0.34981
+, Train time: 51.098928928375244, Valid time: 12.812832117080688
+In epoch 288, Train Loss: 0.2098, Valid MRR: 0.33505
+, Train time: 50.91945838928223, Valid time: 13.129002571105957
+In epoch 660, Train Loss: 0.2018, Valid MRR: 0.35004
+, Train time: 51.33601260185242, Valid time: 12.853516101837158
+In epoch 289, Train Loss: 0.2097, Valid MRR: 0.33549
+, Train time: 51.32122182846069, Valid time: 13.148672580718994
+In epoch 661, Train Loss: 0.2016, Valid MRR: 0.35114
+, Train time: 51.31277871131897, Valid time: 12.739290952682495
+In epoch 290, Train Loss: 0.2096, Valid MRR: 0.33525
+, Train time: 51.33637309074402, Valid time: 12.691091775894165
+In epoch 662, Train Loss: 0.2015, Valid MRR: 0.35064
+, Train time: 51.16410422325134, Valid time: 12.863717079162598
+In epoch 291, Train Loss: 0.2099, Valid MRR: 0.33543
+, Train time: 50.908076763153076, Valid time: 12.859743356704712
+In epoch 663, Train Loss: 0.2020, Valid MRR: 0.34918
+, Train time: 51.27524781227112, Valid time: 12.896339416503906
+In epoch 292, Train Loss: 0.2094, Valid MRR: 0.33492
+, Train time: 51.32165884971619, Valid time: 12.92438554763794
+In epoch 664, Train Loss: 0.2014, Valid MRR: 0.35056
+, Train time: 51.420443296432495, Valid time: 12.889149904251099
+In epoch 293, Train Loss: 0.2094, Valid MRR: 0.33476
+, Train time: 51.33086943626404, Valid time: 12.775250911712646
+In epoch 665, Train Loss: 0.2011, Valid MRR: 0.35048
+, Train time: 50.91763424873352, Valid time: 12.986253023147583
+saving model...
+In epoch 294, Train Loss: 0.2095, Valid MRR: 0.33706
+, Train time: 50.93948793411255, Valid time: 12.628662824630737
+In epoch 666, Train Loss: 0.2012, Valid MRR: 0.35109
+, Train time: 51.2509548664093, Valid time: 12.730778217315674
+In epoch 295, Train Loss: 0.2093, Valid MRR: 0.33573
+, Train time: 51.533631801605225, Valid time: 12.711490154266357
+In epoch 667, Train Loss: 0.2014, Valid MRR: 0.34928
+, Train time: 51.2627432346344, Valid time: 12.755248785018921
+saving model...
+In epoch 296, Train Loss: 0.2092, Valid MRR: 0.33728
+, Train time: 51.345430850982666, Valid time: 13.045949459075928
+In epoch 668, Train Loss: 0.2012, Valid MRR: 0.3497
+, Train time: 51.308257818222046, Valid time: 12.82996940612793
+In epoch 297, Train Loss: 0.2094, Valid MRR: 0.33666
+, Train time: 51.57663130760193, Valid time: 12.977251529693604
+In epoch 669, Train Loss: 0.2012, Valid MRR: 0.35095
+, Train time: 51.15308690071106, Valid time: 13.127681016921997
+In epoch 298, Train Loss: 0.2093, Valid MRR: 0.33714
+, Train time: 51.163482666015625, Valid time: 12.999286890029907
+In epoch 670, Train Loss: 0.2013, Valid MRR: 0.35018
+, Train time: 50.726649045944214, Valid time: 13.261108160018921
+In epoch 299, Train Loss: 0.2090, Valid MRR: 0.33505
+, Train time: 50.73822617530823, Valid time: 12.90080738067627
+In epoch 671, Train Loss: 0.2014, Valid MRR: 0.35005
+, Train time: 51.50656008720398, Valid time: 13.268160343170166
+In epoch 300, Train Loss: 0.2091, Valid MRR: 0.33578
+, Train time: 51.398149251937866, Valid time: 13.022235870361328
+In epoch 672, Train Loss: 0.2014, Valid MRR: 0.34967
+, Train time: 50.73990082740784, Valid time: 13.304045915603638
+In epoch 301, Train Loss: 0.2089, Valid MRR: 0.33582
+, Train time: 51.007359981536865, Valid time: 12.916637420654297
+In epoch 673, Train Loss: 0.2012, Valid MRR: 0.34928
+, Train time: 50.78559136390686, Valid time: 13.371325254440308
+In epoch 302, Train Loss: 0.2093, Valid MRR: 0.33627
+, Train time: 50.65416216850281, Valid time: 12.45318865776062
+In epoch 674, Train Loss: 0.2013, Valid MRR: 0.35101
+, Train time: 50.61881637573242, Valid time: 13.289335489273071
+In epoch 303, Train Loss: 0.2090, Valid MRR: 0.3343
+, Train time: 50.82346153259277, Valid time: 12.769407033920288
+In epoch 675, Train Loss: 0.2014, Valid MRR: 0.35057
+, Train time: 50.93890929222107, Valid time: 13.209818124771118
+In epoch 304, Train Loss: 0.2089, Valid MRR: 0.33536
+, Train time: 51.21519327163696, Valid time: 12.9568510055542
+In epoch 676, Train Loss: 0.2012, Valid MRR: 0.35067
+, Train time: 51.42309856414795, Valid time: 13.243309736251831
+In epoch 305, Train Loss: 0.2091, Valid MRR: 0.33506
+, Train time: 51.36284255981445, Valid time: 12.630515098571777
+In epoch 677, Train Loss: 0.2013, Valid MRR: 0.3493
+, Train time: 51.82677745819092, Valid time: 12.910977363586426
+saving model...
+In epoch 306, Train Loss: 0.2090, Valid MRR: 0.3382
+, Train time: 51.838491439819336, Valid time: 12.728282451629639
+In epoch 678, Train Loss: 0.2013, Valid MRR: 0.34896
+, Train time: 51.067954540252686, Valid time: 13.311260223388672
+In epoch 307, Train Loss: 0.2090, Valid MRR: 0.33764
+, Train time: 51.341755867004395, Valid time: 12.872345447540283
+In epoch 679, Train Loss: 0.2012, Valid MRR: 0.34988
+, Train time: 50.861573457717896, Valid time: 13.212387323379517
+In epoch 308, Train Loss: 0.2089, Valid MRR: 0.33683
+, Train time: 50.81854796409607, Valid time: 12.756520748138428
+In epoch 680, Train Loss: 0.2012, Valid MRR: 0.35044
+, Train time: 51.057623624801636, Valid time: 13.190022468566895
+saving model...
+In epoch 309, Train Loss: 0.2085, Valid MRR: 0.33851
+, Train time: 51.137465715408325, Valid time: 13.048839092254639
+In epoch 681, Train Loss: 0.2012, Valid MRR: 0.35027
+, Train time: 50.413373947143555, Valid time: 13.549307346343994
+In epoch 310, Train Loss: 0.2086, Valid MRR: 0.33801
+, Train time: 50.79304838180542, Valid time: 12.834187984466553
+In epoch 682, Train Loss: 0.2012, Valid MRR: 0.34808
+, Train time: 50.79944086074829, Valid time: 13.06073784828186
+In epoch 311, Train Loss: 0.2086, Valid MRR: 0.33745
+, Train time: 50.705002546310425, Valid time: 12.965877771377563
+In epoch 683, Train Loss: 0.2014, Valid MRR: 0.35047
+, Train time: 51.361653566360474, Valid time: 13.40189814567566
+In epoch 312, Train Loss: 0.2089, Valid MRR: 0.33727
+, Train time: 51.39054322242737, Valid time: 12.861129760742188
+In epoch 684, Train Loss: 0.2010, Valid MRR: 0.34875
+, Train time: 50.936063289642334, Valid time: 13.155682563781738
+In epoch 313, Train Loss: 0.2086, Valid MRR: 0.33799
+, Train time: 51.18190336227417, Valid time: 12.86931562423706
+In epoch 685, Train Loss: 0.2012, Valid MRR: 0.35058
+, Train time: 50.62210416793823, Valid time: 13.29342246055603
+In epoch 314, Train Loss: 0.2089, Valid MRR: 0.33833
+, Train time: 50.608471155166626, Valid time: 12.626338005065918
+In epoch 686, Train Loss: 0.2012, Valid MRR: 0.34793
+, Train time: 51.14781045913696, Valid time: 13.077908277511597
+In epoch 315, Train Loss: 0.2085, Valid MRR: 0.33673
+, Train time: 51.47640562057495, Valid time: 12.766270160675049
+In epoch 687, Train Loss: 0.2011, Valid MRR: 0.35017
+, Train time: 50.76185441017151, Valid time: 12.651443243026733
+saving model...
+In epoch 316, Train Loss: 0.2086, Valid MRR: 0.3389
+, Train time: 51.06508708000183, Valid time: 12.851629972457886
+In epoch 688, Train Loss: 0.2014, Valid MRR: 0.35175
+, Train time: 50.78161835670471, Valid time: 13.218397617340088
+In epoch 317, Train Loss: 0.2085, Valid MRR: 0.33854
+, Train time: 50.78421425819397, Valid time: 12.776427507400513
+In epoch 689, Train Loss: 0.2012, Valid MRR: 0.34945
+, Train time: 51.37737727165222, Valid time: 13.043410539627075
+In epoch 318, Train Loss: 0.2085, Valid MRR: 0.33879
+, Train time: 51.364174127578735, Valid time: 12.797533512115479
+In epoch 690, Train Loss: 0.2010, Valid MRR: 0.35165
+, Train time: 51.490970611572266, Valid time: 12.75922679901123
+In epoch 319, Train Loss: 0.2083, Valid MRR: 0.33848
+, Train time: 51.404760122299194, Valid time: 12.70603322982788
+In epoch 691, Train Loss: 0.2010, Valid MRR: 0.34965
+, Train time: 51.21535348892212, Valid time: 12.970298767089844
+In epoch 320, Train Loss: 0.2082, Valid MRR: 0.33753
+, Train time: 51.17969226837158, Valid time: 12.717313289642334
+In epoch 692, Train Loss: 0.2011, Valid MRR: 0.35067
+, Train time: 50.653419733047485, Valid time: 12.764135837554932
+In epoch 321, Train Loss: 0.2082, Valid MRR: 0.33828
+, Train time: 50.74474120140076, Valid time: 12.778554916381836
+In epoch 693, Train Loss: 0.2014, Valid MRR: 0.34957
+, Train time: 50.748517751693726, Valid time: 12.793091773986816
+In epoch 322, Train Loss: 0.2083, Valid MRR: 0.33787
+, Train time: 50.7165629863739, Valid time: 12.470333576202393
+In epoch 694, Train Loss: 0.2013, Valid MRR: 0.35166
+, Train time: 50.98304510116577, Valid time: 13.049631595611572
+In epoch 323, Train Loss: 0.2083, Valid MRR: 0.33723
+, Train time: 50.57642698287964, Valid time: 12.639533758163452
+In epoch 695, Train Loss: 0.2008, Valid MRR: 0.35096
+, Train time: 50.87147879600525, Valid time: 12.693790674209595
+In epoch 324, Train Loss: 0.2084, Valid MRR: 0.33744
+, Train time: 51.193603515625, Valid time: 12.432297706604004
+In epoch 696, Train Loss: 0.2012, Valid MRR: 0.34984
+, Train time: 50.831652879714966, Valid time: 12.895739793777466
+In epoch 325, Train Loss: 0.2083, Valid MRR: 0.3384
+, Train time: 50.48187613487244, Valid time: 12.857483386993408
+In epoch 697, Train Loss: 0.2013, Valid MRR: 0.3499
+, Train time: 50.954437017440796, Valid time: 12.871591806411743
+saving model...
+In epoch 326, Train Loss: 0.2080, Valid MRR: 0.33894
+, Train time: 50.733909130096436, Valid time: 12.767932653427124
+In epoch 698, Train Loss: 0.2010, Valid MRR: 0.35167
+, Train time: 50.61546516418457, Valid time: 12.878131628036499
+saving model...
+In epoch 327, Train Loss: 0.2081, Valid MRR: 0.33927
+, Train time: 50.50692391395569, Valid time: 12.631100416183472
+In epoch 699, Train Loss: 0.2009, Valid MRR: 0.34983
+, Train time: 50.760632276535034, Valid time: 13.025848150253296
+In epoch 328, Train Loss: 0.2081, Valid MRR: 0.33827
+, Train time: 50.64279890060425, Valid time: 12.76355504989624
+In epoch 700, Train Loss: 0.2009, Valid MRR: 0.35096
+, Train time: 50.51553702354431, Valid time: 12.75082015991211
+In epoch 329, Train Loss: 0.2078, Valid MRR: 0.33832
+, Train time: 50.80799150466919, Valid time: 12.718340635299683
+In epoch 701, Train Loss: 0.2010, Valid MRR: 0.35097
+, Train time: 50.62191033363342, Valid time: 12.816998720169067
+saving model...
+In epoch 330, Train Loss: 0.2077, Valid MRR: 0.33991
+, Train time: 50.625181674957275, Valid time: 12.695229053497314
+In epoch 702, Train Loss: 0.2009, Valid MRR: 0.35024
+, Train time: 50.494423627853394, Valid time: 12.698703050613403
+saving model...
+In epoch 331, Train Loss: 0.2079, Valid MRR: 0.34009
+, Train time: 50.559083461761475, Valid time: 12.87738299369812
+In epoch 703, Train Loss: 0.2009, Valid MRR: 0.35039
+, Train time: 50.85301661491394, Valid time: 13.14897084236145
+In epoch 332, Train Loss: 0.2077, Valid MRR: 0.33956
+, Train time: 50.850016832351685, Valid time: 12.799654245376587
+In epoch 704, Train Loss: 0.2009, Valid MRR: 0.35074
+, Train time: 50.7411003112793, Valid time: 12.848143577575684
+In epoch 333, Train Loss: 0.2079, Valid MRR: 0.33927
+, Train time: 50.70923209190369, Valid time: 12.961441040039062
+In epoch 705, Train Loss: 0.2007, Valid MRR: 0.34989
+, Train time: 50.696510791778564, Valid time: 12.832390546798706
+In epoch 334, Train Loss: 0.2080, Valid MRR: 0.33779
+, Train time: 50.6179563999176, Valid time: 12.920396327972412
+In epoch 706, Train Loss: 0.2011, Valid MRR: 0.34962
+, Train time: 51.21094012260437, Valid time: 12.851182699203491
+In epoch 335, Train Loss: 0.2078, Valid MRR: 0.33921
+, Train time: 51.04295635223389, Valid time: 12.953689336776733
+In epoch 707, Train Loss: 0.2009, Valid MRR: 0.35073
+, Train time: 50.304330587387085, Valid time: 12.824511528015137
+In epoch 336, Train Loss: 0.2083, Valid MRR: 0.34002
+, Train time: 50.473620653152466, Valid time: 12.842329740524292
+In epoch 708, Train Loss: 0.2007, Valid MRR: 0.35138
+, Train time: 51.34796738624573, Valid time: 12.973588466644287
+In epoch 337, Train Loss: 0.2083, Valid MRR: 0.33959
+, Train time: 51.260246992111206, Valid time: 12.69433307647705
+In epoch 709, Train Loss: 0.2009, Valid MRR: 0.34834
+, Train time: 51.416621923446655, Valid time: 12.785046577453613
+In epoch 338, Train Loss: 0.2078, Valid MRR: 0.33812
+, Train time: 51.67608070373535, Valid time: 12.834197759628296
+In epoch 710, Train Loss: 0.2008, Valid MRR: 0.34981
+, Train time: 50.80380177497864, Valid time: 12.510956287384033
+saving model...
+In epoch 339, Train Loss: 0.2079, Valid MRR: 0.34059
+, Train time: 50.52247452735901, Valid time: 13.079251050949097
+In epoch 711, Train Loss: 0.2008, Valid MRR: 0.351
+, Train time: 51.62562966346741, Valid time: 13.153455972671509
+In epoch 340, Train Loss: 0.2080, Valid MRR: 0.33941
+, Train time: 51.46561098098755, Valid time: 12.779970645904541
+In epoch 712, Train Loss: 0.2010, Valid MRR: 0.35147
+, Train time: 50.51573896408081, Valid time: 12.536497831344604
+In epoch 341, Train Loss: 0.2078, Valid MRR: 0.33879
+, Train time: 50.958608627319336, Valid time: 12.79461932182312
+In epoch 713, Train Loss: 0.2011, Valid MRR: 0.34971
+, Train time: 50.70373320579529, Valid time: 12.701626539230347
+In epoch 342, Train Loss: 0.2076, Valid MRR: 0.33919
+, Train time: 50.60586953163147, Valid time: 13.0102698802948
+In epoch 714, Train Loss: 0.2008, Valid MRR: 0.35003
+, Train time: 50.80689835548401, Valid time: 13.013793230056763
+In epoch 343, Train Loss: 0.2082, Valid MRR: 0.33856
+, Train time: 50.6374831199646, Valid time: 12.86033582687378
+In epoch 715, Train Loss: 0.2006, Valid MRR: 0.34968
+, Train time: 50.924651861190796, Valid time: 12.638686895370483
+In epoch 344, Train Loss: 0.2077, Valid MRR: 0.33919
+, Train time: 50.63407611846924, Valid time: 12.847966194152832
+In epoch 716, Train Loss: 0.2006, Valid MRR: 0.34944
+, Train time: 51.435986042022705, Valid time: 12.926894426345825
+saving model...
+In epoch 345, Train Loss: 0.2075, Valid MRR: 0.34124
+, Train time: 51.34265422821045, Valid time: 12.899613618850708
+In epoch 717, Train Loss: 0.2007, Valid MRR: 0.35069
+, Train time: 50.7690486907959, Valid time: 13.01225209236145
+In epoch 346, Train Loss: 0.2076, Valid MRR: 0.33992
+, Train time: 50.68703889846802, Valid time: 12.641645431518555
+In epoch 718, Train Loss: 0.2006, Valid MRR: 0.35075
+, Train time: 51.39746022224426, Valid time: 12.9399995803833
+In epoch 347, Train Loss: 0.2074, Valid MRR: 0.34028
+, Train time: 51.42752814292908, Valid time: 12.826935529708862
+In epoch 719, Train Loss: 0.2008, Valid MRR: 0.35079
+, Train time: 51.754480600357056, Valid time: 13.211841106414795
+In epoch 348, Train Loss: 0.2074, Valid MRR: 0.34075
+, Train time: 51.574859619140625, Valid time: 13.075347185134888
+In epoch 720, Train Loss: 0.2008, Valid MRR: 0.35025
+, Train time: 51.430980920791626, Valid time: 13.172030687332153
+In epoch 349, Train Loss: 0.2076, Valid MRR: 0.33887
+, Train time: 51.43721055984497, Valid time: 12.87934136390686
+In epoch 721, Train Loss: 0.2010, Valid MRR: 0.35069
+, Train time: 51.66808223724365, Valid time: 12.793911695480347
+In epoch 350, Train Loss: 0.2076, Valid MRR: 0.33899
+, Train time: 51.60743236541748, Valid time: 12.81337594985962
+In epoch 722, Train Loss: 0.2007, Valid MRR: 0.35106
+, Train time: 50.54430174827576, Valid time: 12.740450859069824
+In epoch 351, Train Loss: 0.2075, Valid MRR: 0.34015
+, Train time: 50.73241591453552, Valid time: 13.066585063934326
+In epoch 723, Train Loss: 0.2006, Valid MRR: 0.35079
+, Train time: 50.64518404006958, Valid time: 12.854299068450928
+In epoch 352, Train Loss: 0.2074, Valid MRR: 0.33976
+, Train time: 50.802250146865845, Valid time: 12.803462028503418
+In epoch 724, Train Loss: 0.2009, Valid MRR: 0.34928
+, Train time: 51.517478942871094, Valid time: 13.043938636779785
+In epoch 353, Train Loss: 0.2073, Valid MRR: 0.34048
+, Train time: 51.20093059539795, Valid time: 12.984946489334106
+In epoch 725, Train Loss: 0.2007, Valid MRR: 0.35144
+, Train time: 51.00927448272705, Valid time: 13.029200792312622
+In epoch 354, Train Loss: 0.2072, Valid MRR: 0.34014
+, Train time: 51.172407388687134, Valid time: 12.875227928161621
+In epoch 726, Train Loss: 0.2006, Valid MRR: 0.35012
+, Train time: 51.392457008361816, Valid time: 13.073635816574097
+In epoch 355, Train Loss: 0.2070, Valid MRR: 0.34042
+, Train time: 51.12412762641907, Valid time: 12.907785654067993
+In epoch 727, Train Loss: 0.2005, Valid MRR: 0.35155
+, Train time: 51.43700551986694, Valid time: 12.757004737854004
+In epoch 356, Train Loss: 0.2069, Valid MRR: 0.33919
+, Train time: 51.26595711708069, Valid time: 12.766847133636475
+In epoch 728, Train Loss: 0.2010, Valid MRR: 0.35021
+, Train time: 51.1909396648407, Valid time: 12.654836654663086
+In epoch 357, Train Loss: 0.2073, Valid MRR: 0.33911
+, Train time: 51.14065766334534, Valid time: 13.00296401977539
+In epoch 729, Train Loss: 0.2009, Valid MRR: 0.35126
+, Train time: 51.56309270858765, Valid time: 12.719878911972046
+In epoch 358, Train Loss: 0.2070, Valid MRR: 0.34071
+, Train time: 51.74876570701599, Valid time: 12.883633136749268
+In epoch 730, Train Loss: 0.2008, Valid MRR: 0.35059
+, Train time: 51.30049514770508, Valid time: 12.485180377960205
+In epoch 359, Train Loss: 0.2073, Valid MRR: 0.34088
+, Train time: 51.39512395858765, Valid time: 12.686874628067017
+In epoch 731, Train Loss: 0.2007, Valid MRR: 0.35037
+, Train time: 51.11813282966614, Valid time: 12.762913703918457
+In epoch 360, Train Loss: 0.2071, Valid MRR: 0.34055
+, Train time: 50.77852272987366, Valid time: 12.993597984313965
+In epoch 732, Train Loss: 0.2006, Valid MRR: 0.3514
+, Train time: 51.69650316238403, Valid time: 12.77791976928711
+In epoch 361, Train Loss: 0.2071, Valid MRR: 0.33977
+, Train time: 51.49458599090576, Valid time: 12.663619041442871
+In epoch 733, Train Loss: 0.2009, Valid MRR: 0.35056
+, Train time: 51.3611204624176, Valid time: 12.879732131958008
+In epoch 362, Train Loss: 0.2073, Valid MRR: 0.34068
+, Train time: 51.23746347427368, Valid time: 12.862761735916138
+In epoch 734, Train Loss: 0.2006, Valid MRR: 0.35055
+, Train time: 50.68660569190979, Valid time: 12.730904340744019
+saving model...
+In epoch 363, Train Loss: 0.2070, Valid MRR: 0.34179
+, Train time: 50.795830488204956, Valid time: 12.760667562484741
+In epoch 735, Train Loss: 0.2005, Valid MRR: 0.35058
+, Train time: 51.243640422821045, Valid time: 12.810132503509521
+saving model...
+In epoch 364, Train Loss: 0.2069, Valid MRR: 0.34198
+, Train time: 51.28833723068237, Valid time: 13.159383058547974
+In epoch 736, Train Loss: 0.2005, Valid MRR: 0.35118
+, Train time: 51.33579087257385, Valid time: 13.045856952667236
+In epoch 365, Train Loss: 0.2067, Valid MRR: 0.34139
+, Train time: 51.30366921424866, Valid time: 12.878411531448364
+saving model...
+In epoch 737, Train Loss: 0.2003, Valid MRR: 0.35281
+, Train time: 50.67199683189392, Valid time: 13.017408609390259
+In epoch 366, Train Loss: 0.2068, Valid MRR: 0.33975
+, Train time: 50.713181257247925, Valid time: 12.725114345550537
+In epoch 738, Train Loss: 0.2004, Valid MRR: 0.35092
+, Train time: 51.417126417160034, Valid time: 12.49729061126709
+In epoch 367, Train Loss: 0.2067, Valid MRR: 0.33972
+, Train time: 51.63085603713989, Valid time: 12.915499448776245
+In epoch 739, Train Loss: 0.2005, Valid MRR: 0.3523
+, Train time: 50.993125677108765, Valid time: 13.116569757461548
+In epoch 368, Train Loss: 0.2067, Valid MRR: 0.34028
+, Train time: 51.066396713256836, Valid time: 12.855035543441772
+In epoch 740, Train Loss: 0.2009, Valid MRR: 0.35125
+, Train time: 50.67681074142456, Valid time: 12.942057847976685
+saving model...
+In epoch 369, Train Loss: 0.2070, Valid MRR: 0.34218
+, Train time: 50.88122797012329, Valid time: 12.884418964385986
+In epoch 741, Train Loss: 0.2008, Valid MRR: 0.35155
+, Train time: 50.91924571990967, Valid time: 12.501574993133545
+In epoch 370, Train Loss: 0.2069, Valid MRR: 0.33979
+, Train time: 50.90038800239563, Valid time: 12.720488548278809
+In epoch 742, Train Loss: 0.2006, Valid MRR: 0.35183
+, Train time: 51.19491624832153, Valid time: 12.853275299072266
+In epoch 371, Train Loss: 0.2067, Valid MRR: 0.3413
+, Train time: 51.230212688446045, Valid time: 12.8477041721344
+In epoch 743, Train Loss: 0.2003, Valid MRR: 0.35073
+, Train time: 51.36219120025635, Valid time: 12.91062879562378
+In epoch 372, Train Loss: 0.2066, Valid MRR: 0.34017
+, Train time: 51.188705921173096, Valid time: 12.781262159347534
+In epoch 744, Train Loss: 0.2004, Valid MRR: 0.35201
+, Train time: 50.847622871398926, Valid time: 12.661791801452637
+In epoch 373, Train Loss: 0.2069, Valid MRR: 0.33961
+, Train time: 50.940829038619995, Valid time: 13.04710578918457
+In epoch 745, Train Loss: 0.2003, Valid MRR: 0.35042
+, Train time: 51.31908416748047, Valid time: 12.874109983444214
+In epoch 374, Train Loss: 0.2068, Valid MRR: 0.34091
+, Train time: 51.464017152786255, Valid time: 12.719835758209229
+In epoch 746, Train Loss: 0.2010, Valid MRR: 0.35065
+, Train time: 50.84511089324951, Valid time: 12.728551149368286
+In epoch 375, Train Loss: 0.2066, Valid MRR: 0.33918
+, Train time: 50.7173810005188, Valid time: 12.866187334060669
+In epoch 747, Train Loss: 0.2008, Valid MRR: 0.35125
+, Train time: 50.77662491798401, Valid time: 12.99024486541748
+In epoch 376, Train Loss: 0.2063, Valid MRR: 0.33963
+, Train time: 51.159308433532715, Valid time: 12.941230773925781
+In epoch 748, Train Loss: 0.2005, Valid MRR: 0.35124
+, Train time: 50.84655475616455, Valid time: 12.833436965942383
+saving model...
+In epoch 377, Train Loss: 0.2065, Valid MRR: 0.34236
+, Train time: 50.8729989528656, Valid time: 12.997204303741455
+In epoch 749, Train Loss: 0.2004, Valid MRR: 0.35092
+, Train time: 51.047375202178955, Valid time: 12.952337741851807
+In epoch 378, Train Loss: 0.2066, Valid MRR: 0.34116
+, Train time: 51.178587198257446, Valid time: 12.719902038574219
+In epoch 750, Train Loss: 0.2000, Valid MRR: 0.35113
+, Train time: 51.55104684829712, Valid time: 13.012831449508667
+In epoch 379, Train Loss: 0.2064, Valid MRR: 0.34095
+, Train time: 51.548818826675415, Valid time: 12.780125617980957
+In epoch 751, Train Loss: 0.2003, Valid MRR: 0.35068
+, Train time: 51.56917905807495, Valid time: 12.988402605056763
+In epoch 380, Train Loss: 0.2069, Valid MRR: 0.34011
+, Train time: 51.36282229423523, Valid time: 12.601667881011963
+In epoch 752, Train Loss: 0.2003, Valid MRR: 0.35222
+, Train time: 50.72967767715454, Valid time: 12.756570816040039
+In epoch 381, Train Loss: 0.2065, Valid MRR: 0.34099
+, Train time: 50.55272555351257, Valid time: 13.066371202468872
+In epoch 753, Train Loss: 0.2002, Valid MRR: 0.35074
+, Train time: 50.94091439247131, Valid time: 12.809823274612427
+In epoch 382, Train Loss: 0.2065, Valid MRR: 0.34065
+, Train time: 51.1836724281311, Valid time: 13.103301048278809
+In epoch 754, Train Loss: 0.2007, Valid MRR: 0.35261
+, Train time: 51.45861339569092, Valid time: 12.637945652008057
+In epoch 383, Train Loss: 0.2065, Valid MRR: 0.33963
+, Train time: 51.604363679885864, Valid time: 12.973779439926147
+In epoch 755, Train Loss: 0.2005, Valid MRR: 0.35231
+, Train time: 51.63240146636963, Valid time: 12.590509176254272
+In epoch 384, Train Loss: 0.2064, Valid MRR: 0.34205
+, Train time: 51.621089935302734, Valid time: 12.75216794013977
+In epoch 756, Train Loss: 0.2006, Valid MRR: 0.35172
+, Train time: 50.78979301452637, Valid time: 12.907756567001343
+saving model...
+In epoch 385, Train Loss: 0.2064, Valid MRR: 0.34299
+, Train time: 50.71086812019348, Valid time: 12.826277732849121
+In epoch 757, Train Loss: 0.2004, Valid MRR: 0.35166
+, Train time: 51.72359085083008, Valid time: 12.992202758789062
+In epoch 386, Train Loss: 0.2065, Valid MRR: 0.34211
+, Train time: 51.54493808746338, Valid time: 12.744037866592407
+In epoch 758, Train Loss: 0.2006, Valid MRR: 0.35042
+, Train time: 50.607468366622925, Valid time: 12.69085168838501
+saving model...
+In epoch 387, Train Loss: 0.2064, Valid MRR: 0.34347
+, Train time: 50.76424789428711, Valid time: 12.725354671478271
+In epoch 759, Train Loss: 0.2002, Valid MRR: 0.35179
+, Train time: 51.09278678894043, Valid time: 12.765132904052734
+In epoch 388, Train Loss: 0.2061, Valid MRR: 0.34253
+, Train time: 51.00191283226013, Valid time: 12.742093563079834
+In epoch 760, Train Loss: 0.2001, Valid MRR: 0.35143
+, Train time: 51.50394630432129, Valid time: 12.695071697235107
+In epoch 389, Train Loss: 0.2064, Valid MRR: 0.33965
+, Train time: 51.55644702911377, Valid time: 12.722251653671265
+In epoch 761, Train Loss: 0.2005, Valid MRR: 0.35049
+, Train time: 50.73341631889343, Valid time: 12.939728736877441
+saving model...
+In epoch 390, Train Loss: 0.2063, Valid MRR: 0.34403
+, Train time: 50.56521248817444, Valid time: 12.979758501052856
+In epoch 762, Train Loss: 0.2001, Valid MRR: 0.3522
+, Train time: 50.59222459793091, Valid time: 12.803222179412842
+In epoch 391, Train Loss: 0.2060, Valid MRR: 0.34208
+, Train time: 50.79630923271179, Valid time: 12.874083280563354
+In epoch 763, Train Loss: 0.2003, Valid MRR: 0.35274
+, Train time: 50.73239183425903, Valid time: 12.792285203933716
+In epoch 392, Train Loss: 0.2058, Valid MRR: 0.34216
+, Train time: 50.754167318344116, Valid time: 12.708960771560669
+saving model...
+In epoch 764, Train Loss: 0.2006, Valid MRR: 0.35369
+, Train time: 50.42688179016113, Valid time: 12.76158356666565
+In epoch 393, Train Loss: 0.2060, Valid MRR: 0.343
+, Train time: 50.46320414543152, Valid time: 12.742285251617432
+In epoch 765, Train Loss: 0.2005, Valid MRR: 0.35107
+, Train time: 50.65957307815552, Valid time: 12.700707912445068
+In epoch 394, Train Loss: 0.2060, Valid MRR: 0.34076
+, Train time: 50.73340654373169, Valid time: 12.581199169158936
+In epoch 766, Train Loss: 0.2001, Valid MRR: 0.3511
+, Train time: 51.538196325302124, Valid time: 13.036173343658447
+In epoch 395, Train Loss: 0.2063, Valid MRR: 0.3417
+, Train time: 51.490575551986694, Valid time: 12.746312618255615
+In epoch 767, Train Loss: 0.1999, Valid MRR: 0.35302
+, Train time: 50.5135772228241, Valid time: 12.849271059036255
+In epoch 396, Train Loss: 0.2063, Valid MRR: 0.34288
+, Train time: 50.65774726867676, Valid time: 12.59196662902832
+In epoch 768, Train Loss: 0.2004, Valid MRR: 0.35314
+, Train time: 51.0844829082489, Valid time: 12.804209470748901
+In epoch 397, Train Loss: 0.2060, Valid MRR: 0.34202
+, Train time: 50.99755334854126, Valid time: 12.72565770149231
+In epoch 769, Train Loss: 0.2002, Valid MRR: 0.35227
+, Train time: 50.5424063205719, Valid time: 12.911997556686401
+In epoch 398, Train Loss: 0.2060, Valid MRR: 0.34169
+, Train time: 50.95211315155029, Valid time: 12.925598621368408
+In epoch 770, Train Loss: 0.2000, Valid MRR: 0.3523
+, Train time: 50.64081168174744, Valid time: 12.68373417854309
+In epoch 399, Train Loss: 0.2060, Valid MRR: 0.34132
+, Train time: 50.82577610015869, Valid time: 12.818297624588013
+saving model...
+In epoch 771, Train Loss: 0.2002, Valid MRR: 0.35385
+, Train time: 50.985942125320435, Valid time: 12.808742761611938
+In epoch 400, Train Loss: 0.2060, Valid MRR: 0.34098
+, Train time: 51.07677340507507, Valid time: 12.352784156799316
+In epoch 772, Train Loss: 0.2004, Valid MRR: 0.35111
+, Train time: 51.44485068321228, Valid time: 13.112569808959961
+In epoch 401, Train Loss: 0.2058, Valid MRR: 0.34117
+, Train time: 51.45772075653076, Valid time: 13.095206260681152
+In epoch 773, Train Loss: 0.2001, Valid MRR: 0.3527
+, Train time: 50.98252081871033, Valid time: 13.0415940284729
+In epoch 402, Train Loss: 0.2059, Valid MRR: 0.34313
+, Train time: 50.8418083190918, Valid time: 12.665887594223022
+In epoch 774, Train Loss: 0.2000, Valid MRR: 0.35172
+, Train time: 50.397806882858276, Valid time: 12.56494665145874
+In epoch 403, Train Loss: 0.2059, Valid MRR: 0.34103
+, Train time: 50.769999980926514, Valid time: 13.01366901397705
+In epoch 775, Train Loss: 0.2003, Valid MRR: 0.35202
+, Train time: 51.40068531036377, Valid time: 12.771155595779419
+In epoch 404, Train Loss: 0.2059, Valid MRR: 0.34255
+, Train time: 51.4699022769928, Valid time: 12.998432874679565
+In epoch 776, Train Loss: 0.2002, Valid MRR: 0.35185
+, Train time: 51.21647548675537, Valid time: 12.80346941947937
+In epoch 405, Train Loss: 0.2057, Valid MRR: 0.34199
+, Train time: 51.24020075798035, Valid time: 12.517301321029663
+In epoch 777, Train Loss: 0.2001, Valid MRR: 0.35221
+, Train time: 51.61817646026611, Valid time: 12.752906560897827
+In epoch 406, Train Loss: 0.2064, Valid MRR: 0.3416
+, Train time: 51.675806760787964, Valid time: 12.671570539474487
+In epoch 778, Train Loss: 0.2000, Valid MRR: 0.3519
+, Train time: 51.26955723762512, Valid time: 12.74541425704956
+In epoch 407, Train Loss: 0.2059, Valid MRR: 0.34142
+, Train time: 51.22123098373413, Valid time: 12.758487701416016
+In epoch 779, Train Loss: 0.2000, Valid MRR: 0.35305
+, Train time: 51.06919836997986, Valid time: 12.90831732749939
+In epoch 408, Train Loss: 0.2055, Valid MRR: 0.34146
+, Train time: 51.02971386909485, Valid time: 12.644336223602295
+In epoch 780, Train Loss: 0.2003, Valid MRR: 0.35241
+, Train time: 50.76987361907959, Valid time: 13.020026445388794
+In epoch 409, Train Loss: 0.2056, Valid MRR: 0.34064
+, Train time: 50.99720549583435, Valid time: 12.980802774429321
+In epoch 781, Train Loss: 0.2000, Valid MRR: 0.35258
+, Train time: 51.24141526222229, Valid time: 12.715946912765503
+In epoch 410, Train Loss: 0.2058, Valid MRR: 0.34178
+, Train time: 51.076822996139526, Valid time: 12.625164985656738
+In epoch 782, Train Loss: 0.2000, Valid MRR: 0.3526
+, Train time: 50.896443128585815, Valid time: 12.86066198348999
+In epoch 411, Train Loss: 0.2056, Valid MRR: 0.34253
+, Train time: 50.85777997970581, Valid time: 12.704968929290771
+In epoch 783, Train Loss: 0.2001, Valid MRR: 0.35206
+, Train time: 50.99331188201904, Valid time: 12.937305450439453
+In epoch 412, Train Loss: 0.2058, Valid MRR: 0.34254
+, Train time: 51.007190465927124, Valid time: 12.921847343444824
+In epoch 784, Train Loss: 0.2000, Valid MRR: 0.35349
+, Train time: 51.4899742603302, Valid time: 12.688267230987549
+In epoch 413, Train Loss: 0.2055, Valid MRR: 0.34221
+, Train time: 51.34770941734314, Valid time: 12.654411792755127
+In epoch 785, Train Loss: 0.2002, Valid MRR: 0.35193
+, Train time: 50.746023178100586, Valid time: 13.000682592391968
+In epoch 414, Train Loss: 0.2057, Valid MRR: 0.34311
+, Train time: 50.694475412368774, Valid time: 12.748759031295776
+In epoch 786, Train Loss: 0.2002, Valid MRR: 0.35212
+, Train time: 51.57033586502075, Valid time: 12.838815927505493
+In epoch 415, Train Loss: 0.2054, Valid MRR: 0.34312
+, Train time: 51.52963662147522, Valid time: 12.881876230239868
+In epoch 787, Train Loss: 0.2000, Valid MRR: 0.3513
+, Train time: 50.577802419662476, Valid time: 13.041577577590942
+In epoch 416, Train Loss: 0.2056, Valid MRR: 0.34241
+, Train time: 50.76425123214722, Valid time: 12.864696979522705
+In epoch 788, Train Loss: 0.1999, Valid MRR: 0.353
+, Train time: 50.788074016571045, Valid time: 13.115656614303589
+In epoch 417, Train Loss: 0.2055, Valid MRR: 0.34287
+, Train time: 50.56364345550537, Valid time: 12.966501712799072
+In epoch 789, Train Loss: 0.1999, Valid MRR: 0.35142
+, Train time: 51.32283353805542, Valid time: 13.043892621994019
+In epoch 418, Train Loss: 0.2055, Valid MRR: 0.34338
+, Train time: 51.39989733695984, Valid time: 12.803473711013794
+In epoch 790, Train Loss: 0.2005, Valid MRR: 0.35163
+, Train time: 50.604278564453125, Valid time: 12.947878360748291
+saving model...
+In epoch 419, Train Loss: 0.2056, Valid MRR: 0.34411
+, Train time: 50.587034702301025, Valid time: 12.855233192443848
+In epoch 791, Train Loss: 0.2006, Valid MRR: 0.35216
+, Train time: 50.73318552970886, Valid time: 12.854408025741577
+In epoch 420, Train Loss: 0.2055, Valid MRR: 0.34323
+, Train time: 50.58622932434082, Valid time: 12.754167556762695
+In epoch 792, Train Loss: 0.1998, Valid MRR: 0.35158
+, Train time: 51.84598112106323, Valid time: 12.895249366760254
+In epoch 421, Train Loss: 0.2057, Valid MRR: 0.34383
+, Train time: 51.542476654052734, Valid time: 12.84925103187561
+In epoch 793, Train Loss: 0.2002, Valid MRR: 0.3523
+, Train time: 50.78848385810852, Valid time: 12.745057821273804
+In epoch 422, Train Loss: 0.2052, Valid MRR: 0.34337
+, Train time: 51.1451153755188, Valid time: 12.84715747833252
+In epoch 794, Train Loss: 0.2002, Valid MRR: 0.35227
+, Train time: 51.11665177345276, Valid time: 12.822139263153076
+In epoch 423, Train Loss: 0.2052, Valid MRR: 0.3433
+, Train time: 51.10864567756653, Valid time: 12.752470016479492
+In epoch 795, Train Loss: 0.2000, Valid MRR: 0.35151
+, Train time: 51.46078705787659, Valid time: 12.797054767608643
+In epoch 424, Train Loss: 0.2057, Valid MRR: 0.34317
+, Train time: 51.47342896461487, Valid time: 12.943016767501831
+In epoch 796, Train Loss: 0.2002, Valid MRR: 0.35271
+, Train time: 51.38174748420715, Valid time: 12.869538068771362
+In epoch 425, Train Loss: 0.2054, Valid MRR: 0.34274
+, Train time: 51.25190758705139, Valid time: 12.956808090209961
+In epoch 797, Train Loss: 0.1999, Valid MRR: 0.35332
+, Train time: 50.62347865104675, Valid time: 12.805579662322998
+In epoch 426, Train Loss: 0.2053, Valid MRR: 0.34237
+, Train time: 50.72694158554077, Valid time: 12.943658828735352
+In epoch 798, Train Loss: 0.1997, Valid MRR: 0.35351
+, Train time: 50.63790321350098, Valid time: 12.805794715881348
+In epoch 427, Train Loss: 0.2051, Valid MRR: 0.34276
+, Train time: 50.50014567375183, Valid time: 13.11149287223816
+In epoch 799, Train Loss: 0.1997, Valid MRR: 0.3535
+, Train time: 50.89038825035095, Valid time: 12.985113382339478
+In epoch 428, Train Loss: 0.2056, Valid MRR: 0.34098
+, Train time: 50.548259973526, Valid time: 12.920194387435913
+In epoch 800, Train Loss: 0.1997, Valid MRR: 0.35367
+, Train time: 50.5341157913208, Valid time: 12.8606595993042
+In epoch 429, Train Loss: 0.2054, Valid MRR: 0.34218
+, Train time: 50.51471710205078, Valid time: 12.712164163589478
+In epoch 801, Train Loss: 0.1997, Valid MRR: 0.35211
+, Train time: 51.442134380340576, Valid time: 12.734015941619873
+In epoch 430, Train Loss: 0.2052, Valid MRR: 0.34285
+, Train time: 51.48180055618286, Valid time: 12.820021152496338
+In epoch 802, Train Loss: 0.1996, Valid MRR: 0.35304
+, Train time: 50.7635395526886, Valid time: 13.054130792617798
+In epoch 431, Train Loss: 0.2052, Valid MRR: 0.34364
+, Train time: 50.91333222389221, Valid time: 12.78104043006897
+saving model...
+In epoch 803, Train Loss: 0.2001, Valid MRR: 0.35447
+, Train time: 50.709959745407104, Valid time: 12.896470069885254
+In epoch 432, Train Loss: 0.2055, Valid MRR: 0.34174
+, Train time: 50.573530197143555, Valid time: 12.80510139465332
+In epoch 804, Train Loss: 0.2000, Valid MRR: 0.35223
+, Train time: 50.85393834114075, Valid time: 12.905134439468384
+In epoch 433, Train Loss: 0.2054, Valid MRR: 0.34376
+, Train time: 50.747374296188354, Valid time: 12.579807043075562
+In epoch 805, Train Loss: 0.2001, Valid MRR: 0.35219
+, Train time: 50.43676400184631, Valid time: 12.997312068939209
+In epoch 434, Train Loss: 0.2052, Valid MRR: 0.34252
+, Train time: 50.420522928237915, Valid time: 12.891748428344727
+In epoch 806, Train Loss: 0.1998, Valid MRR: 0.35282
+, Train time: 51.47208642959595, Valid time: 12.724582433700562
+In epoch 435, Train Loss: 0.2051, Valid MRR: 0.34407
+, Train time: 51.34433603286743, Valid time: 12.906405210494995
+In epoch 807, Train Loss: 0.2001, Valid MRR: 0.35193
+, Train time: 50.660064935684204, Valid time: 12.853074789047241
+In epoch 436, Train Loss: 0.2060, Valid MRR: 0.34098
+, Train time: 50.643611907958984, Valid time: 12.856477499008179
+In epoch 808, Train Loss: 0.2000, Valid MRR: 0.3532
+, Train time: 51.244362115859985, Valid time: 12.765012979507446
+In epoch 437, Train Loss: 0.2051, Valid MRR: 0.34298
+, Train time: 51.48072838783264, Valid time: 12.786567211151123
+In epoch 809, Train Loss: 0.1998, Valid MRR: 0.35178
+, Train time: 51.266321897506714, Valid time: 12.79999041557312
+In epoch 438, Train Loss: 0.2048, Valid MRR: 0.34337
+, Train time: 51.231314182281494, Valid time: 12.798478603363037
+In epoch 810, Train Loss: 0.2002, Valid MRR: 0.3526
+, Train time: 51.41843557357788, Valid time: 12.895204544067383
+In epoch 439, Train Loss: 0.2049, Valid MRR: 0.34315
+, Train time: 51.086936950683594, Valid time: 13.013944864273071
+In epoch 811, Train Loss: 0.1998, Valid MRR: 0.35249
+, Train time: 51.40934181213379, Valid time: 12.961431503295898
+In epoch 440, Train Loss: 0.2048, Valid MRR: 0.34372
+, Train time: 51.673155307769775, Valid time: 12.648794889450073
+In epoch 812, Train Loss: 0.1999, Valid MRR: 0.35226
+, Train time: 50.585118770599365, Valid time: 12.953155040740967
+In epoch 441, Train Loss: 0.2048, Valid MRR: 0.3437
+, Train time: 50.2997829914093, Valid time: 13.08411955833435
+In epoch 813, Train Loss: 0.1997, Valid MRR: 0.35145
+, Train time: 50.75660514831543, Valid time: 12.846831798553467
+In epoch 442, Train Loss: 0.2052, Valid MRR: 0.34311
+, Train time: 50.70191836357117, Valid time: 12.733882427215576
+In epoch 814, Train Loss: 0.1999, Valid MRR: 0.35121
+, Train time: 51.554948568344116, Valid time: 13.059041738510132
+In epoch 443, Train Loss: 0.2050, Valid MRR: 0.34204
+, Train time: 51.38238978385925, Valid time: 12.906798124313354
+In epoch 815, Train Loss: 0.1999, Valid MRR: 0.35376
+, Train time: 51.51444959640503, Valid time: 12.724414110183716
+In epoch 444, Train Loss: 0.2050, Valid MRR: 0.34277
+, Train time: 51.74060559272766, Valid time: 12.723372459411621
+In epoch 816, Train Loss: 0.1998, Valid MRR: 0.35321
+, Train time: 51.710933446884155, Valid time: 12.835922718048096
+In epoch 445, Train Loss: 0.2050, Valid MRR: 0.34218
+, Train time: 51.52450156211853, Valid time: 12.754497766494751
+In epoch 817, Train Loss: 0.1994, Valid MRR: 0.35153
+, Train time: 51.679304361343384, Valid time: 12.943399429321289
+In epoch 446, Train Loss: 0.2049, Valid MRR: 0.34339
+, Train time: 51.55401563644409, Valid time: 12.679038286209106
+In epoch 818, Train Loss: 0.2000, Valid MRR: 0.34994
+, Train time: 51.50996470451355, Valid time: 12.837444305419922
+In epoch 447, Train Loss: 0.2050, Valid MRR: 0.3441
+, Train time: 51.37422466278076, Valid time: 12.740312099456787
+In epoch 819, Train Loss: 0.1995, Valid MRR: 0.35248
+, Train time: 50.59223222732544, Valid time: 13.023756980895996
+saving model...
+In epoch 448, Train Loss: 0.2051, Valid MRR: 0.34446
+, Train time: 50.63784742355347, Valid time: 12.969212532043457
+In epoch 820, Train Loss: 0.1997, Valid MRR: 0.35106
+, Train time: 51.58187198638916, Valid time: 12.611408948898315
+In epoch 449, Train Loss: 0.2047, Valid MRR: 0.34353
+, Train time: 51.61552715301514, Valid time: 13.134279012680054
+In epoch 821, Train Loss: 0.1996, Valid MRR: 0.35314
+, Train time: 50.623042821884155, Valid time: 12.686415910720825
+saving model...
+In epoch 450, Train Loss: 0.2047, Valid MRR: 0.34448
+, Train time: 50.57818579673767, Valid time: 12.861147403717041
+In epoch 822, Train Loss: 0.1997, Valid MRR: 0.35231
+, Train time: 50.74115800857544, Valid time: 13.059516429901123
+In epoch 451, Train Loss: 0.2047, Valid MRR: 0.34384
+, Train time: 50.552037954330444, Valid time: 12.770125150680542
+In epoch 823, Train Loss: 0.1996, Valid MRR: 0.3515
+, Train time: 51.430158376693726, Valid time: 12.959511756896973
+In epoch 452, Train Loss: 0.2052, Valid MRR: 0.34316
+, Train time: 51.47386860847473, Valid time: 12.86653184890747
+In epoch 824, Train Loss: 0.1996, Valid MRR: 0.35158
+, Train time: 50.63399147987366, Valid time: 12.565083503723145
+In epoch 453, Train Loss: 0.2048, Valid MRR: 0.34338
+, Train time: 50.62359023094177, Valid time: 13.088463544845581
+In epoch 825, Train Loss: 0.1995, Valid MRR: 0.35157
+, Train time: 50.719568729400635, Valid time: 12.456665515899658
+In epoch 454, Train Loss: 0.2049, Valid MRR: 0.34418
+, Train time: 51.01765418052673, Valid time: 12.750235319137573
+In epoch 826, Train Loss: 0.1996, Valid MRR: 0.35236
+, Train time: 50.84585690498352, Valid time: 12.725381135940552
+saving model...
+In epoch 455, Train Loss: 0.2049, Valid MRR: 0.34486
+, Train time: 50.79114055633545, Valid time: 12.906408548355103
+In epoch 827, Train Loss: 0.1997, Valid MRR: 0.35192
+, Train time: 50.4848735332489, Valid time: 12.878043174743652
+In epoch 456, Train Loss: 0.2048, Valid MRR: 0.34428
+, Train time: 50.802738428115845, Valid time: 12.980854749679565
+In epoch 828, Train Loss: 0.1997, Valid MRR: 0.35176
+, Train time: 50.90383553504944, Valid time: 12.619942903518677
+In epoch 457, Train Loss: 0.2049, Valid MRR: 0.34453
+, Train time: 50.873055934906006, Valid time: 12.681562662124634
+In epoch 829, Train Loss: 0.2001, Valid MRR: 0.352
+, Train time: 50.972670555114746, Valid time: 12.733938455581665
+In epoch 458, Train Loss: 0.2044, Valid MRR: 0.34361
+, Train time: 50.952468395233154, Valid time: 12.91657543182373
+In epoch 830, Train Loss: 0.1995, Valid MRR: 0.35272
+, Train time: 51.53217148780823, Valid time: 12.782881736755371
+In epoch 459, Train Loss: 0.2043, Valid MRR: 0.34362
+, Train time: 51.40948414802551, Valid time: 12.992237567901611
+In epoch 831, Train Loss: 0.1994, Valid MRR: 0.35352
+, Train time: 51.456095933914185, Valid time: 12.694144010543823
+In epoch 460, Train Loss: 0.2046, Valid MRR: 0.34293
+, Train time: 51.36633801460266, Valid time: 12.777336359024048
+In epoch 832, Train Loss: 0.1991, Valid MRR: 0.35307
+, Train time: 51.552913665771484, Valid time: 12.942678689956665
+In epoch 461, Train Loss: 0.2044, Valid MRR: 0.34444
+, Train time: 51.50836253166199, Valid time: 12.903759002685547
+In epoch 833, Train Loss: 0.1999, Valid MRR: 0.3533
+, Train time: 51.49473166465759, Valid time: 12.775705099105835
+In epoch 462, Train Loss: 0.2045, Valid MRR: 0.34338
+, Train time: 51.79063034057617, Valid time: 12.924859762191772
+In epoch 834, Train Loss: 0.1996, Valid MRR: 0.35253
+, Train time: 50.825172424316406, Valid time: 12.938970565795898
+saving model...
+In epoch 463, Train Loss: 0.2048, Valid MRR: 0.34491
+, Train time: 50.93309760093689, Valid time: 12.920780420303345
+In epoch 835, Train Loss: 0.1995, Valid MRR: 0.35313
+, Train time: 51.51389527320862, Valid time: 12.7193021774292
+In epoch 464, Train Loss: 0.2045, Valid MRR: 0.34463
+, Train time: 51.46995234489441, Valid time: 12.6713125705719
+In epoch 836, Train Loss: 0.1994, Valid MRR: 0.35254
+, Train time: 50.712658643722534, Valid time: 12.527920246124268
+In epoch 465, Train Loss: 0.2044, Valid MRR: 0.34397
+, Train time: 50.726642370224, Valid time: 12.886240720748901
+In epoch 837, Train Loss: 0.1996, Valid MRR: 0.35316
+, Train time: 51.493587255477905, Valid time: 12.798502206802368
+In epoch 466, Train Loss: 0.2044, Valid MRR: 0.34425
+, Train time: 51.61714005470276, Valid time: 12.785786867141724
+In epoch 838, Train Loss: 0.1995, Valid MRR: 0.35284
+, Train time: 51.68614053726196, Valid time: 12.75545597076416
+In epoch 467, Train Loss: 0.2043, Valid MRR: 0.34471
+, Train time: 51.60862326622009, Valid time: 12.957279920578003
+In epoch 839, Train Loss: 0.1996, Valid MRR: 0.35135
+, Train time: 51.13184714317322, Valid time: 12.735435724258423
+saving model...
+In epoch 468, Train Loss: 0.2042, Valid MRR: 0.34492
+, Train time: 51.293712854385376, Valid time: 12.893952369689941
+In epoch 840, Train Loss: 0.1995, Valid MRR: 0.35241
+, Train time: 50.52853035926819, Valid time: 12.879993438720703
+In epoch 469, Train Loss: 0.2045, Valid MRR: 0.34472
+, Train time: 50.78029656410217, Valid time: 12.875855684280396
+In epoch 841, Train Loss: 0.1996, Valid MRR: 0.35234
+, Train time: 50.48399567604065, Valid time: 12.803646326065063
+In epoch 470, Train Loss: 0.2042, Valid MRR: 0.34426
+, Train time: 50.61079454421997, Valid time: 12.732664346694946
+In epoch 842, Train Loss: 0.1995, Valid MRR: 0.35189
+, Train time: 51.44445204734802, Valid time: 12.781750917434692
+In epoch 471, Train Loss: 0.2045, Valid MRR: 0.34424
+, Train time: 51.5630304813385, Valid time: 12.791338682174683
+In epoch 843, Train Loss: 0.1994, Valid MRR: 0.35065
+, Train time: 51.04248809814453, Valid time: 12.783972978591919
+In epoch 472, Train Loss: 0.2045, Valid MRR: 0.34442
+, Train time: 50.89802622795105, Valid time: 12.762770652770996
+In epoch 844, Train Loss: 0.1994, Valid MRR: 0.352
+, Train time: 50.81419658660889, Valid time: 12.690043210983276
+saving model...
+In epoch 473, Train Loss: 0.2047, Valid MRR: 0.34622
+, Train time: 50.948002338409424, Valid time: 12.741543769836426
+In epoch 845, Train Loss: 0.1992, Valid MRR: 0.35092
+, Train time: 50.709922552108765, Valid time: 12.993687152862549
+In epoch 474, Train Loss: 0.2046, Valid MRR: 0.34458
+, Train time: 50.83919358253479, Valid time: 12.751083135604858
+In epoch 846, Train Loss: 0.1997, Valid MRR: 0.35123
+, Train time: 50.8452582359314, Valid time: 12.832853317260742
+In epoch 475, Train Loss: 0.2043, Valid MRR: 0.34496
+, Train time: 50.86332154273987, Valid time: 12.817479610443115
+In epoch 847, Train Loss: 0.1994, Valid MRR: 0.35141
+, Train time: 51.302637815475464, Valid time: 12.552704811096191
+In epoch 476, Train Loss: 0.2046, Valid MRR: 0.34454
+, Train time: 51.338669300079346, Valid time: 12.683857202529907
+In epoch 848, Train Loss: 0.1993, Valid MRR: 0.35133
+, Train time: 51.58213210105896, Valid time: 12.901725053787231
+In epoch 477, Train Loss: 0.2045, Valid MRR: 0.34485
+, Train time: 51.44367003440857, Valid time: 12.708441734313965
+In epoch 849, Train Loss: 0.1995, Valid MRR: 0.35232
+, Train time: 50.65677809715271, Valid time: 12.87553358078003
+In epoch 478, Train Loss: 0.2043, Valid MRR: 0.34579
+, Train time: 50.72614240646362, Valid time: 12.656588554382324
+In epoch 850, Train Loss: 0.1994, Valid MRR: 0.35291
+, Train time: 50.58801293373108, Valid time: 12.746734619140625
+In epoch 479, Train Loss: 0.2040, Valid MRR: 0.3441
+, Train time: 50.89214849472046, Valid time: 12.753822088241577
+In epoch 851, Train Loss: 0.1994, Valid MRR: 0.35208
+, Train time: 50.61210751533508, Valid time: 12.964795351028442
+In epoch 480, Train Loss: 0.2039, Valid MRR: 0.34606
+, Train time: 50.753921031951904, Valid time: 12.86426329612732
+In epoch 852, Train Loss: 0.1994, Valid MRR: 0.35329
+, Train time: 50.7361741065979, Valid time: 13.08188009262085
+In epoch 481, Train Loss: 0.2042, Valid MRR: 0.34359
+, Train time: 51.015153884887695, Valid time: 12.958468914031982
+In epoch 853, Train Loss: 0.1994, Valid MRR: 0.35318
+, Train time: 50.537946462631226, Valid time: 12.972186803817749
+In epoch 482, Train Loss: 0.2043, Valid MRR: 0.34527
+, Train time: 50.582138538360596, Valid time: 12.687271356582642
+In epoch 854, Train Loss: 0.1995, Valid MRR: 0.35334
+, Train time: 50.74307179450989, Valid time: 12.700037002563477
+In epoch 483, Train Loss: 0.2044, Valid MRR: 0.34357
+, Train time: 50.63229703903198, Valid time: 12.700332880020142
+In epoch 855, Train Loss: 0.1995, Valid MRR: 0.35238
+, Train time: 50.74274396896362, Valid time: 12.825067281723022
+In epoch 484, Train Loss: 0.2044, Valid MRR: 0.34363
+, Train time: 50.83802771568298, Valid time: 12.759834051132202
+In epoch 856, Train Loss: 0.1995, Valid MRR: 0.35279
+, Train time: 51.703527212142944, Valid time: 12.940021514892578
+In epoch 485, Train Loss: 0.2040, Valid MRR: 0.34554
+, Train time: 51.78010439872742, Valid time: 12.776023864746094
+In epoch 857, Train Loss: 0.1996, Valid MRR: 0.35281
+, Train time: 50.58385157585144, Valid time: 12.992705821990967
+saving model...
+In epoch 486, Train Loss: 0.2042, Valid MRR: 0.3472
+, Train time: 50.686461210250854, Valid time: 12.823086261749268
+In epoch 858, Train Loss: 0.1992, Valid MRR: 0.35334
+, Train time: 50.7231068611145, Valid time: 13.030556917190552
+In epoch 487, Train Loss: 0.2041, Valid MRR: 0.3452
+, Train time: 50.77705764770508, Valid time: 12.493192911148071
+In epoch 859, Train Loss: 0.1992, Valid MRR: 0.35289
+, Train time: 51.216410398483276, Valid time: 12.847358226776123
+In epoch 488, Train Loss: 0.2040, Valid MRR: 0.34551
+, Train time: 51.278236627578735, Valid time: 12.739718914031982
+In epoch 860, Train Loss: 0.1992, Valid MRR: 0.35324
+, Train time: 50.76789116859436, Valid time: 12.76682162284851
+In epoch 489, Train Loss: 0.2040, Valid MRR: 0.34383
+, Train time: 50.64068603515625, Valid time: 13.110494136810303
+In epoch 861, Train Loss: 0.1997, Valid MRR: 0.35165
+, Train time: 50.537941694259644, Valid time: 12.856758117675781
+In epoch 490, Train Loss: 0.2044, Valid MRR: 0.34282
+, Train time: 50.83208203315735, Valid time: 12.790589570999146
+In epoch 862, Train Loss: 0.1996, Valid MRR: 0.35261
+, Train time: 51.4694037437439, Valid time: 12.727816104888916
+In epoch 491, Train Loss: 0.2043, Valid MRR: 0.34519
+, Train time: 51.48164987564087, Valid time: 12.65372371673584
+In epoch 863, Train Loss: 0.1993, Valid MRR: 0.35372
+, Train time: 50.57660627365112, Valid time: 12.626196146011353
+In epoch 492, Train Loss: 0.2040, Valid MRR: 0.34552
+, Train time: 50.39701867103577, Valid time: 12.813924074172974
+In epoch 864, Train Loss: 0.1994, Valid MRR: 0.35371
+, Train time: 51.871039152145386, Valid time: 12.784950733184814
+In epoch 493, Train Loss: 0.2039, Valid MRR: 0.34596
+, Train time: 51.92521524429321, Valid time: 12.533212661743164
+saving model...
+In epoch 865, Train Loss: 0.1992, Valid MRR: 0.3548
+, Train time: 51.430986404418945, Valid time: 12.877689599990845
+In epoch 494, Train Loss: 0.2039, Valid MRR: 0.34466
+, Train time: 51.645386695861816, Valid time: 12.809366226196289
+In epoch 866, Train Loss: 0.1994, Valid MRR: 0.35329
+, Train time: 51.70022702217102, Valid time: 12.892470359802246
+In epoch 495, Train Loss: 0.2038, Valid MRR: 0.34535
+, Train time: 51.34623885154724, Valid time: 12.836965322494507
+In epoch 867, Train Loss: 0.1995, Valid MRR: 0.35215
+, Train time: 51.322622299194336, Valid time: 13.04841661453247
+In epoch 496, Train Loss: 0.2040, Valid MRR: 0.3464
+, Train time: 51.592869997024536, Valid time: 12.683737993240356
+In epoch 868, Train Loss: 0.1993, Valid MRR: 0.35261
+, Train time: 51.73759365081787, Valid time: 12.780437707901001
+In epoch 497, Train Loss: 0.2041, Valid MRR: 0.34462
+, Train time: 51.67722702026367, Valid time: 12.95777177810669
+In epoch 869, Train Loss: 0.1992, Valid MRR: 0.35293
+, Train time: 51.24795961380005, Valid time: 12.808772802352905
+In epoch 498, Train Loss: 0.2039, Valid MRR: 0.34488
+, Train time: 51.07999277114868, Valid time: 12.62310242652893
+In epoch 870, Train Loss: 0.1990, Valid MRR: 0.35372
+, Train time: 50.873979568481445, Valid time: 12.810153007507324
+In epoch 499, Train Loss: 0.2038, Valid MRR: 0.34498
+, Train time: 50.86816143989563, Valid time: 12.840891599655151
+In epoch 871, Train Loss: 0.1994, Valid MRR: 0.35248
+, Train time: 51.486525774002075, Valid time: 12.926625967025757
+In epoch 500, Train Loss: 0.2036, Valid MRR: 0.34584
+, Train time: 51.63409113883972, Valid time: 12.858373880386353
+In epoch 872, Train Loss: 0.1996, Valid MRR: 0.35292
+, Train time: 50.53182649612427, Valid time: 12.985280752182007
+saving model...
+In epoch 501, Train Loss: 0.2041, Valid MRR: 0.34765
+, Train time: 50.37037897109985, Valid time: 12.829494953155518
+In epoch 873, Train Loss: 0.1991, Valid MRR: 0.35176
+, Train time: 51.15843629837036, Valid time: 12.822400331497192
+In epoch 502, Train Loss: 0.2038, Valid MRR: 0.34658
+, Train time: 50.94550180435181, Valid time: 13.113980531692505
+In epoch 874, Train Loss: 0.1993, Valid MRR: 0.35277
+, Train time: 51.69983696937561, Valid time: 12.883307933807373
+saving model...
+In epoch 503, Train Loss: 0.2037, Valid MRR: 0.34878
+, Train time: 51.56617856025696, Valid time: 12.886783838272095
+In epoch 875, Train Loss: 0.1993, Valid MRR: 0.35322
+, Train time: 51.26425123214722, Valid time: 12.603200912475586
+In epoch 504, Train Loss: 0.2038, Valid MRR: 0.34581
+, Train time: 50.91070294380188, Valid time: 13.00589919090271
+In epoch 876, Train Loss: 0.1991, Valid MRR: 0.35214
+, Train time: 51.35052466392517, Valid time: 12.708061456680298
+In epoch 505, Train Loss: 0.2039, Valid MRR: 0.34539
+, Train time: 51.467934370040894, Valid time: 13.175854206085205
+saving model...
+In epoch 877, Train Loss: 0.1994, Valid MRR: 0.35504
+, Train time: 50.71928906440735, Valid time: 12.990392208099365
+In epoch 506, Train Loss: 0.2037, Valid MRR: 0.34592
+, Train time: 50.89937686920166, Valid time: 12.802627086639404
+In epoch 878, Train Loss: 0.1991, Valid MRR: 0.35309
+, Train time: 50.885377645492554, Valid time: 13.081849813461304
+In epoch 507, Train Loss: 0.2037, Valid MRR: 0.34568
+, Train time: 50.86193776130676, Valid time: 12.871271133422852
+In epoch 879, Train Loss: 0.1993, Valid MRR: 0.3534
+, Train time: 51.40827560424805, Valid time: 12.929365396499634
+In epoch 508, Train Loss: 0.2035, Valid MRR: 0.34582
+, Train time: 51.391854763031006, Valid time: 12.847158432006836
+In epoch 880, Train Loss: 0.1994, Valid MRR: 0.35303
+, Train time: 51.41421890258789, Valid time: 12.797176361083984
+In epoch 509, Train Loss: 0.2036, Valid MRR: 0.34616
+, Train time: 51.56029272079468, Valid time: 12.499541282653809
+In epoch 881, Train Loss: 0.1991, Valid MRR: 0.35262
+, Train time: 51.107545614242554, Valid time: 12.910968542098999
+In epoch 510, Train Loss: 0.2038, Valid MRR: 0.3468
+, Train time: 51.126136779785156, Valid time: 12.759604930877686
+In epoch 882, Train Loss: 0.1994, Valid MRR: 0.35326
+, Train time: 50.44911527633667, Valid time: 12.933330297470093
+In epoch 511, Train Loss: 0.2038, Valid MRR: 0.34602
+, Train time: 50.70658016204834, Valid time: 13.084986448287964
+In epoch 883, Train Loss: 0.1994, Valid MRR: 0.35179
+, Train time: 50.72809457778931, Valid time: 12.846540451049805
+In epoch 512, Train Loss: 0.2039, Valid MRR: 0.34697
+, Train time: 50.77187538146973, Valid time: 12.837615013122559
+In epoch 884, Train Loss: 0.1992, Valid MRR: 0.35318
+, Train time: 50.79962205886841, Valid time: 12.89772629737854
+In epoch 513, Train Loss: 0.2035, Valid MRR: 0.34581
+, Train time: 50.87690877914429, Valid time: 12.715145111083984
+In epoch 885, Train Loss: 0.1991, Valid MRR: 0.35282
+, Train time: 51.08225631713867, Valid time: 12.76501178741455
+In epoch 514, Train Loss: 0.2035, Valid MRR: 0.34719
+, Train time: 50.99411392211914, Valid time: 12.960100889205933
+In epoch 886, Train Loss: 0.1989, Valid MRR: 0.35363
+, Train time: 51.00550365447998, Valid time: 12.67151403427124
+In epoch 515, Train Loss: 0.2036, Valid MRR: 0.34475
+, Train time: 51.35440278053284, Valid time: 12.825522661209106
+In epoch 887, Train Loss: 0.1988, Valid MRR: 0.35385
+, Train time: 51.41568088531494, Valid time: 12.796528577804565
+In epoch 516, Train Loss: 0.2037, Valid MRR: 0.34611
+, Train time: 51.50957727432251, Valid time: 12.949475526809692
+In epoch 888, Train Loss: 0.1990, Valid MRR: 0.35393
+, Train time: 51.485984325408936, Valid time: 12.904950380325317
+In epoch 517, Train Loss: 0.2040, Valid MRR: 0.34583
+, Train time: 51.41649556159973, Valid time: 12.798776388168335
+In epoch 889, Train Loss: 0.1989, Valid MRR: 0.35324
+, Train time: 50.94351840019226, Valid time: 12.893095016479492
+In epoch 518, Train Loss: 0.2037, Valid MRR: 0.34591
+, Train time: 51.03497385978699, Valid time: 12.924339532852173
+In epoch 890, Train Loss: 0.1992, Valid MRR: 0.35303
+, Train time: 51.42346549034119, Valid time: 12.564588069915771
+In epoch 519, Train Loss: 0.2036, Valid MRR: 0.34568
+, Train time: 51.338961124420166, Valid time: 12.848901271820068
+In epoch 891, Train Loss: 0.1994, Valid MRR: 0.35211
+, Train time: 51.5378897190094, Valid time: 12.844396829605103
+In epoch 520, Train Loss: 0.2036, Valid MRR: 0.34646
+, Train time: 51.5865683555603, Valid time: 12.785815715789795
+In epoch 892, Train Loss: 0.1990, Valid MRR: 0.3529
+, Train time: 51.16398763656616, Valid time: 12.866689682006836
+In epoch 521, Train Loss: 0.2036, Valid MRR: 0.34549
+, Train time: 51.059563398361206, Valid time: 12.78656816482544
+In epoch 893, Train Loss: 0.1990, Valid MRR: 0.35248
+, Train time: 51.38485598564148, Valid time: 13.195945501327515
+In epoch 522, Train Loss: 0.2033, Valid MRR: 0.34462
+, Train time: 51.20964980125427, Valid time: 12.722581148147583
+In epoch 894, Train Loss: 0.1991, Valid MRR: 0.35441
+, Train time: 50.79552364349365, Valid time: 13.033019781112671
+In epoch 523, Train Loss: 0.2035, Valid MRR: 0.34421
+, Train time: 50.81826090812683, Valid time: 13.058937072753906
+In epoch 895, Train Loss: 0.1988, Valid MRR: 0.35217
+, Train time: 50.62734937667847, Valid time: 12.945930242538452
+In epoch 524, Train Loss: 0.2034, Valid MRR: 0.34555
+, Train time: 51.000845432281494, Valid time: 12.896091938018799
+In epoch 896, Train Loss: 0.1990, Valid MRR: 0.35465
+, Train time: 51.35212182998657, Valid time: 12.559009552001953
+In epoch 525, Train Loss: 0.2034, Valid MRR: 0.3457
+, Train time: 51.54551148414612, Valid time: 12.589183568954468
+In epoch 897, Train Loss: 0.1990, Valid MRR: 0.3534
+, Train time: 51.37089514732361, Valid time: 13.014624834060669
+In epoch 526, Train Loss: 0.2032, Valid MRR: 0.34566
+, Train time: 51.272052526474, Valid time: 12.582577466964722
+In epoch 898, Train Loss: 0.1988, Valid MRR: 0.3526
+, Train time: 51.086729526519775, Valid time: 12.94337248802185
+In epoch 527, Train Loss: 0.2031, Valid MRR: 0.3469
+, Train time: 51.109886169433594, Valid time: 12.537137985229492
+In epoch 899, Train Loss: 0.1989, Valid MRR: 0.35372
+, Train time: 50.941662311553955, Valid time: 12.781758308410645
+In epoch 528, Train Loss: 0.2038, Valid MRR: 0.34718
+, Train time: 50.80572175979614, Valid time: 12.885223627090454
+In epoch 900, Train Loss: 0.1992, Valid MRR: 0.35272
+, Train time: 51.44035577774048, Valid time: 12.949362993240356
+In epoch 529, Train Loss: 0.2031, Valid MRR: 0.34652
+, Train time: 51.54453420639038, Valid time: 12.921401739120483
+In epoch 901, Train Loss: 0.1994, Valid MRR: 0.35346
+, Train time: 51.42440700531006, Valid time: 12.926759004592896
+In epoch 530, Train Loss: 0.2031, Valid MRR: 0.34745
+, Train time: 51.47107768058777, Valid time: 12.855210304260254
+In epoch 902, Train Loss: 0.1990, Valid MRR: 0.35468
+, Train time: 50.76446294784546, Valid time: 12.993555784225464
+In epoch 531, Train Loss: 0.2033, Valid MRR: 0.34733
+, Train time: 50.78637719154358, Valid time: 12.812870025634766
+In epoch 903, Train Loss: 0.1987, Valid MRR: 0.35348
+, Train time: 50.78646969795227, Valid time: 12.851951122283936
+In epoch 532, Train Loss: 0.2030, Valid MRR: 0.3471
+, Train time: 50.90153241157532, Valid time: 12.88325548171997
+In epoch 904, Train Loss: 0.1989, Valid MRR: 0.35377
+, Train time: 50.71038866043091, Valid time: 12.831936359405518
+In epoch 533, Train Loss: 0.2032, Valid MRR: 0.34543
+, Train time: 50.70549035072327, Valid time: 12.818464517593384
+In epoch 905, Train Loss: 0.1989, Valid MRR: 0.3523
+, Train time: 51.7273473739624, Valid time: 12.953731775283813
+In epoch 534, Train Loss: 0.2030, Valid MRR: 0.34583
+, Train time: 51.56406831741333, Valid time: 12.701250314712524
+In epoch 906, Train Loss: 0.1989, Valid MRR: 0.3516
+, Train time: 51.54306626319885, Valid time: 12.769894123077393
+In epoch 535, Train Loss: 0.2033, Valid MRR: 0.34656
+, Train time: 51.42773485183716, Valid time: 12.70201563835144
+In epoch 907, Train Loss: 0.1988, Valid MRR: 0.35279
+, Train time: 50.52889156341553, Valid time: 12.82035517692566
+In epoch 536, Train Loss: 0.2032, Valid MRR: 0.34737
+, Train time: 50.421584606170654, Valid time: 12.514585733413696
+In epoch 908, Train Loss: 0.1988, Valid MRR: 0.35436
+, Train time: 51.12548065185547, Valid time: 12.789435625076294
+In epoch 537, Train Loss: 0.2033, Valid MRR: 0.34525
+, Train time: 51.24109935760498, Valid time: 12.70780634880066
+In epoch 909, Train Loss: 0.1991, Valid MRR: 0.35463
+, Train time: 50.83768844604492, Valid time: 12.948012828826904
+In epoch 538, Train Loss: 0.2032, Valid MRR: 0.34653
+, Train time: 50.839845180511475, Valid time: 12.729646682739258
+In epoch 910, Train Loss: 0.1988, Valid MRR: 0.3547
+, Train time: 51.72630715370178, Valid time: 12.897742509841919
+In epoch 539, Train Loss: 0.2031, Valid MRR: 0.3457
+, Train time: 51.59729361534119, Valid time: 12.787350416183472
+In epoch 911, Train Loss: 0.1989, Valid MRR: 0.35378
+, Train time: 50.63243746757507, Valid time: 12.806020498275757
+saving model...
+In epoch 540, Train Loss: 0.2030, Valid MRR: 0.34965
+, Train time: 50.70961785316467, Valid time: 12.973475933074951
+In epoch 912, Train Loss: 0.1993, Valid MRR: 0.35257
+, Train time: 51.41925263404846, Valid time: 12.85282278060913
+In epoch 541, Train Loss: 0.2033, Valid MRR: 0.3464
+, Train time: 51.57551956176758, Valid time: 13.247069358825684
+In epoch 913, Train Loss: 0.1990, Valid MRR: 0.35276
+, Train time: 50.37627720832825, Valid time: 12.852511405944824
+In epoch 542, Train Loss: 0.2031, Valid MRR: 0.34644
+, Train time: 50.57311987876892, Valid time: 12.876144409179688
+In epoch 914, Train Loss: 0.1990, Valid MRR: 0.35212
+, Train time: 51.24909520149231, Valid time: 13.051825761795044
+In epoch 543, Train Loss: 0.2032, Valid MRR: 0.34627
+, Train time: 50.9608268737793, Valid time: 13.147687435150146
+In epoch 915, Train Loss: 0.1989, Valid MRR: 0.35294
+, Train time: 51.20338201522827, Valid time: 12.574294328689575
+In epoch 544, Train Loss: 0.2030, Valid MRR: 0.34665
+, Train time: 51.06867861747742, Valid time: 12.802520036697388
+In epoch 916, Train Loss: 0.1988, Valid MRR: 0.35176
+, Train time: 51.4858021736145, Valid time: 12.70181941986084
+In epoch 545, Train Loss: 0.2031, Valid MRR: 0.34585
+, Train time: 51.76154971122742, Valid time: 12.8946852684021
+In epoch 917, Train Loss: 0.1986, Valid MRR: 0.35365
+, Train time: 51.55833101272583, Valid time: 12.806870222091675
+In epoch 546, Train Loss: 0.2030, Valid MRR: 0.3472
+, Train time: 51.67011332511902, Valid time: 12.774516820907593
+In epoch 918, Train Loss: 0.1991, Valid MRR: 0.35497
+, Train time: 50.451905488967896, Valid time: 12.627763509750366
+In epoch 547, Train Loss: 0.2032, Valid MRR: 0.34578
+, Train time: 50.734407901763916, Valid time: 12.790926933288574
+In epoch 919, Train Loss: 0.1992, Valid MRR: 0.35377
+, Train time: 51.52029037475586, Valid time: 12.814687252044678
+In epoch 548, Train Loss: 0.2030, Valid MRR: 0.34664
+, Train time: 51.42128372192383, Valid time: 12.779810428619385
+In epoch 920, Train Loss: 0.1986, Valid MRR: 0.35289
+, Train time: 51.23065638542175, Valid time: 13.07942795753479
+In epoch 549, Train Loss: 0.2029, Valid MRR: 0.34717
+, Train time: 51.1859347820282, Valid time: 12.825097560882568
+In epoch 921, Train Loss: 0.1989, Valid MRR: 0.3523
+, Train time: 51.81548881530762, Valid time: 12.847360849380493
+In epoch 550, Train Loss: 0.2030, Valid MRR: 0.34751
+, Train time: 51.7727792263031, Valid time: 12.66637897491455
+In epoch 922, Train Loss: 0.1987, Valid MRR: 0.35448
+, Train time: 50.51125764846802, Valid time: 12.840609550476074
+In epoch 551, Train Loss: 0.2031, Valid MRR: 0.34721
+, Train time: 50.621904134750366, Valid time: 12.850297212600708
+In epoch 923, Train Loss: 0.1984, Valid MRR: 0.35387
+, Train time: 51.545647621154785, Valid time: 12.721513748168945
+In epoch 552, Train Loss: 0.2032, Valid MRR: 0.34799
+, Train time: 51.596447706222534, Valid time: 12.95844316482544
+In epoch 924, Train Loss: 0.1987, Valid MRR: 0.35345
+, Train time: 50.69719982147217, Valid time: 12.89876413345337
+In epoch 553, Train Loss: 0.2030, Valid MRR: 0.34586
+, Train time: 50.80500674247742, Valid time: 12.655200958251953
+In epoch 925, Train Loss: 0.1991, Valid MRR: 0.35333
+, Train time: 50.62794494628906, Valid time: 12.783471584320068
+In epoch 554, Train Loss: 0.2031, Valid MRR: 0.34717
+, Train time: 50.6589891910553, Valid time: 12.855852365493774
+In epoch 926, Train Loss: 0.1987, Valid MRR: 0.35263
+, Train time: 51.45379614830017, Valid time: 12.911998987197876
+In epoch 555, Train Loss: 0.2029, Valid MRR: 0.34498
+, Train time: 51.301997900009155, Valid time: 12.72626805305481
+In epoch 927, Train Loss: 0.1985, Valid MRR: 0.3541
+, Train time: 51.86919975280762, Valid time: 12.848746299743652
+In epoch 556, Train Loss: 0.2028, Valid MRR: 0.34654
+, Train time: 51.66038537025452, Valid time: 12.813538312911987
+In epoch 928, Train Loss: 0.1990, Valid MRR: 0.35303
+, Train time: 50.988372564315796, Valid time: 13.022327423095703
+In epoch 557, Train Loss: 0.2030, Valid MRR: 0.34743
+, Train time: 50.90072751045227, Valid time: 12.828960180282593
+In epoch 929, Train Loss: 0.1986, Valid MRR: 0.35334
+, Train time: 51.51448130607605, Valid time: 13.0382821559906
+In epoch 558, Train Loss: 0.2030, Valid MRR: 0.34603
+, Train time: 51.5552499294281, Valid time: 12.71231198310852
+In epoch 930, Train Loss: 0.1987, Valid MRR: 0.3538
+, Train time: 50.6577045917511, Valid time: 12.802017211914062
+In epoch 559, Train Loss: 0.2029, Valid MRR: 0.3456
+, Train time: 50.78051519393921, Valid time: 12.659203052520752
+In epoch 931, Train Loss: 0.1989, Valid MRR: 0.3536
+, Train time: 51.52557635307312, Valid time: 12.832638263702393
+In epoch 560, Train Loss: 0.2027, Valid MRR: 0.34663
+, Train time: 51.04347348213196, Valid time: 13.012927055358887
+In epoch 932, Train Loss: 0.1984, Valid MRR: 0.35324
+, Train time: 51.84098029136658, Valid time: 12.856172800064087
+In epoch 561, Train Loss: 0.2030, Valid MRR: 0.34694
+, Train time: 51.736387968063354, Valid time: 12.878955364227295
+In epoch 933, Train Loss: 0.1988, Valid MRR: 0.3528
+, Train time: 50.71296525001526, Valid time: 12.952697515487671
+In epoch 562, Train Loss: 0.2034, Valid MRR: 0.34602
+, Train time: 50.75198531150818, Valid time: 12.788805961608887
+In epoch 934, Train Loss: 0.1989, Valid MRR: 0.35433
+, Train time: 50.60413646697998, Valid time: 13.038176536560059
+In epoch 563, Train Loss: 0.2030, Valid MRR: 0.34699
+, Train time: 50.43307638168335, Valid time: 12.927128553390503
+In epoch 935, Train Loss: 0.1992, Valid MRR: 0.35282
+, Train time: 51.49095940589905, Valid time: 12.897193431854248
+In epoch 564, Train Loss: 0.2028, Valid MRR: 0.34638
+, Train time: 51.505189180374146, Valid time: 12.859196662902832
+In epoch 936, Train Loss: 0.1989, Valid MRR: 0.3535
+, Train time: 51.4529287815094, Valid time: 13.12784457206726
+In epoch 565, Train Loss: 0.2027, Valid MRR: 0.34642
+, Train time: 51.48158550262451, Valid time: 12.660011768341064
+In epoch 937, Train Loss: 0.1986, Valid MRR: 0.35389
+, Train time: 51.63044762611389, Valid time: 12.649433135986328
+In epoch 566, Train Loss: 0.2027, Valid MRR: 0.34628
+, Train time: 51.7124981880188, Valid time: 12.71296501159668
+In epoch 938, Train Loss: 0.1985, Valid MRR: 0.3534
+, Train time: 50.775824785232544, Valid time: 12.857497453689575
+In epoch 567, Train Loss: 0.2027, Valid MRR: 0.34857
+, Train time: 50.681108474731445, Valid time: 13.105750560760498
+In epoch 939, Train Loss: 0.1988, Valid MRR: 0.35348
+, Train time: 50.65408778190613, Valid time: 12.900961875915527
+In epoch 568, Train Loss: 0.2026, Valid MRR: 0.34661
+, Train time: 50.984875202178955, Valid time: 12.855969667434692
+In epoch 940, Train Loss: 0.1988, Valid MRR: 0.35309
+, Train time: 50.97615957260132, Valid time: 12.983332633972168
+In epoch 569, Train Loss: 0.2027, Valid MRR: 0.34546
+, Train time: 50.97506761550903, Valid time: 12.794035196304321
+In epoch 941, Train Loss: 0.1990, Valid MRR: 0.35428
+, Train time: 50.54301071166992, Valid time: 12.945966958999634
+In epoch 570, Train Loss: 0.2026, Valid MRR: 0.34578
+, Train time: 50.512117862701416, Valid time: 12.791993856430054
+In epoch 942, Train Loss: 0.1987, Valid MRR: 0.35229
+, Train time: 51.68922734260559, Valid time: 12.873876333236694
+In epoch 571, Train Loss: 0.2031, Valid MRR: 0.34653
+, Train time: 51.620983839035034, Valid time: 12.745910882949829
+In epoch 943, Train Loss: 0.1989, Valid MRR: 0.35185
+, Train time: 50.84105205535889, Valid time: 12.896439790725708
+In epoch 572, Train Loss: 0.2026, Valid MRR: 0.34698
+, Train time: 50.71501708030701, Valid time: 12.834378242492676
+In epoch 944, Train Loss: 0.1986, Valid MRR: 0.35286
+, Train time: 51.66516160964966, Valid time: 12.907305717468262
+In epoch 573, Train Loss: 0.2024, Valid MRR: 0.34669
+, Train time: 51.6077663898468, Valid time: 12.960469245910645
+In epoch 945, Train Loss: 0.1988, Valid MRR: 0.35315
+, Train time: 50.78540849685669, Valid time: 12.782247066497803
+In epoch 574, Train Loss: 0.2028, Valid MRR: 0.34751
+, Train time: 50.63878631591797, Valid time: 13.019740343093872
+In epoch 946, Train Loss: 0.1986, Valid MRR: 0.35431
+, Train time: 50.64885234832764, Valid time: 12.9721097946167
+In epoch 575, Train Loss: 0.2027, Valid MRR: 0.34563
+, Train time: 50.791319131851196, Valid time: 13.023717403411865
+In epoch 947, Train Loss: 0.1986, Valid MRR: 0.35293
+, Train time: 51.58114671707153, Valid time: 12.703779458999634
+In epoch 576, Train Loss: 0.2025, Valid MRR: 0.34696
+, Train time: 51.53218460083008, Valid time: 12.983765125274658
+In epoch 948, Train Loss: 0.1988, Valid MRR: 0.35319
+, Train time: 50.5865843296051, Valid time: 12.735037088394165
+In epoch 577, Train Loss: 0.2027, Valid MRR: 0.3472
+, Train time: 50.497519731521606, Valid time: 12.859971761703491
+In epoch 949, Train Loss: 0.1986, Valid MRR: 0.35225
+, Train time: 50.816033124923706, Valid time: 12.686181545257568
+In epoch 578, Train Loss: 0.2028, Valid MRR: 0.34689
+, Train time: 50.7335889339447, Valid time: 12.643589735031128
+In epoch 950, Train Loss: 0.1984, Valid MRR: 0.3527
+, Train time: 51.68530869483948, Valid time: 12.472228050231934
+In epoch 579, Train Loss: 0.2026, Valid MRR: 0.34788
+, Train time: 51.890745401382446, Valid time: 12.879881381988525
+In epoch 951, Train Loss: 0.1988, Valid MRR: 0.35412
+, Train time: 51.58983540534973, Valid time: 12.810250997543335
+In epoch 580, Train Loss: 0.2025, Valid MRR: 0.34754
+, Train time: 51.50948143005371, Valid time: 12.756065130233765
+In epoch 952, Train Loss: 0.1985, Valid MRR: 0.35345
+, Train time: 51.902058601379395, Valid time: 12.987311363220215
+In epoch 581, Train Loss: 0.2027, Valid MRR: 0.34781
+, Train time: 51.613343238830566, Valid time: 12.629753828048706
+In epoch 953, Train Loss: 0.1986, Valid MRR: 0.35362
+, Train time: 51.568148612976074, Valid time: 12.800078630447388
+In epoch 582, Train Loss: 0.2025, Valid MRR: 0.34727
+, Train time: 51.526023387908936, Valid time: 13.066093921661377
+In epoch 954, Train Loss: 0.1983, Valid MRR: 0.35325
+, Train time: 50.711697578430176, Valid time: 12.883264064788818
+In epoch 583, Train Loss: 0.2026, Valid MRR: 0.34726
+, Train time: 50.75099492073059, Valid time: 12.814506769180298
+In epoch 955, Train Loss: 0.1984, Valid MRR: 0.35328
+, Train time: 50.5800256729126, Valid time: 12.783039093017578
+In epoch 584, Train Loss: 0.2025, Valid MRR: 0.34898
+, Train time: 50.705233097076416, Valid time: 12.891842603683472
+In epoch 956, Train Loss: 0.1983, Valid MRR: 0.3537
+, Train time: 51.928526401519775, Valid time: 12.827759742736816
+In epoch 585, Train Loss: 0.2024, Valid MRR: 0.34671
+, Train time: 51.84664964675903, Valid time: 13.044472932815552
+In epoch 957, Train Loss: 0.1986, Valid MRR: 0.35332
+, Train time: 50.80189347267151, Valid time: 12.610751867294312
+In epoch 586, Train Loss: 0.2022, Valid MRR: 0.34628
+, Train time: 50.85364580154419, Valid time: 12.867158651351929
+In epoch 958, Train Loss: 0.1987, Valid MRR: 0.35353
+, Train time: 50.71961236000061, Valid time: 12.911468029022217
+In epoch 587, Train Loss: 0.2025, Valid MRR: 0.34841
+, Train time: 50.86468577384949, Valid time: 12.931558847427368
+In epoch 959, Train Loss: 0.1984, Valid MRR: 0.35297
+, Train time: 51.89306426048279, Valid time: 12.6636643409729
+In epoch 588, Train Loss: 0.2026, Valid MRR: 0.34785
+, Train time: 51.95736885070801, Valid time: 13.069690465927124
+In epoch 960, Train Loss: 0.1985, Valid MRR: 0.35228
+, Train time: 50.77852725982666, Valid time: 12.868989706039429
+In epoch 589, Train Loss: 0.2025, Valid MRR: 0.3455
+, Train time: 50.60469603538513, Valid time: 12.84580659866333
+In epoch 961, Train Loss: 0.1983, Valid MRR: 0.3538
+, Train time: 51.07776975631714, Valid time: 12.723034620285034
+In epoch 590, Train Loss: 0.2025, Valid MRR: 0.34846
+, Train time: 51.091357707977295, Valid time: 12.984293699264526
+In epoch 962, Train Loss: 0.1985, Valid MRR: 0.35269
+, Train time: 51.798877239227295, Valid time: 12.710284948348999
+In epoch 591, Train Loss: 0.2026, Valid MRR: 0.3464
+, Train time: 51.66888666152954, Valid time: 13.016695976257324
+In epoch 963, Train Loss: 0.1984, Valid MRR: 0.35235
+, Train time: 51.58798551559448, Valid time: 12.627737522125244
+In epoch 592, Train Loss: 0.2022, Valid MRR: 0.34877
+, Train time: 51.620585680007935, Valid time: 13.038815259933472
+In epoch 964, Train Loss: 0.1987, Valid MRR: 0.3532
+, Train time: 51.37860584259033, Valid time: 13.132666110992432
+In epoch 593, Train Loss: 0.2023, Valid MRR: 0.34689
+, Train time: 51.37056016921997, Valid time: 12.550981998443604
+In epoch 965, Train Loss: 0.1985, Valid MRR: 0.35278
+, Train time: 50.84566593170166, Valid time: 13.084567546844482
+In epoch 594, Train Loss: 0.2021, Valid MRR: 0.34789
+, Train time: 50.83890151977539, Valid time: 12.835096597671509
+In epoch 966, Train Loss: 0.1984, Valid MRR: 0.35391
+, Train time: 50.453344106674194, Valid time: 12.707366704940796
+In epoch 595, Train Loss: 0.2024, Valid MRR: 0.34565
+, Train time: 50.396427154541016, Valid time: 12.757256746292114
+In epoch 967, Train Loss: 0.1982, Valid MRR: 0.35365
+, Train time: 50.77813267707825, Valid time: 12.650487184524536
+In epoch 596, Train Loss: 0.2025, Valid MRR: 0.34624
+, Train time: 51.079606771469116, Valid time: 12.707561254501343
+In epoch 968, Train Loss: 0.1985, Valid MRR: 0.35412
+, Train time: 51.46490216255188, Valid time: 12.886056900024414
+In epoch 597, Train Loss: 0.2022, Valid MRR: 0.34813
+, Train time: 51.58776545524597, Valid time: 12.733871221542358
+In epoch 969, Train Loss: 0.1987, Valid MRR: 0.35346
+, Train time: 51.41520595550537, Valid time: 12.969720125198364
+In epoch 598, Train Loss: 0.2025, Valid MRR: 0.34825
+, Train time: 51.52354693412781, Valid time: 12.921232223510742
+In epoch 970, Train Loss: 0.1982, Valid MRR: 0.35386
+, Train time: 51.51393413543701, Valid time: 12.817387819290161
+In epoch 599, Train Loss: 0.2028, Valid MRR: 0.34694
+, Train time: 51.61184740066528, Valid time: 12.871824264526367
+In epoch 971, Train Loss: 0.1984, Valid MRR: 0.35493
+, Train time: 50.911765336990356, Valid time: 12.732619524002075
+In epoch 600, Train Loss: 0.2024, Valid MRR: 0.34755
+, Train time: 51.06534695625305, Valid time: 12.772313833236694
+In epoch 972, Train Loss: 0.1985, Valid MRR: 0.35475
+, Train time: 51.03255343437195, Valid time: 13.14350938796997
+In epoch 601, Train Loss: 0.2027, Valid MRR: 0.34764
+, Train time: 50.91537356376648, Valid time: 12.995592832565308
+In epoch 973, Train Loss: 0.1984, Valid MRR: 0.35205
+, Train time: 51.43920135498047, Valid time: 13.265309572219849
+In epoch 602, Train Loss: 0.2023, Valid MRR: 0.34622
+, Train time: 51.42655372619629, Valid time: 12.84671926498413
+In epoch 974, Train Loss: 0.1990, Valid MRR: 0.35323
+, Train time: 50.606241941452026, Valid time: 12.830458402633667
+In epoch 603, Train Loss: 0.2021, Valid MRR: 0.3477
+, Train time: 50.544411420822144, Valid time: 12.69495964050293
+In epoch 975, Train Loss: 0.1983, Valid MRR: 0.35441
+, Train time: 51.69006609916687, Valid time: 13.163811922073364
+In epoch 604, Train Loss: 0.2022, Valid MRR: 0.34742
+, Train time: 51.598106384277344, Valid time: 12.863047122955322
+In epoch 976, Train Loss: 0.1982, Valid MRR: 0.35443
+, Train time: 51.57198786735535, Valid time: 12.91554880142212
+In epoch 605, Train Loss: 0.2026, Valid MRR: 0.34672
+, Train time: 51.500951528549194, Valid time: 12.97265887260437
+In epoch 977, Train Loss: 0.1986, Valid MRR: 0.35378
+, Train time: 51.486141204833984, Valid time: 12.99024486541748
+In epoch 606, Train Loss: 0.2023, Valid MRR: 0.34722
+, Train time: 51.456597089767456, Valid time: 12.93471384048462
+early stop.
+In epoch 607, Train Loss: 0.2020, Valid MRR: 0.34833
+, Train time: 51.87323594093323, Valid time: 12.658919095993042
+Test MRR: 0.35173
+, MR: 167.53662
+, H@10: 0.53368
+, H@3: 0.3864
+, H@1: 0.26065
+
+Saving results to: ../saved/LP_results/FB15k-237-cut/CompGCN/lp_results_FB15k-237-cut_CompGCN-base_1024bs_2000e.json
+run_main.sh: error reading input file: Stale file handle
+srun: error: bigdata-1: task 0: Exited with exit code 2
+---- Done ----
+Mon Jan 15 12:43:40 AEDT 2024
+In epoch 608, Train Loss: 0.2024, Valid MRR: 0.34852
+, Train time: 51.12774205207825, Valid time: 12.490488767623901
+In epoch 609, Train Loss: 0.2024, Valid MRR: 0.34813
+, Train time: 49.02665638923645, Valid time: 12.543043375015259
+In epoch 610, Train Loss: 0.2022, Valid MRR: 0.34824
+, Train time: 49.14082598686218, Valid time: 12.378954887390137
+In epoch 611, Train Loss: 0.2021, Valid MRR: 0.34782
+, Train time: 48.845728635787964, Valid time: 12.335561513900757
+In epoch 612, Train Loss: 0.2020, Valid MRR: 0.34739
+, Train time: 49.04522156715393, Valid time: 12.514331817626953
+In epoch 613, Train Loss: 0.2026, Valid MRR: 0.34724
+, Train time: 49.01940107345581, Valid time: 12.446063756942749
+In epoch 614, Train Loss: 0.2023, Valid MRR: 0.3479
+, Train time: 49.15938210487366, Valid time: 12.473526000976562
+In epoch 615, Train Loss: 0.2020, Valid MRR: 0.34814
+, Train time: 48.91243314743042, Valid time: 12.369407653808594
+In epoch 616, Train Loss: 0.2017, Valid MRR: 0.34764
+, Train time: 49.18972849845886, Valid time: 12.695995330810547
+In epoch 617, Train Loss: 0.2020, Valid MRR: 0.34794
+, Train time: 49.32705020904541, Valid time: 12.437562465667725
+In epoch 618, Train Loss: 0.2023, Valid MRR: 0.34737
+, Train time: 48.80266547203064, Valid time: 12.099197149276733
+In epoch 619, Train Loss: 0.2017, Valid MRR: 0.34728
+, Train time: 49.20091724395752, Valid time: 12.336376190185547
+In epoch 620, Train Loss: 0.2020, Valid MRR: 0.34795
+, Train time: 48.89101314544678, Valid time: 12.453683614730835
+In epoch 621, Train Loss: 0.2020, Valid MRR: 0.34686
+, Train time: 48.78991651535034, Valid time: 12.657920360565186
+In epoch 622, Train Loss: 0.2019, Valid MRR: 0.34855
+, Train time: 49.18661427497864, Valid time: 12.633549928665161
+In epoch 623, Train Loss: 0.2021, Valid MRR: 0.34896
+, Train time: 48.85435390472412, Valid time: 12.856743812561035
+In epoch 624, Train Loss: 0.2019, Valid MRR: 0.34721
+, Train time: 49.14376425743103, Valid time: 12.326043844223022
+In epoch 625, Train Loss: 0.2019, Valid MRR: 0.34795
+, Train time: 49.13437223434448, Valid time: 12.770899772644043
+In epoch 626, Train Loss: 0.2019, Valid MRR: 0.34806
+, Train time: 49.123929500579834, Valid time: 12.49242639541626
+In epoch 627, Train Loss: 0.2020, Valid MRR: 0.34785
+, Train time: 49.23504590988159, Valid time: 12.484107255935669
+In epoch 628, Train Loss: 0.2021, Valid MRR: 0.34749
+, Train time: 48.96067261695862, Valid time: 12.492430925369263
+In epoch 629, Train Loss: 0.2018, Valid MRR: 0.34856
+, Train time: 49.151845932006836, Valid time: 12.578288078308105
+In epoch 630, Train Loss: 0.2017, Valid MRR: 0.34848
+, Train time: 49.03754019737244, Valid time: 12.586422443389893
+In epoch 631, Train Loss: 0.2016, Valid MRR: 0.34806
+, Train time: 49.16596794128418, Valid time: 12.342535495758057
+In epoch 632, Train Loss: 0.2018, Valid MRR: 0.34748
+, Train time: 49.37169528007507, Valid time: 12.377136945724487
+In epoch 633, Train Loss: 0.2018, Valid MRR: 0.34758
+, Train time: 48.872650146484375, Valid time: 12.708824396133423
+In epoch 634, Train Loss: 0.2020, Valid MRR: 0.3466
+, Train time: 49.18773937225342, Valid time: 12.349504470825195
+In epoch 635, Train Loss: 0.2023, Valid MRR: 0.34757
+, Train time: 49.25837540626526, Valid time: 12.471123456954956
+In epoch 636, Train Loss: 0.2019, Valid MRR: 0.34715
+, Train time: 49.048208713531494, Valid time: 12.582740545272827
+In epoch 637, Train Loss: 0.2017, Valid MRR: 0.34798
+, Train time: 49.13380670547485, Valid time: 12.455488920211792
+In epoch 638, Train Loss: 0.2017, Valid MRR: 0.34712
+, Train time: 48.92037057876587, Valid time: 12.536128282546997
+In epoch 639, Train Loss: 0.2016, Valid MRR: 0.34795
+, Train time: 49.24515080451965, Valid time: 12.500203371047974
+In epoch 640, Train Loss: 0.2018, Valid MRR: 0.34849
+, Train time: 49.211663007736206, Valid time: 12.345741748809814
+early stop.
+Test MRR: 0.34679
+, MR: 166.38535
+, H@10: 0.52421
+, H@3: 0.37963
+, H@1: 0.2575
+
+Saving results to: ../saved/LP_results/FB15k-237-cut/CompGCN/lp_results_FB15k-237-cut_CompGCN-base_1024bs_1000e.json
+Traceback (most recent call last):
+  File "/home/remote/u7177797/git/CLIP-KB/CompGCN/merge_res.py", line 3, in <module>
+    with open(sys.argv[1], 'r') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '../saved/LP_results/FB15k-237-cut/CompGCN/lp_results_FB15k-237-cut_CompGCN-cpp_1024bs_1000e.json'
+srun: error: bigdata-1: task 0: Exited with exit code 1
+---- Done ----
+Mon Jan 15 13:18:37 AEDT 2024

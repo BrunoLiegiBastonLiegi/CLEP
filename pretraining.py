@@ -10,6 +10,7 @@ from scipy.stats import ttest_ind, mannwhitneyu
 from tqdm import tqdm
 from utils import training_routine, KG
 from torch.utils.data import Dataset
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
@@ -65,16 +66,17 @@ if torch.cuda.is_available():
     dev = torch.device('cuda:0')
 else:
     dev = torch.device('cpu')
-print(f'\n> Setting device {dev} for computation.')
+#print(f'\n> Setting device {dev} for computation.')
 
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
-if args.text_encoder == 'gpt2':
-    tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+#if 'gpt2' in args.text_encoder:
+#    tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
 #tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
+tokenizer.pad_token = tokenizer.eos_token
 
 print('> Preparing the data.')
 # Load index mapping
@@ -193,7 +195,8 @@ model = CLIP_KB(
     text_encoder=text_encoder,
     hdim=200,
     head_to_tail=args.head_to_tail
-).to(dev)
+).cuda()
+#model = DDP(model, device_ids=rank)
 
 #original_node_feat = graph_encoder.model.n_embds.clone().cpu()
 
@@ -258,7 +261,7 @@ def eval_f(model, data):
     index, caption_encodings = [], []
     for batch in tqdm(capdata.get_loader(batchsize=64)):
         with torch.no_grad() and autocast():
-            captions = model.t_nn(batch[0].to(dev)).detach()
+            captions = model.t_mlp(model.t_encoder(batch[0].to(dev))).detach()
             caption_encodings.append(captions)
             del captions
             torch.cuda.empty_cache()

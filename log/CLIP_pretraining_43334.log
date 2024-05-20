@@ -1,0 +1,52 @@
+/home/remote/u7177797/git/CLIP-KB
+gpusrv-5
+Thu Aug 10 01:04:38 AEST 2023
+---- CLIP Pretraining ----
+/var/spool/slurmd/job43334/slurm_script: line 27: activate: No such file or directory
+
+> Saving model to: saved/models/FB15k-237/pretraining/RGCN/RGCN-gpt2-xl_8bs_10e_FB15k-237.pt
+
+> Setting device cuda:0 for computation.
+> Loading Pretrained tokenizer.
+> Preparing the data.
+> Initializing the model.
+
+### EPOCH 0
+  0%|          | 0/1454 [00:00<?, ?it/s]/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/dgl/backend/pytorch/tensor.py:449: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  assert input.numel() == input.storage().size(), (
+  0%|          | 1/1454 [00:00<19:32,  1.24it/s]  0%|          | 2/1454 [00:01<19:37,  1.23it/s]  0%|          | 3/1454 [00:02<19:14,  1.26it/s]  0%|          | 4/1454 [00:03<20:58,  1.15it/s]  0%|          | 5/1454 [00:04<21:03,  1.15it/s]  0%|          | 6/1454 [00:05<20:14,  1.19it/s]  0%|          | 7/1454 [00:05<19:10,  1.26it/s]  1%|          | 8/1454 [00:06<18:06,  1.33it/s]  1%|          | 9/1454 [00:07<19:39,  1.22it/s]  1%|          | 10/1454 [00:08<19:01,  1.26it/s]  1%|          | 11/1454 [00:08<17:22,  1.38it/s]  1%|          | 12/1454 [00:09<18:13,  1.32it/s]  1%|          | 13/1454 [00:10<19:20,  1.24it/s]  1%|          | 14/1454 [00:11<18:47,  1.28it/s]  1%|          | 15/1454 [00:11<18:00,  1.33it/s]  1%|          | 16/1454 [00:13<21:08,  1.13it/s]  1%|          | 17/1454 [00:13<20:20,  1.18it/s]  1%|          | 18/1454 [00:14<20:17,  1.18it/s]  1%|▏         | 19/1454 [00:15<19:30,  1.23it/s]  1%|▏         | 20/1454 [00:16<18:45,  1.27it/s]  1%|▏         | 21/1454 [00:16<18:01,  1.33it/s]  2%|▏         | 22/1454 [00:17<17:38,  1.35it/s]  2%|▏         | 23/1454 [00:18<18:06,  1.32it/s]  2%|▏         | 24/1454 [00:19<18:15,  1.31it/s]  2%|▏         | 25/1454 [00:19<18:03,  1.32it/s]  2%|▏         | 26/1454 [00:20<17:16,  1.38it/s]  2%|▏         | 27/1454 [00:21<17:10,  1.38it/s]  2%|▏         | 28/1454 [00:21<17:32,  1.36it/s]  2%|▏         | 29/1454 [00:22<17:34,  1.35it/s]  2%|▏         | 30/1454 [00:23<21:17,  1.11it/s]  2%|▏         | 31/1454 [00:24<20:16,  1.17it/s]  2%|▏         | 32/1454 [00:25<19:20,  1.22it/s]  2%|▏         | 33/1454 [00:26<18:13,  1.30it/s]  2%|▏         | 34/1454 [00:26<17:10,  1.38it/s]  2%|▏         | 35/1454 [00:27<18:14,  1.30it/s]  2%|▏         | 36/1454 [00:28<19:18,  1.22it/s]  3%|▎         | 37/1454 [00:29<18:54,  1.25it/s]  3%|▎         | 38/1454 [00:29<18:13,  1.29it/s]  3%|▎         | 39/1454 [00:30<18:17,  1.29it/s]  3%|▎         | 40/1454 [00:31<18:09,  1.30it/s]  3%|▎         | 41/1454 [00:32<19:52,  1.19it/s]  3%|▎         | 42/1454 [00:33<20:32,  1.15it/s]  3%|▎         | 43/1454 [00:34<20:48,  1.13it/s]  3%|▎         | 44/1454 [00:35<19:44,  1.19it/s]  3%|▎         | 45/1454 [00:35<18:07,  1.30it/s]  3%|▎         | 46/1454 [00:36<17:18,  1.36it/s]  3%|▎         | 47/1454 [00:36<16:00,  1.47it/s]  3%|▎         | 48/1454 [00:37<16:48,  1.39it/s]  3%|▎         | 49/1454 [00:38<16:15,  1.44it/s]  3%|▎         | 50/1454 [00:38<15:06,  1.55it/s]  4%|▎         | 51/1454 [00:39<15:14,  1.53it/s]  4%|▎         | 52/1454 [00:40<15:18,  1.53it/s]  4%|▎         | 53/1454 [00:40<15:01,  1.55it/s]  4%|▎         | 54/1454 [00:41<16:07,  1.45it/s]  4%|▍         | 55/1454 [00:42<16:06,  1.45it/s]  4%|▍         | 56/1454 [00:43<19:08,  1.22it/s]  4%|▍         | 57/1454 [00:44<17:46,  1.31it/s]  4%|▍         | 58/1454 [00:44<17:33,  1.33it/s]  4%|▍         | 59/1454 [00:45<17:07,  1.36it/s]  4%|▍         | 60/1454 [00:46<16:52,  1.38it/s]  4%|▍         | 61/1454 [00:46<16:19,  1.42it/s]  4%|▍         | 62/1454 [00:47<15:43,  1.47it/s]  4%|▍         | 63/1454 [00:48<15:14,  1.52it/s]  4%|▍         | 64/1454 [00:48<15:24,  1.50it/s]  4%|▍         | 65/1454 [00:49<15:33,  1.49it/s]  5%|▍         | 66/1454 [00:50<17:34,  1.32it/s]  5%|▍         | 67/1454 [00:51<17:32,  1.32it/s]  5%|▍         | 68/1454 [00:51<16:50,  1.37it/s]  5%|▍         | 69/1454 [00:52<16:06,  1.43it/s]  5%|▍         | 70/1454 [00:53<16:43,  1.38it/s]  5%|▍         | 71/1454 [00:54<17:08,  1.34it/s]  5%|▍         | 72/1454 [00:54<16:39,  1.38it/s]  5%|▌         | 73/1454 [00:55<18:19,  1.26it/s]  5%|▌         | 74/1454 [00:56<18:47,  1.22it/s]  5%|▌         | 75/1454 [00:57<19:06,  1.20it/s]  5%|▌         | 76/1454 [00:58<21:24,  1.07it/s]  5%|▌         | 77/1454 [00:59<20:25,  1.12it/s]  5%|▌         | 78/1454 [01:00<18:54,  1.21it/s]  5%|▌         | 79/1454 [01:00<17:00,  1.35it/s]  6%|▌         | 80/1454 [01:01<17:59,  1.27it/s]  6%|▌         | 81/1454 [01:02<17:21,  1.32it/s]  6%|▌         | 82/1454 [01:03<18:55,  1.21it/s]  6%|▌         | 83/1454 [01:03<18:43,  1.22it/s]  6%|▌         | 84/1454 [01:04<18:05,  1.26it/s]  6%|▌         | 85/1454 [01:05<17:06,  1.33it/s]  6%|▌         | 86/1454 [01:06<16:17,  1.40it/s]  6%|▌         | 87/1454 [01:06<15:37,  1.46it/s]  6%|▌         | 88/1454 [01:07<15:09,  1.50it/s]  6%|▌         | 89/1454 [01:08<15:58,  1.42it/s]  6%|▌         | 90/1454 [01:08<16:20,  1.39it/s]  6%|▋         | 91/1454 [01:09<16:30,  1.38it/s]  6%|▋         | 92/1454 [01:10<16:45,  1.35it/s]  6%|▋         | 93/1454 [01:11<16:33,  1.37it/s]  6%|▋         | 94/1454 [01:11<16:48,  1.35it/s]  7%|▋         | 95/1454 [01:12<16:52,  1.34it/s]  7%|▋         | 96/1454 [01:13<17:30,  1.29it/s]  7%|▋         | 97/1454 [01:14<17:22,  1.30it/s]  7%|▋         | 98/1454 [01:14<17:47,  1.27it/s]  7%|▋         | 99/1454 [01:15<17:24,  1.30it/s]  7%|▋         | 100/1454 [01:16<16:41,  1.35it/s]  7%|▋         | 101/1454 [01:16<15:57,  1.41it/s]  7%|▋         | 102/1454 [01:17<15:08,  1.49it/s]  7%|▋         | 103/1454 [01:18<15:05,  1.49it/s]  7%|▋         | 104/1454 [01:18<15:25,  1.46it/s]  7%|▋         | 105/1454 [01:19<16:51,  1.33it/s]  7%|▋         | 106/1454 [01:20<17:02,  1.32it/s]  7%|▋         | 107/1454 [01:21<17:18,  1.30it/s]  7%|▋         | 108/1454 [01:22<16:46,  1.34it/s]  7%|▋         | 109/1454 [01:23<18:33,  1.21it/s]  8%|▊         | 110/1454 [01:23<18:20,  1.22it/s]  8%|▊         | 111/1454 [01:24<17:43,  1.26it/s]  8%|▊         | 112/1454 [01:25<17:22,  1.29it/s]  8%|▊         | 113/1454 [01:26<17:19,  1.29it/s]  8%|▊         | 114/1454 [01:26<16:38,  1.34it/s]  8%|▊         | 115/1454 [01:27<16:02,  1.39it/s]  8%|▊         | 116/1454 [01:28<15:31,  1.44it/s]  8%|▊         | 117/1454 [01:28<15:54,  1.40it/s]  8%|▊         | 118/1454 [01:29<16:00,  1.39it/s]  8%|▊         | 119/1454 [01:30<16:58,  1.31it/s]  8%|▊         | 120/1454 [01:31<16:44,  1.33it/s]  8%|▊         | 121/1454 [01:32<19:32,  1.14it/s]  8%|▊         | 122/1454 [01:33<18:45,  1.18it/s]  8%|▊         | 123/1454 [01:33<17:11,  1.29it/s]  9%|▊         | 124/1454 [01:34<17:04,  1.30it/s]  9%|▊         | 125/1454 [01:35<16:33,  1.34it/s]  9%|▊         | 126/1454 [01:36<17:00,  1.30it/s]  9%|▊         | 127/1454 [01:36<17:00,  1.30it/s]  9%|▉         | 128/1454 [01:37<16:21,  1.35it/s]  9%|▉         | 129/1454 [01:38<15:32,  1.42it/s]  9%|▉         | 129/1454 [01:38<16:55,  1.31it/s]
+Traceback (most recent call last):
+  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 311, in <module>
+    _, _, metrics = training_routine(
+  File "/home/remote/u7177797/git/CLIP-KB/utils.py", line 79, in training_routine
+    loss = step_f(model, batch, label, dev)
+  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 208, in step_f
+    graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 91, in forward
+    captions = self.t_mlp(self.t_encoder(captions))
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 136, in forward
+    return self.model(**x).last_hidden_state[:,-1,:]
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 900, in forward
+    outputs = block(
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 428, in forward
+    feed_forward_hidden_states = self.mlp(hidden_states)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 356, in forward
+    hidden_states = self.act(hidden_states)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/activations.py", line 56, in forward
+    return 0.5 * input * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (input + 0.044715 * torch.pow(input, 3.0))))
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 102.00 MiB (GPU 0; 47.54 GiB total capacity; 46.01 GiB already allocated; 31.88 MiB free; 47.12 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+srun: error: gpusrv-5: task 0: Exited with exit code 1
+---- Done ----
+Thu Aug 10 01:06:41 AEST 2023
