@@ -64,7 +64,10 @@ print(f'> Saving model to: {args.save_model}')
 if torch.cuda.is_available():
     dev = torch.device('cuda:0')
 else:
-    dev = torch.device('cpu')
+    try:
+        dev = torch.device('mps')
+    except RuntimeError:
+        dev = torch.device('cpu')
 print(f'\n> Setting device {dev} for computation.')
 
 # Choose the tokenizer

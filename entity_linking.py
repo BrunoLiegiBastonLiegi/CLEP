@@ -1,32 +1,48 @@
 import argparse, json, torch
 
+from sklearn.metrics import f1_score
+
 from model import EntityLinkingModel
 from utils import KG
 
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description='Entity Linking.')
+    parser.add_argument('--dataset')
+    parser.add_argument('--load_model')
+    parser.add_argument('--graph_encoder', default="RGCN")
+    parser.add_argument('--text_encoder', default="gpt2")
+    
+    if args.dataset is not None:
+        entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
+        rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
+        graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+        test_data = 'data/{}/entity-linking/test.json'.format(args.dataset)
+
     # Set device for computation
     if torch.cuda.is_available():
         dev = torch.device('cuda:0')
     else:
-        dev = torch.device('cpu')
+        try:
+            dev = torch.device('mps')
+        except RuntimeError:
+            dev = torch.device('cpu')
     print(f'\n> Setting device {dev} for computation.')
 
     # load the entity id map 
-    with open("data/wikidata-disambig-cut/ent2idx.json", "r") as f:
+    with open(entity_index, "r") as f:
         ent2idx = json.load(f)
     # load the relation id map 
-    with open("data/wikidata-disambig-cut/rel2idx.json", "r") as f:
+    with open(rel_index, "r") as f:
         rel2idx = json.load(f)
 
     # load the kg
     kg = KG(ent2idx=ent2idx, rel2idx=rel2idx, embedding_dim=200, dev=dev, add_inverse_edges=True)
-    kg.build_from_file("data/wikidata-disambig-cut/link-prediction/train.txt")
+    kg.build_from_file(graph)
 
     # prepare the graph encoder
-    graph_encoder = "RGCN"
-    if graph_encoderl == 'RGCN':
+    if args.graph_encoder == 'RGCN':
         conf = {
             'kg': kg,
             'n_layers': 2,
@@ -36,7 +52,7 @@ if __name__ == "__main__":
             'num_bases': 64
         }   
         graph_encoder = RGCN(**conf)
-    elif graph_encoder == 'CompGCN':
+    elif args.graph_encoder == 'CompGCN':
         conf = {
             'kg': kg,
             'n_layers': 2,
@@ -49,8 +65,7 @@ if __name__ == "__main__":
         graph_encoder = CompGCNWrapper(**conf)
 
     # load the CLEP pretrained model
-    text_encoder = "gpt2"
-    text_encoder = GPT2CaptionEncoder(pretrained_model=text_encoder)
+    text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 
     # load
     clep_model = CLIP_KB(
@@ -61,8 +76,7 @@ if __name__ == "__main__":
     clep_model.load_state_dict(torch.load(args.load_model))
 
     # load the test data
-    path = "data/wikidata-disambig-cut/entity-linking/wikidata-disambig-test.json"
-    with open(path, 'r') as f:
+    with open(test_data, 'r') as f:
         data = json.load(f)
         entity_mentions, entity_labels, entity_ids = [], [], []
         for d in data:
@@ -81,7 +95,8 @@ if __name__ == "__main__":
                 hits_at_k[i] += 1
         labels.append(groundtruth)
         predictions.append(candidates[0])
-            
+
+    print(f"--> F1 score: {f1_score(labels, predictions)}")
     
             
 

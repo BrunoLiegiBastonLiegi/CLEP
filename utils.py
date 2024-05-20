@@ -5,7 +5,7 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.metrics import silhouette_score
 import numpy as np
-import colorcet as cc
+#import colorcet as cc
 import json
 import bitsandbytes as bnb
 
@@ -36,8 +36,8 @@ from tqdm import tqdm
 
 def training_routine(model, step_f, train_data, test_data, epochs, batchsize, learning_rate, valid_data=None, eval_f=None, eval_each=-1, unfreezing_f=None, accum_iter=1, dev=torch.device('cpu')):
     
-    #optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    optimizer = bnb.optim.Adam8bit(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    #optimizer = bnb.optim.Adam8bit(model.parameters(), lr=learning_rate)
     #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.)
     scaler = GradScaler()
 
@@ -186,7 +186,7 @@ class SimilarityQA(object):
     def answer(self, query, top_k=10):
         query = self.tok(query)
         query_emb = torch.nn.functional.normalize(self.clep.t_nn(query, p=2, dim=-1))
-        node_embs = torch.nn.functional.normalize(self.clep.g_nn(:))
+        node_embs = torch.nn.functional.normalize(self.clep.g_nn(None))
         similarities = (query_emb*node_embs).sum(-1)
         values, indices = similarities.sort(descending=True)
         return list(zip(indices[:top_k], values[:top_k]))
