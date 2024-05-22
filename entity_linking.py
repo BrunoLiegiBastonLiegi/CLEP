@@ -2,7 +2,8 @@ import argparse, json, torch
 
 from sklearn.metrics import f1_score
 
-from model import EntityLinkingModel
+from model import EntityLinkingModel, CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
+from transformers import AutoTokenizer
 from utils import KG
 
 
@@ -14,6 +15,8 @@ if __name__ == "__main__":
     parser.add_argument('--graph_encoder', default="RGCN")
     parser.add_argument('--text_encoder', default="gpt2")
     
+    args = parser.parse_args()
+
     if args.dataset is not None:
         entity_index = 'data/{}/ent2idx.json'.format(args.dataset)
         rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
@@ -65,6 +68,7 @@ if __name__ == "__main__":
         graph_encoder = CompGCNWrapper(**conf)
 
     # load the CLEP pretrained model
+    tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
     text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 
     # load
@@ -74,6 +78,8 @@ if __name__ == "__main__":
         hdim = 200
     ).to(dev)
     clep_model.load_state_dict(torch.load(args.load_model))
+
+    EL_model = EntityLinkingModel(clep_model, tokenizer) 
 
     # load the test data
     with open(test_data, 'r') as f:
@@ -89,7 +95,7 @@ if __name__ == "__main__":
     predictions, labels = [], []
     for mention, label, _id in zip(entity_mentions, entity_labels, entity_ids):
         groundtruth = ent2idx[_id]
-        candidates = clep_model(mention, entity, top_k=max(hits_at_k))
+        candidates = EL_model(mention, label, top_k=max(hits_at_k))
         for i in hits_at_k.keys():
             if groundtruth in candidates[:i]:
                 hits_at_k[i] += 1

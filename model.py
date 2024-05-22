@@ -402,13 +402,14 @@ class Distmult(torch.nn.Module):
 class EntityLinkingModel(torch.nn.Module):
 
     def __init__(self, clep_model, tokenizer):
+        super().__init__()
         self.clep_model = clep_model
         self.tokenizer = tokenizer
 
     def forward(self, entity_mention, entity, top_k=1):
         tokenized_mention = self.tokenizer(entity_mention)
         tokenized_entity = self.tokenizer(entity)
-        span = self.find_entity_span(tokenized_mention, tokenized_entity)
+        span = self.find_entity_span(tokenized_mention.input_ids, tokenized_entity.input_ids)
         text_embedding = self.clep_model.t_encoder(tokenized_mention)[span[0]:span[1]].mean()
         text_embedding = self.clep_model.t_mlp(text_embedding)
         graph_embedding = self.clep_model.g_encoder(None)
