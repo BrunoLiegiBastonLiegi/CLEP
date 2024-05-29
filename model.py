@@ -131,9 +131,12 @@ class GPT2CaptionEncoder(torch.nn.Module):
             for p in m.parameters():
                 p.requires_grad = False
         
-    def forward(self, x):
+    def forward(self, x, span=None):
         #return self.model(**x).logits[:,-1,:]
-        return self.model(**x).last_hidden_state[:,-1,:]
+        if span is None:
+            return self.model(**x).last_hidden_state[:,-1,:]
+        else:
+            return self.model(**x).last_hidden_state[:,span[0]:span[1],:]
 
     @property
     def hdim(self):
@@ -405,23 +408,48 @@ class EntityLinkingModel(torch.nn.Module):
         super().__init__()
         self.clep_model = clep_model
         self.tokenizer = tokenizer
+        self.dev = None
 
     def forward(self, entity_mention, entity, top_k=1):
-        tokenized_mention = self.tokenizer(entity_mention)
-        tokenized_entity = self.tokenizer(entity)
+        if self.dev is None:
+            self.dev = next(self.clep_model.g_mlp.parameters()).device
+        tokenized_mention = self.tokenizer(entity_mention.lower(), add_special_tokens=False, return_tensors="pt").to(self.dev)
+        tokenized_entity = self.tokenizer(entity.lower(), add_special_tokens=False, return_tensors="pt").to(self.dev)
         span = self.find_entity_span(tokenized_mention.input_ids, tokenized_entity.input_ids)
-        text_embedding = self.clep_model.t_encoder(tokenized_mention)[span[0]:span[1]].mean()
+        if span is None:
+            raise RuntimeError(f"Entity `{entity}` not found in sentence `{entity_mention}`.")
+        text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
         text_embedding = self.clep_model.t_mlp(text_embedding)
         graph_embedding = self.clep_model.g_encoder(None)
         graph_embedding = self.clep_model.g_mlp(graph_embedding)
-        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding, graph_embedding).sort(descending=True)
+        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding.squeeze(0), graph_embedding.squeeze(0)).sort(descending=True)
         return node_indices[:top_k]
 
-    def find_entity_span(self, entity_mention, entity):
-        l = len(entity)
-        i = 0 
-        while i < len(entity_mention):
-            if all(entity_mention[i:i+l] == entity):
+    def find_entity_span(self, entity_mention, entity, allow_recursion=True):
+        l = entity.shape[-1]
+        i = 0
+        while i + l <= entity_mention.shape[-1]:
+            if all(entity_mention[0][i:i+l] == entity[0]):
                 return (i, i+l)
             i += 1
+        ent = self.tokenizer.decode(entity.ravel())
+        # try with a space in front
+        if ent[0] != " " and allow_recursion:
+            ent = self.tokenizer(f" {ent.lower()}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids
+            return self.find_entity_span(entity_mention, ent)
+        # some labels don't precisely coincide with the words in the text
+        else:
+            # they miss the final s, n or ed for instance
+            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al")
+            for desinence in desinences:
+                if ent[-1] != desinence and allow_recursion:
+                    print(f"{ent}{desinence}")
+                    span = self.find_entity_span(
+                        entity_mention,
+                        self.tokenizer(f"{ent}{desinence}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids,
+                        False
+                    )
+                    if span is not None:
+                        return span
+    
         

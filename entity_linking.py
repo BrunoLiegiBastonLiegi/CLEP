@@ -1,6 +1,7 @@
 import argparse, json, torch
 
 from sklearn.metrics import f1_score
+from tqdm import tqdm
 
 from model import EntityLinkingModel, CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
 from transformers import AutoTokenizer
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     # evaluate the model on the test data
     hits_at_k = {1: 0, 3: 0, 5: 0, 10: 0}
     predictions, labels = [], []
-    for mention, label, _id in zip(entity_mentions, entity_labels, entity_ids):
+    for mention, label, _id in tqdm(zip(entity_mentions, entity_labels, entity_ids), total=len(entity_mentions)):
         groundtruth = ent2idx[_id]
         candidates = EL_model(mention, label, top_k=max(hits_at_k))
         for i in hits_at_k.keys():
