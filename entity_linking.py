@@ -92,9 +92,9 @@ if __name__ == "__main__":
             entity_ids.append(d["correct_id"])
     
     # evaluate the model on the test data
-    hits_at_k = {1: 0, 3: 0, 5: 0, 10: 0}
+    hits_at_k = {1: 0, 3: 0, 5: 0, 10: 0, 50: 0, 100: 0, 500: 0}
     predictions, labels = [], []
-    for mention, label, _id in tqdm(zip(entity_mentions, entity_labels, entity_ids), total=len(entity_mentions)):
+    for mention, label, _id in tqdm(list(zip(entity_mentions, entity_labels, entity_ids)), total=len(entity_mentions)):
         groundtruth = ent2idx[_id]
         candidates = EL_model(mention, label, top_k=max(hits_at_k))
         for i in hits_at_k.keys():
@@ -103,6 +103,7 @@ if __name__ == "__main__":
         labels.append(groundtruth)
         predictions.append(candidates[0])
 
+    print(f"--> hits@k: {hits_at_k}")
     print(f"--> F1 score: {f1_score(labels, predictions)}")
     
             

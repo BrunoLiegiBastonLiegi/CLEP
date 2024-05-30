@@ -1,4 +1,4 @@
-import torch, time
+import re, torch, time
 import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
@@ -413,12 +413,21 @@ class EntityLinkingModel(torch.nn.Module):
     def forward(self, entity_mention, entity, top_k=1):
         if self.dev is None:
             self.dev = next(self.clep_model.g_mlp.parameters()).device
-        tokenized_mention = self.tokenizer(entity_mention.lower(), add_special_tokens=False, return_tensors="pt").to(self.dev)
+        # edit the sentence to help the tokenizer
+        # insert white space between contiguos punctuation: ., -> . ,
+        entity_mention = re.sub("(?<=[.,:;\)])(?=[.,:;])", r"\g<0> ", entity_mention.lower())
+        # insert white space in expression between apices: "xxx" -> " xxx "
+        entity_mention = re.sub("(?<=[\s\(][\"])[^\"]+(?=[\"][\s\)])", r" \g<0> ", entity_mention)
+
+        if entity_mention[0] != " ":
+            entity_mention = f" {entity_mention}"
+        tokenized_mention = self.tokenizer(entity_mention, add_special_tokens=False, return_tensors="pt").to(self.dev)
         tokenized_entity = self.tokenizer(entity.lower(), add_special_tokens=False, return_tensors="pt").to(self.dev)
         span = self.find_entity_span(tokenized_mention.input_ids, tokenized_entity.input_ids)
         if span is None:
             raise RuntimeError(f"Entity `{entity}` not found in sentence `{entity_mention}`.")
         text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
+        #text_embedding = self.clep_model.t_encoder(tokenized_mention, None).reshape(1, 1, -1)
         text_embedding = self.clep_model.t_mlp(text_embedding)
         graph_embedding = self.clep_model.g_encoder(None)
         graph_embedding = self.clep_model.g_mlp(graph_embedding)
@@ -440,10 +449,9 @@ class EntityLinkingModel(torch.nn.Module):
         # some labels don't precisely coincide with the words in the text
         else:
             # they miss the final s, n or ed for instance
-            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al")
+            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian")
             for desinence in desinences:
                 if ent[-1] != desinence and allow_recursion:
-                    print(f"{ent}{desinence}")
                     span = self.find_entity_span(
                         entity_mention,
                         self.tokenizer(f"{ent}{desinence}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids,
