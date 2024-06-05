@@ -427,6 +427,7 @@ class EntityLinkingModel(torch.nn.Module):
         if span is None:
             raise RuntimeError(f"Entity `{entity}` not found in sentence `{entity_mention}`.")
         text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
+        # this tests the use of the last token of the mention as identifier of the entity, but it seems to work worse 
         #text_embedding = self.clep_model.t_encoder(tokenized_mention, None).reshape(1, 1, -1)
         text_embedding = self.clep_model.t_mlp(text_embedding)
         graph_embedding = self.clep_model.g_encoder(None)
@@ -449,7 +450,7 @@ class EntityLinkingModel(torch.nn.Module):
         # some labels don't precisely coincide with the words in the text
         else:
             # they miss the final s, n or ed for instance
-            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian")
+            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian", "ans")
             for desinence in desinences:
                 if ent[-1] != desinence and allow_recursion:
                     span = self.find_entity_span(

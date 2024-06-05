@@ -104,10 +104,37 @@ if __name__ == "__main__":
         predictions.append(candidates[0])
 
     print(f"--> hits@k: {hits_at_k}")
-    print(f"--> F1 score: {f1_score(labels, predictions)}")
+    print(f"--> F1 score: {f1_score(labels.cpu(), predictions.cpu())}")
     
             
 
     
 
     
+# Notes:
+
+# I tested this on the wikidata-disambig dataset with a CLEP(RGCN, gpt2) model trained with batch size 128
+# but the results are poor:
+
+# --> hits@k: {1: 2, 3: 3, 5: 4, 10: 11, 50: 36, 100: 71, 500: 346} (out of 10.000 test samples)
+
+# The reasons could be several:
+# - too many descriptions are missing, out of the roughly 80.000 entities, around 10.000 of them
+#   have missing or completely uninformative descriptions, e.g. `wikidata disambiguation page`
+# - the descriptions found in Wikidata are not particularly informative, with often a large degree of overlapping
+#   among different entities, e.g. `american actress`, `rock band`, `capital city`. They might be ok for
+#   some general identification of their type, but not precise enough to enable entity disambiguation
+# - the graph is rather sparse and disconnected, only roughly 6.000 edges were found among 80.000 entities
+
+# Possible ideas to explore:
+# - use more informative descriptions for the pretraining, for instance by taking the first sentence of
+#   corresponding wikipedia webpage to each entity, or asking an LLM to generate it
+# - adapt another dataset for which we do have a comprehensive graph, e.g. FB15k-237, to the entity linking task.
+#   For example, by taking any sentence in the wikipedia web page of an entity that contains it as the entity
+#   mention to link to the KB.
+
+
+# even working with the cut dataset, i.e. discarding the entities that miss descriptions, the entity linking
+# performance does not get better:
+
+# --> hits@k: {1: 2, 3: 3, 5: 5, 10: 12, 50: 51, 100: 88, 500: 328}
