@@ -120,7 +120,28 @@ class PretrainedGraphEncoder(torch.nn.Module):
     def hdim(self):
         #return self.ordered_embs.shape[-1]
         return self._hdim
+
+
+class CaptionEncoder(torch.nn.Module):
+
+    def __init__(self, pretrained_model: str = 'gpt2'):
+        super().__init__()
+        self.model = AutoModel.from_pretrained(pretrained_model)      
+        for m in self.model.layers[:-4]: # freezing every layer but the last 4
+            for p in m.parameters():
+                p.requires_grad = False
         
+    def forward(self, x, span=None):
+        if span is None:
+            return self.model(**x).last_hidden_state[:,-1,:]
+        else:
+            return self.model(**x).last_hidden_state[:,span[0]:span[1],:]
+
+    @property
+    def hdim(self):
+        return next(self.model.layers[-1].parameters()).shape[-1]
+    
+    
 class GPT2CaptionEncoder(torch.nn.Module):
 
     def __init__(self, pretrained_model: str = 'gpt2'):

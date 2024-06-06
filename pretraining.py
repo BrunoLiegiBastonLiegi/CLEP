@@ -1,6 +1,6 @@
 import torch, argparse, json, random, time, pickle, numpy, os
 from dataset import CLIPDataset, LinkPredictionDataset
-from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
+from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, CaptionEncoder, RGCN, CompGCNWrapper
 from transformers import GPT2Tokenizer, BertTokenizer, AutoTokenizer, DistilBertTokenizerFast
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
@@ -49,7 +49,7 @@ if args.save_model is None:
         args.dataset,
         args.graph_encoder,
         args.graph_encoder,
-        args.text_encoder,
+        args.text_encoder.replace("/", "-"),
         args.batchsize,
         args.epochs,
         args.dataset
@@ -190,7 +190,8 @@ if args.head_to_tail:
 if 'gpt2' in args.text_encoder:
     text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 else:
-    text_encoder = BertCaptionEncoder(pretrained_model=args.text_encoder)
+    text_encoder = CaptionEncoder(pretrained_model=args.text_encoder)
+
 # CLIP
 model = CLIP_KB(
     graph_encoder=graph_encoder,
