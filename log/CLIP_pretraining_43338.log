@@ -1,0 +1,43 @@
+/home/remote/u7177797/git/CLIP-KB
+gpusrv-5
+Thu Aug 10 01:26:02 AEST 2023
+---- CLIP Pretraining ----
+/var/spool/slurmd/job43338/slurm_script: line 27: activate: No such file or directory
+
+> Saving model to: saved/models/FB15k-237/pretraining/RGCN/RGCN-gpt2-large_32bs_10e_FB15k-237.pt
+
+> Setting device cuda:0 for computation.
+> Loading Pretrained tokenizer.
+> Preparing the data.
+> Initializing the model.
+
+### EPOCH 0
+  0%|          | 0/364 [00:00<?, ?it/s]Using pad_token, but it is not set yet.
+  0%|          | 0/364 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 311, in <module>
+    _, _, metrics = training_routine(
+  File "/home/remote/u7177797/git/CLIP-KB/utils.py", line 76, in training_routine
+    for i, (batch, label) in tqdm(enumerate(train_loader), total=len(train_loader)):
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/tqdm/std.py", line 1195, in __iter__
+    for obj in iterable:
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 633, in __next__
+    data = self._next_data()
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 54, in fetch
+    return self.collate_fn(data)
+  File "/home/remote/u7177797/git/CLIP-KB/dataset.py", line 60, in collate_fn
+    inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2577, in __call__
+    encodings = self._call_one(text=text, text_pair=text_pair, **all_kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2663, in _call_one
+    return self.batch_encode_plus(
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2845, in batch_encode_plus
+    padding_strategy, truncation_strategy, max_length, kwargs = self._get_padding_truncation_strategies(
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2482, in _get_padding_truncation_strategies
+    raise ValueError(
+ValueError: Asking to pad but the tokenizer does not have a padding token. Please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)` or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[PAD]'})`.
+srun: error: gpusrv-5: task 0: Exited with exit code 1
+---- Done ----
+Thu Aug 10 01:26:17 AEST 2023

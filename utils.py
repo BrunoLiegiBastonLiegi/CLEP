@@ -175,7 +175,7 @@ class KG(object):
     def embedding_dim(self):
         return self.emb_dim
 
-
+"""
 class SimilarityQA(object):
 
     def __init__(self, clep_model, tokenizer):
@@ -190,5 +190,5 @@ class SimilarityQA(object):
         similarities = (query_emb*node_embs).sum(-1)
         values, indices = similarities.sort(descending=True)
         return list(zip(indices[:top_k], values[:top_k]))
-                                                  
+"""                                                  
         

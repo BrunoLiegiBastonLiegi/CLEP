@@ -134,7 +134,7 @@ def main(args):
         kg = KG(embedding_dim=200, ent2idx=ent2idx, rel2idx=rel2idx, dev=device, add_inverse_edges=True)
         kg.build_from_file('./' + args.dataset + '/train.txt')
         graph = kg.g
-        _ = GPT2CaptionEncoder(pretrained_model='gpt2')
+        _ = GPT2CaptionEncoder(pretrained_model='gpt2-xl')
         conf = {
             'kg': kg,
             'n_layers': 2,

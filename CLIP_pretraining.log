@@ -1,6 +1,0 @@
-/home/remote/u7177797/git/CLIP-KB
-gpusrv-5
-Tue May 21 23:24:53 AEST 2024
----- CLIP Pretraining ----
-/bin/bash
-slurmstepd: error: *** JOB 54724 ON gpusrv-5 CANCELLED AT 2024-05-21T23:24:53 ***

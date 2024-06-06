@@ -1,0 +1,56 @@
+/home/remote/u7177797/git/CLIP-KB
+gpusrv-5
+Thu Aug 10 01:04:11 AEST 2023
+---- CLIP Pretraining ----
+/var/spool/slurmd/job43333/slurm_script: line 27: activate: No such file or directory
+
+> Saving model to: saved/models/FB15k-237/pretraining/RGCN/RGCN-gpt2_512bs_10e_FB15k-237.pt
+
+> Setting device cuda:0 for computation.
+> Loading Pretrained tokenizer.
+> Preparing the data.
+> Initializing the model.
+
+### EPOCH 0
+  0%|          | 0/23 [00:00<?, ?it/s]/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/dgl/backend/pytorch/tensor.py:449: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  assert input.numel() == input.storage().size(), (
+  0%|          | 0/23 [00:01<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 311, in <module>
+    _, _, metrics = training_routine(
+  File "/home/remote/u7177797/git/CLIP-KB/utils.py", line 79, in training_routine
+    loss = step_f(model, batch, label, dev)
+  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 208, in step_f
+    graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 91, in forward
+    captions = self.t_mlp(self.t_encoder(captions))
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 136, in forward
+    return self.model(**x).last_hidden_state[:,-1,:]
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 900, in forward
+    outputs = block(
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 391, in forward
+    attn_outputs = self.attn(
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 332, in forward
+    attn_output, attn_weights = self._attn(query, key, value, attention_mask, head_mask)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 213, in _attn
+    attn_weights = self.attn_dropout(attn_weights)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/dropout.py", line 59, in forward
+    return F.dropout(input, self.p, self.training, self.inplace)
+  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/functional.py", line 1252, in dropout
+    return _VF.dropout_(input, p, training) if inplace else _VF.dropout(input, p, training)
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 8.17 GiB (GPU 0; 47.54 GiB total capacity; 36.81 GiB already allocated; 6.00 GiB free; 41.17 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+srun: error: gpusrv-5: task 0: Exited with exit code 1
+---- Done ----
+Thu Aug 10 01:04:22 AEST 2023
