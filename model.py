@@ -447,13 +447,15 @@ class EntityLinkingModel(torch.nn.Module):
         span = self.find_entity_span(tokenized_mention.input_ids, tokenized_entity.input_ids)
         if span is None:
             raise RuntimeError(f"Entity `{entity}` not found in sentence `{entity_mention}`.")
-        text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
+        #text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
+        # instead of taking the mean, take only the last one
+        text_embedding = self.clep_model.t_encoder(tokenized_mention, span)[:, -1, :].reshape(1, 1, -1)
         # this tests the use of the last token of the mention as identifier of the entity, but it seems to work worse 
         #text_embedding = self.clep_model.t_encoder(tokenized_mention, None).reshape(1, 1, -1)
         text_embedding = self.clep_model.t_mlp(text_embedding)
         graph_embedding = self.clep_model.g_encoder(None)
         graph_embedding = self.clep_model.g_mlp(graph_embedding)
-        scores, node_indices = torch.nn.functional.cosine_similarity(text_embedding.squeeze(0), graph_embedding.squeeze(0)).sort(descending=True)
+        scores, node_indices = torch.nn.functional.cosine_similarity(normalize(text_embedding.squeeze(0), p=2, dim=-1), normalize(graph_embedding.squeeze(0), p=2, dim=-1)).sort(descending=True)
         return node_indices[:top_k]
 
     def find_entity_span(self, entity_mention, entity, allow_recursion=True):

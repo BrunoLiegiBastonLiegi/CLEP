@@ -46,33 +46,78 @@ transition: fade-out
 
 # The CLEP Architecture
 
-<div id="container" style="position:relative; display:inline-block;">
-  <img id="clepImage" src="/CLEP_pretraining.svg" style="position:relative; left:50px; top:40px" width="600" height="600" />
-  <canvas id="highlightCanvas" width="600" height="600" style="position:absolute; left:50px; top:40px; pointer-events:none;"></canvas>
-</div>
+$$
+(Barack\;Obama,\, born\_in,\, Honolulu)
+$$
 
-<script setup>
-  import { onMounted } from 'vue'
-
-  onMounted(() => {
-    const canvas = document.getElementById('highlightCanvas');
-    const context = canvas.getContext('2d');
-
-    // Adjust these values to match the specific part of the image you want to highlight
-    const circleX = 300; // x-coordinate of the circle center
-    const circleY = 300; // y-coordinate of the circle center
-    const radius = 50;   // radius of the circle
-
-    // Draw a red circle
-    context.beginPath();
-    context.arc(circleX, circleY, radius, 0, 2 * Math.PI, false);
-    context.lineWidth = 1;
-    context.strokeStyle = 'red';
-    context.stroke();
-  });
-</script>
+<img id="clepImage" src="/CLEP_pretraining.svg" style="position:relative; left:150px; top:1px" width="600" height="600" />
+  
 
 ---
+transition: slide-up
+---
+
+# A Forward Pass
+
+
+<div class="grid grid-cols-2 gap-4">
+<div>
+
+ $e^{head}$ :  head node of the relational triplet 
+
+ $d^{tail}$ :  description of the tail node 
+
+
+<br>
+<div v-click>
+$$
+(h_i^{(g)}, \rho_i^{(g)}) = \text{GraphEncoder}\big(e^{head}_i,r_i\big)
+$$
+</div>
+<br>
+<div v-click>
+$$
+x_i^{(g)} = h_i^{(g)} + \rho_i^{(g)}
+$$
+</div>
+<br>
+<div v-click>
+$$
+\tilde{x}_i^{(g)} = \text{MLP}_g\big(x_i^{(g)}\big)
+$$
+</div>
+	
+</div>
+
+<div>
+
+Batch of KG triplets 
+$$
+\big\{\big(e^{head}_{1},r_1,d^{tail}_{1}\big), \, \ldots \, , \big(e^{head}_n,r_n,d^{tail}_n\big)\big\}\;
+$$
+
+
+<br>
+<br>
+<br>
+<br>
+
+
+<div v-click='1'>
+<img src="/graph_encoder.svg" style="position:absolute; left:500px; top:250px" width="300" height="300" />
+</div>
+<div v-click='2'>
+<img src="/head_rel_composition.svg" style="position:absolute; left:810px; top:320px" width="75" height="75" />
+</div>
+<div v-click='3'>
+<img src="/mlp.svg" style="position:absolute; left:895px; top:320px" width="20" height="20" />
+</div>
+
+</div>
+
+</div>
+
+
 ---
 
 # What is Slidev?
@@ -625,7 +670,7 @@ Double-click on the draggable elements to edit their positions.
 <v-drag-arrow two-way />
 ```
 
-<v-drag-arrow pos="67,452,253,46" two-way op70 />
+<v-drag-arrow pos="116,458,252,14" two-way op70 />
 
 ---
 src: ./pages/multiple-entries.md
