@@ -189,7 +189,7 @@ elif graph_model == 'RGCN':
 if args.head_to_tail:
     assert graph_model == 'CompGCN' and graph_encoder.return_rel_embs, "Head-to-Tail pretraining is only supported for CompGCN models with return_rel_embs=True"
 # Caption encoder
-if 'gpt2' in args.text_encoder:
+if "gpt2" in args.text_encoder:
     text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 else:
     text_encoder = CaptionEncoder(pretrained_model=args.text_encoder)

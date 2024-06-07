@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 
-from model import EntityLinkingModel, CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
+from model import EntityLinkingModel, CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, CaptionEncoder, RGCN, CompGCNWrapper
 from transformers import AutoTokenizer
 from utils import KG
 
@@ -71,7 +71,10 @@ if __name__ == "__main__":
 
     # load the CLEP pretrained model
     tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
-    text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
+    if "gpt2" in args.text_encoder:
+        text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
+    else:
+        text_encoder = CaptionEncoder(pretrained_model=args.text_encoder)
 
     # load
     clep_model = CLIP_KB(
@@ -105,7 +108,7 @@ if __name__ == "__main__":
         predictions.append(candidates[0])
 
     print(f"--> hits@k: {hits_at_k}")
-    print(f"--> F1 score: {f1_score(labels.cpu(), predictions.cpu())}")
+    #print(f"--> F1 score: {f1_score(labels.cpu(), predictions.cpu())}")
 
     x, y = zip(*hits_at_k.items())
     plt.plot(x, y)

@@ -126,7 +126,7 @@ class CaptionEncoder(torch.nn.Module):
 
     def __init__(self, pretrained_model: str = 'gpt2'):
         super().__init__()
-        self.model = AutoModel.from_pretrained(pretrained_model)      
+        self.model = AutoModel.from_pretrained(pretrained_model)
         for m in self.model.layers[:-4]: # freezing every layer but the last 4
             for p in m.parameters():
                 p.requires_grad = False
@@ -144,11 +144,11 @@ class CaptionEncoder(torch.nn.Module):
     
 class GPT2CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model: str = 'gpt2'):
+    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=4):
         super().__init__()
         #self.model = GPT2LMHeadModel.from_pretrained(pretrained_model)
         self.model = GPT2Model.from_pretrained(pretrained_model)       # which one is better to use?
-        for m in self.model.h[:-4]: # freezing every layer but the last 4
+        for m in self.model.h[:-unfrozen_layers]: # freezing every layer but the last n
             for p in m.parameters():
                 p.requires_grad = False
         
@@ -288,9 +288,14 @@ class RGCN(torch.nn.Module):
             
         self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), indim), requires_grad=True)
         torch.nn.init.xavier_normal_(self.node_feats)
+        self.register_parameter(
+            name="node_feats",
+            param = self.node_feats,
+        )
         
     def forward(self, nodes):
         h = self.node_feats
+        #print(h[0,0].item(), h[37, 15].item(), h[-1, 123].item())
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]
