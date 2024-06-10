@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="382.2424"
-   height="104.61609"
-   viewBox="0 0 382.2424 104.61609"
+   width="353.70728"
+   height="233.27406"
+   viewBox="0 0 353.70728 233.27406"
    version="1.1"
    id="SVGRoot"
    sodipodi:docname="CLEP_pretraining.svg"
@@ -24,7 +24,7 @@
      inkscape:document-units="px"
      showgrid="true"
      inkscape:zoom="2.1997092"
-     inkscape:cx="449.37758"
+     inkscape:cx="441.42198"
      inkscape:cy="236.39488"
      inkscape:window-width="3440"
      inkscape:window-height="1371"
@@ -65,7 +65,7 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Livello 3"
-     transform="translate(-8.7062559,-345.50735)">
+     transform="translate(-3.3452055,-216.84938)">
     <rect
        style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.934689;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect2030"
@@ -81,12 +81,60 @@
      inkscape:label="Livello 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-8.7062559,-345.50735)">
+     transform="translate(-3.3452055,-216.84938)">
+    <rect
+       style="opacity:0.96;fill:#0000ff;fill-opacity:0.625874;stroke:#000000;stroke-width:0.897495"
+       id="rect894"
+       width="55.415958"
+       height="103.81855"
+       x="299.41174"
+       y="117.09477"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="head_rel_composition.svg" />
+    <circle
+       style="opacity:0.96;fill:#ff0000;stroke:#000000;stroke-width:1.23107;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path1402-5"
+       cx="66.897842"
+       cy="229.47488"
+       r="9.5541563"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
+    <circle
+       style="opacity:0.96;fill:#008000;stroke:#000000;stroke-width:1.23107;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path1402-62"
+       cx="173.8813"
+       cy="227.01907"
+       r="9.5541563"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="text_encoder.svg" />
+    <path
+       style="opacity:0.96;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.76951;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 169.41313,218.5743 152.15085,185.94887"
+       id="path1461"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#path1402-62"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0223;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 70.271452,220.53635 82.966715,186.89968"
+       id="path3121"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"
+       inkscape:connection-start="#path1402-5" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.914542;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Mend)"
        d="m 255.9048,403.34208 h 33.25606"
        id="path1120"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-filename="text_encoder.svg"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <text
@@ -122,31 +170,6 @@
          y="425.09912"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.3333px;font-family:sans-serif;-inkscape-font-specification:sans-serif;stroke-width:1.04091"
          id="tspan192518">County, Hawaii, United States</tspan></text>
-    <rect
-       style="opacity:0.96;fill:#ff0000;fill-opacity:0.625874;stroke:#000000;stroke-width:0.897067"
-       id="rect2711-6"
-       width="22.166454"
-       height="103.71901"
-       x="368.33368"
-       y="345.9559"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.598px;line-height:0%;font-family:sans-serif;opacity:0.96;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.4665"
-       x="378.93924"
-       y="-371.2157"
-       id="text2803-2"
-       transform="rotate(89.755232)"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"><tspan
-         sodipodi:role="line"
-         id="tspan2801-9"
-         x="378.93924"
-         y="-371.2157"
-         style="font-size:19.5533px;line-height:1.25;stroke-width:1.4665">MLP</tspan></text>
     <rect
        style="opacity:0.96;fill:#008000;fill-opacity:0.625874;stroke:#000000;stroke-width:0.897067"
        id="rect3487"
@@ -201,5 +224,16 @@
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:6, 6;stroke-dashoffset:0;stroke-opacity:1"
        d="M 4.5228035,367.77318 171.56206,241.65919 240.59453,367.81671"
        id="path3163" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb"
+       x="229.96112"
+       y="-12.906252"
+       id="text1348"
+       transform="rotate(60.232437)"><tspan
+         sodipodi:role="line"
+         id="tspan1346"
+         x="229.96112"
+         y="-12.906252">born_in</tspan></text>
   </g>
 </svg>

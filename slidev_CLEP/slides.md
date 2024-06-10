@@ -120,6 +120,108 @@ $$
 
 ---
 
+# A Forward Pass
+
+<div class="grid grid-cols-2 gap-4">
+
+<div>
+$$
+x_i^{(t)} = \text{TextEncoder}\big(d^{tail}_i\big)
+$$
+<div v-click='1'>
+$$
+\tilde{x}_i^{(t)} = \text{MLP}_t\big(x_i^{(t)}\big)
+$$
+</div>
+<div v-click='2'>
+<img src="/matrix.svg" style="position:absolute; left:100px; top:275px" width="300" height="300" />
+</div>
+</div>
+
+<div>
+
+<div v-click='0'>
+<img src="/text_encoder.svg" style="position:absolute; left:500px; top:25px" width="300" height="300" />
+</div>
+<div v-click='1'>
+<img src="/mlp.svg" style="position:absolute; left:810px; top:133px" width="20" height="20" />
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div v-click='2'>
+Cosine similarity matrix
+$$
+m_{i,j} = \frac{\tilde{x}_i^{(g)}\cdot \tilde{x}_j^{(t)}}{\|\tilde{x}_i^{(g)}\|\|\tilde{x}_j^{(t)}\|}\cdot e^\tau
+$$
+</div>
+<br>
+<div v-click='3'>
+
+ $\tau$ : temperature scaling the logits
+
+</div>
+
+
+</div>
+
+</div>
+
+---
+
+# A Forward Pass
+<br>
+
+Row-wise Cross Entropy (CE)
+
+$$
+\text{CE}\big(M\big) = -\frac{1}{n} \sum_{i=1}^n \log\frac{e^{m_{i,i}}}{\sum_{j=1}^n e^{m_{i,j}}}
+$$
+
+<div v-click.hide>
+<img src="/row-wise_CE.svg" style="position:absolute; left:710px; top:133px" width="150" height="150" />
+</div>
+
+<br>
+<div v-click='1'>
+
+ The column-wise CE is obtained by simply taking $\;M\rightarrow M^T$
+ 
+ <img src="/col-wise_CE.svg" style="position:absolute; left:710px; top:133px" width="150" height="150" />
+
+
+</div>
+<br>
+<div v-click='2'>
+
+$$
+\mathcal{L}=\frac{1}{2}\bigg(\text{CE}\big(M\big)+\text{CE}\big(M^\top\big)\bigg)
+$$
+
+$\longrightarrow$ Enforces minimization of incorrect entity-description associations simultaneously in rows and columns!
+
+</div>
+
+---
+
+# The aligned Text-Graph embedding space
+
+<div class="grid grid-cols-2 gap-4">
+
+<div>
+</div>
+
+<div>
+</div>
+
+</div>
+
+---
+
 # What is Slidev?
 
 Slidev is a slides maker and presenter designed for developers, consist of the following features
