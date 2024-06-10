@@ -208,14 +208,63 @@ $\longrightarrow$ Enforces minimization of incorrect entity-description associat
 
 ---
 
-# The aligned Text-Graph embedding space
+# The aligned Text-Graph space
+<br>
+Euclidean distance of the correct/incorrect entity-description associations
+
+$$
+\textcolor{green}{P\bigg(\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|\bigg)} \quad\quad \textcolor{red}{P\bigg(\|\tilde{x}_i^{(g)}-\tilde{x}_j^{(t)}\|_{i\neq j}\bigg)}
+$$
+
+
+<div class="grid grid-cols-2 gap-4">
+
+<div v-click='1'>
+<img src="/euclidean_dist_FB15k-237-cut_untrained.svg" style="position:absolute; left:50px; top:250px" width="350" height="350" />
+</div>
+
+<div>
+<div v-click='2'>
+<v-drag-arrow pos="435,360,86,0" right op70 />
+<img src="/euclidean_dist_FB15k-237-cut.svg" style="position:absolute; left:550px; top:250px" width="350" height="350" />
+</div>
+</div>
+
+</div>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div v-click='1'>
+<div align="center">FB15k-237</div>
+</div>
+
+---
+
+# The aligned Text-Graph space
 
 <div class="grid grid-cols-2 gap-4">
 
 <div>
+<br>
+<div align="center">YAGO3-10</div>
+<img src="/euclidean_dist_YAGO3-10-cut.svg" style="position:absolute; left:70px; top:150px" width="350" height="350" />
+<div v-click='1'>
+<img src="/euclidean_dist_YAGO3-10-cut_overlap.svg" style="position:absolute; left:70px; top:150px" width="350" height="350" />
+<v-drag-arrow pos="309,325,200,-137" right op70 color="red"/>
+</div>
 </div>
 
 <div>
+
+ $\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|\$
+
 </div>
 
 </div>
