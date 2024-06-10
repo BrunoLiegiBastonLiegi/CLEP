@@ -124,10 +124,10 @@ class PretrainedGraphEncoder(torch.nn.Module):
 
 class CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model: str = 'gpt2'):
+    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=4):
         super().__init__()
         self.model = AutoModel.from_pretrained(pretrained_model)
-        for m in self.model.layers[:-4]: # freezing every layer but the last 4
+        for m in self.model.layers[:-unfrozen_layers]: # freezing every layer but the last 4
             for p in m.parameters():
                 p.requires_grad = False
         
@@ -144,7 +144,7 @@ class CaptionEncoder(torch.nn.Module):
     
 class GPT2CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=4):
+    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=0):
         super().__init__()
         #self.model = GPT2LMHeadModel.from_pretrained(pretrained_model)
         self.model = GPT2Model.from_pretrained(pretrained_model)       # which one is better to use?
@@ -163,6 +163,12 @@ class GPT2CaptionEncoder(torch.nn.Module):
     def hdim(self):
         #return self.model.config.vocab_size
         return self.model.config.n_embd
+
+    def unfreeze_layers(self, n: int):
+        for m in self.model.h[-n:]: # unfreezing last n layers
+            for p in m.parameters():
+                p.requires_grad = True
+                
 
 class BertCaptionEncoder(torch.nn.Module):
 
@@ -457,11 +463,13 @@ class EntityLinkingModel(torch.nn.Module):
         text_embedding = self.clep_model.t_encoder(tokenized_mention, span)[:, -1, :].reshape(1, 1, -1)
         # this tests the use of the last token of the mention as identifier of the entity, but it seems to work worse 
         #text_embedding = self.clep_model.t_encoder(tokenized_mention, None).reshape(1, 1, -1)
-        text_embedding = self.clep_model.t_mlp(text_embedding)
+        text_embedding = normalize(self.clep_model.t_mlp(text_embedding).squeeze(0), p=2, dim=-1)
         graph_embedding = self.clep_model.g_encoder(None)
-        graph_embedding = self.clep_model.g_mlp(graph_embedding)
-        scores, node_indices = torch.nn.functional.cosine_similarity(normalize(text_embedding.squeeze(0), p=2, dim=-1), normalize(graph_embedding.squeeze(0), p=2, dim=-1)).sort(descending=True)
-        return node_indices[:top_k]
+        graph_embedding = normalize(self.clep_model.g_mlp(graph_embedding).squeeze(0), p=2, dim=-1)
+        #scores, node_indices = torch.topk(torch.nn.functional.cosine_similarity(text_embedding, graph_embedding), top_k, largest=True)
+        #scores, node_indices = torch.topk(torch.norm(text_embedding - graph_embedding, dim=1), top_k, largest=False)
+        scores, node_indices = torch.topk((graph_embedding @ text_embedding.T).ravel(), top_k, largest=True)
+        return node_indices
 
     def find_entity_span(self, entity_mention, entity, allow_recursion=True):
         l = entity.shape[-1]

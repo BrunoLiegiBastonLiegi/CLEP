@@ -1,3 +1,4 @@
+from sklearn.utils import validation
 import torch, argparse, json, random, time, pickle, numpy, os
 from dataset import CLIPDataset, LinkPredictionDataset
 from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, CaptionEncoder, RGCN, CompGCNWrapper
@@ -29,6 +30,8 @@ parser.add_argument('--save_model', help='Save model to.')
 parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
 parser.add_argument('--text_encoder', default='gpt2')
+parser.add_argument('--use_valid_data', action='store_true')
+
 
 args = parser.parse_args()
 
@@ -44,6 +47,7 @@ if args.dataset is not None:
     else:
         args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
+        args.dev_data = 'data/{}/pretraining/dev.json'.format(args.dataset)
 
 if args.save_model is None:
     args.save_model = 'saved/models/{}/pretraining/{}/{}-{}_{}bs_{}e_{}'.format(
@@ -142,6 +146,18 @@ else:
         entity2idx = wid2idx,
         device = dev
     )
+    try:
+        valid_data = CLIPDataset(
+            datafile = args.test_data,
+            tokenizer = tokenizer,
+            entity2idx = wid2idx,
+            device = dev
+        )
+    except:
+        print("> No valid data found, skipping it.")
+    if args.use_valid_data:
+        train_data.data += valid_data.data
+    
 
 print('> Initializing the model.')
 # Graph encoder
@@ -216,10 +232,6 @@ def step_f(model, batch, label, dev):
     del text_out
     torch.cuda.empty_cache()
     loss = 0.5 * ( torch.nn.functional.cross_entropy(logits, label) + torch.nn.functional.cross_entropy(logits.T, label) )
-    #loss = 0.5 * (
-        #torch.nn.functional.binary_cross_entropy_with_logits(logits, label)
-        #+ torch.nn.functional.binary_cross_entropy_with_logits(logits.T, label)
-        #)
     del logits
     torch.cuda.empty_cache()
     return loss
@@ -307,7 +319,10 @@ def eval_f(model, data):
         'hits@10': len((ranks <= 10).nonzero()) / len(ranks)
     }
     return metrics
-    
+
+def unfreezing_f(model, epoch):
+    if epoch > 1:
+        model.t_encoder.unfreeze_layers(4)
 
 if args.load_model == None:
     epochs = args.epochs
@@ -317,6 +332,7 @@ if args.load_model == None:
         model = model,
         step_f = step_f,
         eval_f = eval_f if args.head_to_tail else None,
+        unfreezing_f=unfreezing_f,
         eval_each = 1,
         train_data = train_data,
         test_data = test_data,
