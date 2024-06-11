@@ -172,6 +172,8 @@ $$
 </div>
 
 ---
+transition: fade-out
+---
 
 # A Forward Pass
 <br>
@@ -226,6 +228,11 @@ $$
 <div>
 <div v-click='2'>
 <v-drag-arrow pos="435,360,86,0" right op70 />
+
+<v-drag pos="440,320,86,0" text-xl>
+  CLEP
+</v-drag>
+ 
 <img src="/euclidean_dist_FB15k-237-cut.svg" style="position:absolute; left:550px; top:250px" width="350" height="350" />
 </div>
 </div>
@@ -245,6 +252,16 @@ $$
 <div align="center">FB15k-237</div>
 </div>
 
+<div v-click='3'>
+<v-drag-arrow pos="720,323,77,0" two-way op70 />
+<v-drag pos="716,284,120,40" text>
+  2x farther
+</v-drag>
+
+</div>
+
+---
+transition: fade-out
 ---
 
 # The aligned Text-Graph space
@@ -257,17 +274,150 @@ $$
 <img src="/euclidean_dist_YAGO3-10-cut.svg" style="position:absolute; left:70px; top:150px" width="350" height="350" />
 <div v-click='1'>
 <img src="/euclidean_dist_YAGO3-10-cut_overlap.svg" style="position:absolute; left:70px; top:150px" width="350" height="350" />
-<v-drag-arrow pos="309,325,200,-137" right op70 color="red"/>
+<v-drag-arrow pos="309,323,216,-146" right op70 color="red"/>
 </div>
 </div>
 
 <div>
 
- $\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|\$
+<div v-click='1' align="center">
+
+Incorrect pairs closer than correct ones
+
+ $$\|\tilde{x}_i^{(g)}-\tilde{x}_i^{(t)}\|\ \geq \;\|\tilde{x}_i^{(g)}-\tilde{x}_j^{(t)}\|_{i\neq j} $$
+ 
+</div>
+<br>
+<br>
+<div v-click='2' align="center">
+
+Many descriptions are shared over different entities
+
+```mermaid
+
+flowchart TD;
+
+A("Horror Music\n(Q54864794)") --> C>"music genre."]
+B("Party Music\n(Q20022908)") --> C>"music genre."]
+```
+</div>
+
+
+</div>
+
+
+</div>
+
+---
+transition: slide-up
+---
+
+# Link Prediction across spaces
+
+<div class="grid grid-cols-[550px_400px] gap-4">
+
+<div>
+
+<div>
+
+```mermaid
+
+graph LR;
+
+A(("Barack\n Obama")) 
+B(("Michelle\nObama"))
+C((Honolulu))
+D((Hawaii))
+E((Chicago))
+F((Illinois))
+G((USA))
+A --spouse--> B
+B --spouse--> A
+A --birthplace--> C
+B --birthplace--> E
+C --located_in--> D
+E --located_in--> F
+D --located_in--> G
+F --located_in--> G
+B --nationality--> G
+A --president_of--> G
+A .- ? .-> G
+```
+
+</div>
+
+<br>
+
+<div v-click='1' align="center">
+What's Barack Obama's Nationality?
+
+$$
+f_s(\text{Barack Obama},\;\text{nationality},\; v) \quad \forall v\in\mathcal{G}
+$$
 
 </div>
 
 </div>
+
+<div>
+
+<div v-click='2' style="font-size:60%;">
+
+| <div style="width:15px">Rank</div> | $f_s$ | Link |
+| :--- | :--- | :--- |
+| 1 | 0.91 | (Barack Obama, nationality, USA) |
+| 2 | 0.53 | (Barack Obama, nationality, Hawaii) | 
+| 3 | 0.44 | (Barack Obama, nationality, Illinois) | 
+| . | . | . |
+| . | . | . |
+| . | . | . |
+| n | 0.11 | (Barack Obama, nationality, Michelle Obama) | 
+
+</div>
+
+</div>
+
+<div>
+
+
+
+</div>
+
+</div>
+
+---
+
+# Link Prediction across spaces
+
+* CLEP is trained to align head entities with tails descriptions $\quad(e^{head},\;r,\;d^{tail})$
+
+$$
+f_s(\text{Barack Obama},\;\text{nationality},\; d(v)) \quad \forall v\in\mathcal{G}
+$$
+
+<v-drag pos="19,302,120,40" text>
+
+  $$
+  \text{node} \in \text{graph space}
+  $$
+   
+</v-drag>
+
+<v-drag pos="485,264,120,40" text>
+
+  $$
+  \text{description} \in \text{text space}
+  $$
+   
+</v-drag>
+
+```mermaid
+graph LR;
+
+A(("Barack Obama"))
+B>Country primarily located in North America.]
+A -. nationality? .-> B
+```
 
 ---
 
