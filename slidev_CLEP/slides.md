@@ -389,13 +389,16 @@ $$
 
 # Link Prediction across spaces
 
-* CLEP is trained to align head entities with tails descriptions $\quad(e^{head},\;r,\;d^{tail})$
+- CLEP is trained to align head entities with tails descriptions $\quad e^{head} + r \sim d^{tail}$
 
 $$
 f_s(\text{Barack Obama},\;\text{nationality},\; d(v)) \quad \forall v\in\mathcal{G}
 $$
 
-<v-drag pos="19,302,120,40" text>
+
+<div v-click="1">
+
+<v-drag pos="10,243,120,40" text>
 
   $$
   \text{node} \in \text{graph space}
@@ -403,7 +406,7 @@ $$
    
 </v-drag>
 
-<v-drag pos="485,264,120,40" text>
+<v-drag pos="483,233,120,40" text>
 
   $$
   \text{description} \in \text{text space}
@@ -414,10 +417,94 @@ $$
 ```mermaid
 graph LR;
 
-A(("Barack Obama"))
+A(("Barack  \n  Obama"))
 B>Country primarily located in North America.]
 A -. nationality? .-> B
 ```
+
+</div>
+
+<div class="grid grid-cols-2 gap-4">
+
+<div v-click='2' align="left">
+<br>
+<br>
+Cosine Similarity score
+
+
+$f_s(h,r,t) = \;\frac{\text{MLP}_g\big(x_{head}^{(g)}\big)\;\cdot\;\text{MLP}_t\big(x_{tail}^{(t)}\big)}{\|\text{MLP}_g\big(x_{head}^{(g)}\big)\|\;\|\text{MLP}_t\big(x_{tail}^{(t)}\big)\|}$
+
+</div>
+
+<div v-click='3'>
+<br>
+
+|  | MR | MRR | hits@1 | hits@10 |
+| - | - | --- | ------ | ------- |
+| CompGCN<sub>CLEP</sub> | **198** | 0.222 | 0.137 | 0.396 |
+| RGCN + Distmult | 315 | **0.237** | **0.156** | **0.407** |
+
+
+<v-drag pos="821,465,120,40" text>
+FB15k-237
+</v-drag>
+
+</div>
+
+</div>
+
+---
+
+# Link Prediction Finetuning
+
+<div v-click='0'>
+<img src="/lp_finetuning.svg" style="position:absolute; left:50px; top:120px" width="300" height="300" />
+</div>
+<div v-click='1'>
+<img src="/lp_head.svg" style="position:absolute; left:355px; top:175px" width="36" height="36" />
+</div>
+
+---
+
+# Link Prediction Finetuning
+
+<v-drag pos="700,4,320,40" text>
+
+<p> &#128311 Randomly initialized model </p>
+<p> &#128310 CLEP pretrained model </p>
+
+</v-drag>
+
+
+<div v-click='0'>
+FB15k-237
+<img src="/lp_metrics_fb15k-237_compgcn.svg" style="position:absolute; left:60px; top:120px" width="800" height="800" />
+</div>
+<div v-click='1'>
+<v-drag pos="857,175,120,40" text>
+
+$$\sim +1\,\text{-}\,2 \%$$
+
+</v-drag>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div v-click='2'>
+YAGO3-10
+<img src="/lp_metrics_yago3-10_compgcn.svg" style="position:absolute; left:60px; top:330px" width="800" height="800" />
+</div>
+<div v-click='3'>
+<v-drag pos="858,381,120,40" text>
+
+$$\sim +4\,\text{-}\,10 \%$$
+
+</v-drag>
+</div>
 
 ---
 
