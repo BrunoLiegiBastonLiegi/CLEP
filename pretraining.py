@@ -81,8 +81,8 @@ print(f'> Loading Pretrained tokenizer.')
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
 if "gpt" in args.text_encoder:
-    tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
-tokenizer.pad_token = tokenizer.bos_token
+    tokenizer.padding_side = 'left'
+tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 #tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
 

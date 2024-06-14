@@ -124,12 +124,11 @@ class PretrainedGraphEncoder(torch.nn.Module):
 
 class CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=4):
+    def __init__(self, pretrained_model, unfrozen_layers=4):
         super().__init__()
         self.model = AutoModel.from_pretrained(pretrained_model)
-        for m in self.model.layers[:-unfrozen_layers]: # freezing every layer but the last 4
-            for p in m.parameters():
-                p.requires_grad = False
+        for param in list(self.model.parameters())[:-unfrozen_layers]: # freezing every layer but the last n
+            param.requires_grad = False
         
     def forward(self, x, span=None):
         if span is None:
@@ -139,7 +138,11 @@ class CaptionEncoder(torch.nn.Module):
 
     @property
     def hdim(self):
-        return next(self.model.layers[-1].parameters()).shape[-1]
+        return list(self.model.parameters())[-1].shape[-1]
+
+    def unfreeze_layers(self, n: int):
+        for param in list(self.model.parameters())[-n:]: 
+            param.requires_grad = True
     
     
 class GPT2CaptionEncoder(torch.nn.Module):
@@ -479,14 +482,15 @@ class EntityLinkingModel(torch.nn.Module):
                 return (i, i+l)
             i += 1
         ent = self.tokenizer.decode(entity.ravel())
+        whitespace_matters = not (self.tokenizer.encode(ent.lower(), add_special_tokens=False) == self.tokenizer.encode(f" {ent.lower()}", add_special_tokens=False))
         # try with a space in front
-        if ent[0] != " " and allow_recursion:
+        if whitespace_matters and ent[0] != " " and allow_recursion:
             ent = self.tokenizer(f" {ent.lower()}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids
             return self.find_entity_span(entity_mention, ent)
         # some labels don't precisely coincide with the words in the text
         else:
             # they miss the final s, n or ed for instance
-            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian", "ans")
+            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian", "ans", "ese", "i", "ulently", "ous", "hips")
             for desinence in desinences:
                 if ent[-1] != desinence and allow_recursion:
                     span = self.find_entity_span(
