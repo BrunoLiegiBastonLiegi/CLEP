@@ -21,4 +21,9 @@ CompGCN/comp_link_*
 !data/wikidata-disambig/rel2idx.json
 !data/wikidata-disambig/pretraining/*
 !data/wikidata-disambig/link-prediction/*
-!data/wikidata-disambig/entity-linking/*
+!data/wikidata-disambig-cut/entity-linking/*
+!data/wikidata-disambig-cut/ent2idx.json
+!data/wikidata-disambig-cut/rel2idx.json
+!data/wikidata-disambig-cut/pretraining/*
+!data/wikidata-disambig-cut/link-prediction/*
+!data/wikidata-disambig-cut/entity-linking/*
