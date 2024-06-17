@@ -457,11 +457,61 @@ FB15k-237
 
 # Link Prediction Finetuning
 
-<div v-click='0'>
-<img src="/lp_finetuning.svg" style="position:absolute; left:50px; top:120px" width="300" height="300" />
+- Pretrain with CLEP
+
+<div v-click="[0,2]">
+<img id="clepImage" src="/CLEP_pretraining.svg" style="position:absolute; left:212px; top:123px" width="600" height="600" />
 </div>
-<div v-click='1'>
-<img src="/lp_head.svg" style="position:absolute; left:355px; top:175px" width="36" height="36" />
+
+<div v-click="[1,2]">
+<img src="/te_to_ge_arrow.svg" style="position:absolute; left:465px; top:290px" width="105" height="105" />
+</div>
+
+<div v-click='2'>
+<img src="/lp_finetuning.svg" style="position:absolute; left:218px; top:149px" width="335" height="335" />
+</div>
+<div v-click='3'>
+<img src="/lp_head.svg" style="position:absolute; left:565px; top:210px" width="43" height="43" />
+</div>
+
+
+<div v-click='3'>
+<v-drag-arrow pos="622,250,53,1" right op70 />
+
+
+<v-drag pos="688,216,320,40" text>
+
+$f_s$
+
+</v-drag>
+
+<v-drag pos="225,427,320,40" text>
+
+$$ f_s(h,r,t)=h^TM_rt \quad\quad\quad\quad\quad\quad f_s(h,r,t)=\| h+r-t \|$$
+
+</v-drag>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+- Finetune on pure LP
+
+<v-drag pos="243,397,320,40" text>
+RESCAL / DistMult
+</v-drag>
+
+<v-drag pos="596,395,320,40" text>
+TransE
+</v-drag>
+
+
 </div>
 
 ---
