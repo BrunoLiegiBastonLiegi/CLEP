@@ -159,4 +159,4 @@ if __name__ == "__main__":
 
 # furthermore not normalizing the vectors seems to slightly help
 # --> hits@k: {1: 31, 3: 71, 5: 125, 10: 221, 50: 753, 100: 1163, 500: 2434, 1000: 3060, 5000: 4861, 10000: 5672}
-
+# with cosine similarity but not with l2 norm
