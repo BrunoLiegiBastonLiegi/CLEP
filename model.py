@@ -282,8 +282,10 @@ class LinkPredictionModel(torch.nn.Module):
 
 class RGCN(torch.nn.Module):
 
-    def __init__(self, kg, n_layers, indim, hdim, rel_regularizer='basis', num_bases=None, activation = ReLU(), regularization = Dropout(0.2)):
+    def __init__(self, kg, n_layers, indim, hdim, rel_regularizer='basis', num_bases=None, activation = ReLU(), regularization = Dropout(0.2), initial_embeddings=None):
         super().__init__()
+        if initial_embeddings is not None and indim != len(initial_embeddings[0]):
+            raise RuntimeError(f"Incompatible input dimension and initial feature dimension: {indim} and {len(initial_embeddings[0])}")
         assert rel_regularizer in {'bdd', 'basis'}
         self.kg = kg
         self._hdim = hdim
@@ -294,9 +296,13 @@ class RGCN(torch.nn.Module):
         for a in act[1:]:
             self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                        activation=a, layer_norm=regularization))
-            
+
         self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), indim), requires_grad=True)
         torch.nn.init.xavier_normal_(self.node_feats)
+        if initial_embeddings is not None:
+            for i,vec in enumerate(initial_embeddings):
+                if vec is not None:
+                    self.node_feats[i].data = torch.tensor(vec, requires_grad=True)
         self.register_parameter(
             name="node_feats",
             param = self.node_feats,

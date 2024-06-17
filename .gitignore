@@ -17,7 +17,8 @@ saved/
 *.html
 CompGCN/comp_link_*
 *.zip
-!data/wikidata-disambig/*
+!data/wikidata-disambig/ent2idx.json
+!data/wikidata-disambig/rel2idx.json
 !data/wikidata-disambig/pretraining/*
 !data/wikidata-disambig/link-prediction/*
 !data/wikidata-disambig/entity-linking/*

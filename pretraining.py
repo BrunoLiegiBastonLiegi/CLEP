@@ -31,6 +31,8 @@ parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
 parser.add_argument('--text_encoder', default='gpt2')
 parser.add_argument('--use_valid_data', action='store_true')
+parser.add_argument('--initial_node_embeddings', help='path to intial embeddings')
+
 
 
 args = parser.parse_args()
@@ -40,6 +42,7 @@ if args.dataset is not None:
     args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
     args.entities = 'data/{}/entities.json'.format(args.dataset)
     args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.initial_node_embeddings = 'data/{}/pretrained_entity_embeddings.json'.format(args.dataset)
     if args.head_to_tail:
         args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
         args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
@@ -69,10 +72,7 @@ print(f'> Saving model to: {args.save_model}')
 if torch.cuda.is_available():
     dev = torch.device('cuda:0')
 else:
-    try:
-        dev = torch.device('mps')
-    except RuntimeError:
-        dev = torch.device('cpu')
+    dev = torch.device('cpu')
 print(f'\n> Setting device {dev} for computation.')
 
 
@@ -177,6 +177,14 @@ else:
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
 
+if args.initial_node_embeddings is not None:
+    try:
+        with open(args.initial_node_embeddings, 'r') as f:
+            initial_node_embeddings = json.load(f)
+        initial_node_embeddings = [initial_node_embeddings[e] for e,i in sorted(wid2idx.items(), key=lambda x: x[1])]
+    except FileNotFoundError:
+        initial_node_embeddings = None
+
 graph_model = args.graph_encoder
 if graph_model == 'CompGCN':
     conf = {
@@ -198,7 +206,8 @@ elif graph_model == 'RGCN':
         'hdim': 200,
         'rel_regularizer': 'basis',
         #'rel_regularizer': 'bdd',
-        'num_bases': 64
+        'num_bases': 64,
+        'initial_embeddings': initial_node_embeddings,
     }
     graph_encoder = RGCN(**conf)
 
@@ -216,7 +225,7 @@ model = CLIP_KB(
     text_encoder=text_encoder,
     hdim=200,
     head_to_tail=args.head_to_tail
-).cuda()
+).to(dev)
 #model = DDP(model, device_ids=rank)
 
 #original_node_feat = graph_encoder.model.n_embds.clone().cpu()
