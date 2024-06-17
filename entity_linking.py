@@ -150,3 +150,13 @@ if __name__ == "__main__":
 # with cosine similarity
 # --> hits@k: {1: 1, 3: 1, 5: 3, 10: 6, 50: 20, 100: 38, 500: 186, 1000: 336, 5000: 1430, 10000: 2709}
 
+# by using Minilm instead of gpt2 I was able to train with batchsize=10,000 on 16GB and batchsize=30,000 on 48GB
+# this drastically reduce the problem of overfitting and leads to a way better alignment, even though the
+# overlapping is still significant.
+
+# candidates generation with these models improves significantly
+# --> hits@k: {1: 24, 3: 48, 5: 70, 10: 129, 50: 417, 100: 653, 500: 1609, 1000: 2239, 5000: 4336, 10000: 5486}
+
+# furthermore not normalizing the vectors seems to slightly help
+# --> hits@k: {1: 31, 3: 71, 5: 125, 10: 221, 50: 753, 100: 1163, 500: 2434, 1000: 3060, 5000: 4861, 10000: 5672}
+
