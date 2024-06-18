@@ -45,6 +45,31 @@ The last comment block of each slide will be treated as slide notes. It will be 
 transition: fade-out
 ---
 
+# Multimodal Learning
+
+<v-clicks every="1">
+
+- Integration of multiple data modalities
+- Text and Images, or Text and Graph data for instance
+- [Xie et al](https://doi.org/10.1609/aaai.v30i1.10329), [Yao et al](https://doi.org/10.48550/ARXIV.1909.03193), [Shen et al](https://aclanthology.org/2022.coling-1.171), [Wang et al](https://aclanthology.org/2022.acl-long.295)  
+&rarr; Textual descriptions improve KG representation learning
+- CLIP ([Radford et al](https://arxiv.org/abs/2103.00020))  
+&rarr; Joint multimodal text-image space  
+&rarr; Stable Diffusion
+- Can we learn a similar multimodal text-graph space  
+for Knowledge Graphs?
+- Does it implicitely yield better KG representations?
+</v-clicks>
+
+<div v-click="4">
+<v-drag pos="624,407,280,80" text>
+  Paradisiac beach of a tropical South-Korean island
+</v-drag>
+<img src="/stable_diffusion_beach.jpg" style="position:absolute; left:640px; top:200px" width="200" height="200" />
+</div>
+
+---
+
 # The CLEP Architecture
 
 $$
@@ -578,7 +603,7 @@ $$\sim +4\,\text{-}\,10 \%$$
 
 </v-clicks>
 
---- 
+---
 
 <br>
 <br>
@@ -589,4 +614,3 @@ $$\sim +4\,\text{-}\,10 \%$$
     <h1>Thank your for the Attention!</h1>
   </div>
 </div>
-
