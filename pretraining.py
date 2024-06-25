@@ -32,6 +32,8 @@ parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
 parser.add_argument('--text_encoder', default='gpt2')
 parser.add_argument('--use_valid_data', action='store_true')
 parser.add_argument('--initial_node_embeddings', help='path to intial embeddings')
+parser.add_argument('--add_label_to_caption', action='store_true')
+
 
 
 
@@ -138,20 +140,23 @@ else:
         datafile = args.train_data,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        device = dev
+        device = dev,
+        concatenate_labels = args.add_label_to_caption,
     )
     test_data = CLIPDataset(
         datafile = args.test_data,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        device = dev
+        device = dev,
+        concatenate_labels = args.add_label_to_caption,
     )
     try:
         valid_data = CLIPDataset(
             datafile = args.test_data,
             tokenizer = tokenizer,
             entity2idx = wid2idx,
-            device = dev
+            device = dev,
+            concatenate_labels = args.add_label_to_caption,
         )
     except:
         print("> No valid data found, skipping it.")
