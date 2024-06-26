@@ -124,15 +124,16 @@ class PretrainedGraphEncoder(torch.nn.Module):
 
 class CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model, unfrozen_layers=4):
+    def __init__(self, pretrained_model, unfrozen_layers=4, cls_token=0):
         super().__init__()
         self.model = AutoModel.from_pretrained(pretrained_model)
         for param in list(self.model.parameters())[:-unfrozen_layers]: # freezing every layer but the last n
             param.requires_grad = False
+        self.cls_token = cls_token
         
     def forward(self, x, span=None):
         if span is None:
-            return self.model(**x).last_hidden_state[:,-1,:]
+            return self.model(**x).last_hidden_state[:,self.cls_token,:]
         else:
             return self.model(**x).last_hidden_state[:,span[0]:span[1],:]
 
