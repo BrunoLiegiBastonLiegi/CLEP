@@ -66,7 +66,7 @@ def training_routine(model, step_f, train_data, test_data, epochs, batchsize, le
         )
 
     train_loss, valid_loss, metrics = [], [], {}
-    print_steps = int(len(train_loader)/5)
+    print_steps = max(int(len(train_loader)/5), 1)
     for e in range(epochs):
         if unfreezing_f is not None:
             unfreezing_f(model, e)
