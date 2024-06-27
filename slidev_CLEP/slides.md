@@ -76,7 +76,7 @@ $$
 (Barack\;Obama,\, born\_in,\, Honolulu)
 $$
 
-<img id="clepImage" src="/CLEP_pretraining.svg" style="position:relative; left:150px; top:1px" width="600" height="600" />
+<img id="clepImage" src="/CLEP_pretraining.svg" style="position:absolute; left:150px; top:120px" width="600" height="600" />
   
 
 ---
@@ -614,3 +614,17 @@ $$\sim +4\,\text{-}\,10 \%$$
     <h1>Thank your for the Attention!</h1>
   </div>
 </div>
+
+---
+
+# Zero-shot Entity Linking
+
+- Candidates generation $(C_1,\,C_2,\,\dots,\,C_n)$ through calculating the distance from the mention $m$ 
+
+<img src="/CLEP_zs_EL.svg" style="position:absolute; left:150px; top:100px" width="600" height="600" />
+
+---
+  
+# Stable Diffusion for Graph Generation
+
+<img src="/CLEP_stable_diffusion.svg" style="position:absolute; left:150px; top:100px" width="550" height="550" />
