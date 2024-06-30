@@ -412,6 +412,8 @@ $$
 </div>
 
 ---
+transition: fade-out
+---
 
 # Link Prediction across spaces
 
@@ -458,7 +460,7 @@ A -. nationality? .-> B
 Cosine Similarity score
 
 
-$f_s(h,r,t) = \;\frac{\text{MLP}_g\big(x_{head}^{(g)}\big)\;\cdot\;\text{MLP}_t\big(x_{tail}^{(t)}\big)}{\|\text{MLP}_g\big(x_{head}^{(g)}\big)\|\;\|\text{MLP}_t\big(x_{tail}^{(t)}\big)\|}$
+$$f_s(h,r,t) = \;\frac{\text{CLEP}_g(h,\,r)\;\cdot\;\text{CLEP}_t(d(t))}{\|\text{CLEP}_g(h,\,r)\|\;\|\text{CLEP}_t(d(t))\|}$$
 
 </div>
 
@@ -467,7 +469,7 @@ $f_s(h,r,t) = \;\frac{\text{MLP}_g\big(x_{head}^{(g)}\big)\;\cdot\;\text{MLP}_t\
 
 |  | MR | MRR | hits@1 | hits@10 |
 | - | - | --- | ------ | ------- |
-| CompGCN<sub>CLEP</sub> | **198** | 0.222 | 0.137 | 0.396 |
+| CLEP | **198** | 0.222 | 0.137 | 0.396 |
 | RGCN + Distmult | 315 | **0.237** | **0.156** | **0.407** |
 
 
@@ -548,8 +550,8 @@ transition: fade-out
 
 <v-drag pos="700,4,320,40" text>
 
-<p> &#128311 Randomly initialized model </p>
-<p> &#128310 CLEP pretrained model </p>
+<p> &#128311 Randomly initialized CompGCN </p>
+<p> &#128310 CLEP pretrained CompGCN </p>
 
 </v-drag>
 
@@ -611,7 +613,7 @@ $$\sim +4\,\text{-}\,10 \%$$
 <br>
 <div class="center">
   <div>
-    <h1>Thank your for the Attention!</h1>
+    <h1>Thank you for the Attention!</h1>
   </div>
 </div>
 
