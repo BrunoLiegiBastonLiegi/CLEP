@@ -1,52 +1,0 @@
-/home/remote/u7177797/git/CLIP-KB
-gpusrv-5
-Sat Jan 13 20:38:11 AEDT 2024
----- CLIP Pretraining ----
-
-> Saving model to: saved/models/FB15k-237-cut/pretraining/CompGCN/CompGCN-gpt2_1024bs_7e_FB15k-237-cut_h_to_t.pt
-> Loading Pretrained tokenizer.
-> Preparing the data.
-> 0 discarded triples due to missing mapping in the index files.
-> 0 discarded triples due to missing mapping in the index files.
-> 0 discarded triples due to missing mapping in the index files.
-> Initializing the model.
-
-### EPOCH 0
-  0%|          | 0/502 [00:00<?, ?it/s]/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/dgl/backend/pytorch/tensor.py:449: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
-  assert input.numel() == input.storage().size(), (
-  0%|          | 1/502 [00:02<19:22,  2.32s/it]  0%|          | 2/502 [00:03<13:25,  1.61s/it]  1%|          | 3/502 [00:04<11:10,  1.34s/it]  1%|          | 4/502 [00:05<10:44,  1.30s/it]  1%|          | 5/502 [00:07<11:07,  1.34s/it]  1%|          | 6/502 [00:08<11:06,  1.34s/it]  1%|▏         | 7/502 [00:09<11:02,  1.34s/it]  2%|▏         | 8/502 [00:11<10:42,  1.30s/it]  2%|▏         | 9/502 [00:12<10:02,  1.22s/it]  2%|▏         | 10/502 [00:13<09:57,  1.21s/it]  2%|▏         | 11/502 [00:14<09:56,  1.22s/it]  2%|▏         | 12/502 [00:15<09:57,  1.22s/it]  3%|▎         | 13/502 [00:16<09:27,  1.16s/it]  3%|▎         | 14/502 [00:18<10:12,  1.25s/it]  3%|▎         | 15/502 [00:19<10:11,  1.26s/it]  3%|▎         | 16/502 [00:20<10:44,  1.33s/it]  3%|▎         | 17/502 [00:22<10:17,  1.27s/it]  4%|▎         | 18/502 [00:23<10:09,  1.26s/it]  4%|▍         | 19/502 [00:24<09:48,  1.22s/it]  4%|▍         | 20/502 [00:25<09:20,  1.16s/it]  4%|▍         | 21/502 [00:26<09:09,  1.14s/it]  4%|▍         | 22/502 [00:28<09:53,  1.24s/it]  5%|▍         | 23/502 [00:29<09:45,  1.22s/it]  5%|▍         | 24/502 [00:30<09:34,  1.20s/it]  5%|▍         | 25/502 [00:31<09:15,  1.16s/it]  5%|▌         | 26/502 [00:32<09:07,  1.15s/it]  5%|▌         | 27/502 [00:33<09:16,  1.17s/it]  6%|▌         | 28/502 [00:35<09:43,  1.23s/it]  6%|▌         | 29/502 [00:36<10:03,  1.28s/it]  6%|▌         | 30/502 [00:37<09:43,  1.24s/it]  6%|▌         | 31/502 [00:38<09:42,  1.24s/it]  6%|▋         | 32/502 [00:40<09:31,  1.22s/it]  7%|▋         | 33/502 [00:41<09:31,  1.22s/it]  7%|▋         | 34/502 [00:42<09:31,  1.22s/it]  7%|▋         | 35/502 [00:43<09:21,  1.20s/it]  7%|▋         | 36/502 [00:45<10:43,  1.38s/it]  7%|▋         | 37/502 [00:46<10:01,  1.29s/it]  7%|▋         | 37/502 [00:47<09:59,  1.29s/it]
-Traceback (most recent call last):
-  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 311, in <module>
-    _, _, metrics = training_routine(
-  File "/home/remote/u7177797/git/CLIP-KB/utils.py", line 79, in training_routine
-    loss = step_f(model, batch, label, dev)
-  File "/home/remote/u7177797/git/CLIP-KB/pretraining.py", line 208, in step_f
-    graph_out, text_out = model(batch['entities'].to(dev), batch['captions'].to(dev))
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 91, in forward
-    captions = self.t_mlp(self.t_encoder(captions))
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/git/CLIP-KB/model.py", line 136, in forward
-    return self.model(**x).last_hidden_state[:,-1,:]
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 900, in forward
-    outputs = block(
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 428, in forward
-    feed_forward_hidden_states = self.mlp(hidden_states)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/models/gpt2/modeling_gpt2.py", line 357, in forward
-    hidden_states = self.c_proj(hidden_states)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/remote/u7177797/miniconda3/envs/torch/lib/python3.10/site-packages/transformers/pytorch_utils.py", line 105, in forward
-    x = torch.addmm(self.bias, x.view(-1, x.size(-1)), self.weight)
-torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 84.00 MiB (GPU 0; 47.54 GiB total capacity; 46.07 GiB already allocated; 5.88 MiB free; 47.16 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
-srun: error: gpusrv-5: task 0: Exited with exit code 1
----- Done ----
-Sat Jan 13 20:39:19 AEDT 2024

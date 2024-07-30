@@ -1,4 +1,4 @@
-import torch, time
+import re, torch, time
 import numpy as np
 from torch.nn import Linear, BatchNorm1d, Dropout, ReLU, Sequential
 from torch.nn.functional import normalize
@@ -120,25 +120,59 @@ class PretrainedGraphEncoder(torch.nn.Module):
     def hdim(self):
         #return self.ordered_embs.shape[-1]
         return self._hdim
+
+
+class CaptionEncoder(torch.nn.Module):
+
+    def __init__(self, pretrained_model, unfrozen_layers=4, cls_token=0):
+        super().__init__()
+        self.model = AutoModel.from_pretrained(pretrained_model)
+        for param in list(self.model.parameters())[:-unfrozen_layers]: # freezing every layer but the last n
+            param.requires_grad = False
+        self.cls_token = cls_token
         
+    def forward(self, x, span=None):
+        if span is None:
+            return self.model(**x).last_hidden_state[:,self.cls_token,:]
+        else:
+            return self.model(**x).last_hidden_state[:,span[0]:span[1],:]
+
+    @property
+    def hdim(self):
+        return list(self.model.parameters())[-1].shape[-1]
+
+    def unfreeze_layers(self, n: int):
+        for param in list(self.model.parameters())[-n:]: 
+            param.requires_grad = True
+    
+    
 class GPT2CaptionEncoder(torch.nn.Module):
 
-    def __init__(self, pretrained_model: str = 'gpt2'):
+    def __init__(self, pretrained_model: str = 'gpt2', unfrozen_layers=0):
         super().__init__()
         #self.model = GPT2LMHeadModel.from_pretrained(pretrained_model)
         self.model = GPT2Model.from_pretrained(pretrained_model)       # which one is better to use?
-        for m in self.model.h[:-4]: # freezing every layer but the last 4
+        for m in self.model.h[:-unfrozen_layers]: # freezing every layer but the last n
             for p in m.parameters():
                 p.requires_grad = False
         
-    def forward(self, x):
+    def forward(self, x, span=None):
         #return self.model(**x).logits[:,-1,:]
-        return self.model(**x).last_hidden_state[:,-1,:]
+        if span is None:
+            return self.model(**x).last_hidden_state[:,-1,:]
+        else:
+            return self.model(**x).last_hidden_state[:,span[0]:span[1],:]
 
     @property
     def hdim(self):
         #return self.model.config.vocab_size
         return self.model.config.n_embd
+
+    def unfreeze_layers(self, n: int):
+        for m in self.model.h[-n:]: # unfreezing last n layers
+            for p in m.parameters():
+                p.requires_grad = True
+                
 
 class BertCaptionEncoder(torch.nn.Module):
 
@@ -249,8 +283,10 @@ class LinkPredictionModel(torch.nn.Module):
 
 class RGCN(torch.nn.Module):
 
-    def __init__(self, kg, n_layers, indim, hdim, rel_regularizer='basis', num_bases=None, activation = ReLU(), regularization = Dropout(0.2)):
+    def __init__(self, kg, n_layers, indim, hdim, rel_regularizer='basis', num_bases=None, activation = ReLU(), regularization = Dropout(0.2), initial_embeddings=None):
         super().__init__()
+        if initial_embeddings is not None and indim != len(initial_embeddings[0]):
+            raise RuntimeError(f"Incompatible input dimension and initial feature dimension: {indim} and {len(initial_embeddings[0])}")
         assert rel_regularizer in {'bdd', 'basis'}
         self.kg = kg
         self._hdim = hdim
@@ -261,12 +297,21 @@ class RGCN(torch.nn.Module):
         for a in act[1:]:
             self.layers.append(RelGraphConv(hdim, hdim, kg.n_rel, regularizer=rel_regularizer, num_bases=num_bases,
                                        activation=a, layer_norm=regularization))
-            
+
         self.node_feats = torch.nn.Parameter(torch.Tensor(len(kg.e2idx), indim), requires_grad=True)
         torch.nn.init.xavier_normal_(self.node_feats)
+        if initial_embeddings is not None:
+            for i,vec in enumerate(initial_embeddings):
+                if vec is not None:
+                    self.node_feats[i].data = torch.tensor(vec, requires_grad=True)
+        self.register_parameter(
+            name="node_feats",
+            param = self.node_feats,
+        )
         
     def forward(self, nodes):
         h = self.node_feats
+        #print(h[0,0].item(), h[37, 15].item(), h[-1, 123].item())
         for l in self.layers:
             h = l(self.kg.g, h, self.kg.etypes)
         return h[nodes]
@@ -397,3 +442,70 @@ class Distmult(torch.nn.Module):
                 return (t*r).mm(h.T)
         else:
             return (h*r*t).sum(-1)
+
+
+class EntityLinkingModel(torch.nn.Module):
+
+    def __init__(self, clep_model, tokenizer):
+        super().__init__()
+        self.clep_model = clep_model
+        self.tokenizer = tokenizer
+        self.dev = None
+
+    def forward(self, entity_mention, entity, top_k=1):
+        if self.dev is None:
+            self.dev = next(self.clep_model.g_mlp.parameters()).device
+        # edit the sentence to help the tokenizer
+        # insert white space between contiguos punctuation: ., -> . ,
+        entity_mention = re.sub("(?<=[.,:;\)])(?=[.,:;])", r"\g<0> ", entity_mention.lower())
+        # insert white space in expression between apices: "xxx" -> " xxx "
+        entity_mention = re.sub("(?<=[\s\(][\"])[^\"]+(?=[\"][\s\)])", r" \g<0> ", entity_mention)
+
+        if entity_mention[0] != " ":
+            entity_mention = f" {entity_mention}"
+        tokenized_mention = self.tokenizer(entity_mention, add_special_tokens=False, return_tensors="pt").to(self.dev)
+        tokenized_entity = self.tokenizer(entity.lower(), add_special_tokens=False, return_tensors="pt").to(self.dev)
+        span = self.find_entity_span(tokenized_mention.input_ids, tokenized_entity.input_ids)
+        if span is None:
+            raise RuntimeError(f"Entity `{entity}` not found in sentence `{entity_mention}`.")
+        #text_embedding = self.clep_model.t_encoder(tokenized_mention, span).mean(1).reshape(1, 1, -1)
+        # instead of taking the mean, take only the last one
+        text_embedding = self.clep_model.t_encoder(tokenized_mention, span)[:, -1, :].reshape(1, 1, -1)
+        # this tests the use of the last token of the mention as identifier of the entity, but it seems to work worse 
+        #text_embedding = self.clep_model.t_encoder(tokenized_mention, None).reshape(1, 1, -1)
+        text_embedding = normalize(self.clep_model.t_mlp(text_embedding).squeeze(0), p=2, dim=-1)
+        graph_embedding = self.clep_model.g_encoder(None)
+        graph_embedding = normalize(self.clep_model.g_mlp(graph_embedding).squeeze(0), p=2, dim=-1)
+        #scores, node_indices = torch.topk(torch.nn.functional.cosine_similarity(text_embedding, graph_embedding), top_k, largest=True)
+        #scores, node_indices = torch.topk(torch.norm(text_embedding - graph_embedding, dim=1), top_k, largest=False)
+        scores, node_indices = torch.topk((graph_embedding @ text_embedding.T).ravel(), top_k, largest=True)
+        return node_indices
+
+    def find_entity_span(self, entity_mention, entity, allow_recursion=True):
+        l = entity.shape[-1]
+        i = 0
+        while i + l <= entity_mention.shape[-1]:
+            if all(entity_mention[0][i:i+l] == entity[0]):
+                return (i, i+l)
+            i += 1
+        ent = self.tokenizer.decode(entity.ravel())
+        whitespace_matters = not (self.tokenizer.encode(ent.lower(), add_special_tokens=False) == self.tokenizer.encode(f" {ent.lower()}", add_special_tokens=False))
+        # try with a space in front
+        if whitespace_matters and ent[0] != " " and allow_recursion:
+            ent = self.tokenizer(f" {ent.lower()}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids
+            return self.find_entity_span(entity_mention, ent)
+        # some labels don't precisely coincide with the words in the text
+        else:
+            # they miss the final s, n or ed for instance
+            desinences = ("s", "n", f"{ent[-1]}ed", "ic", "en", "es", "ns", "er", "ation", "ing", "ed", f"{ent[-1]}ing", "al", "\"", "ern", "h", "e", "te", "ian", "tic", "an", "rs", "nese", "lary", "vian", "ans", "ese", "i", "ulently", "ous", "hips")
+            for desinence in desinences:
+                if ent[-1] != desinence and allow_recursion:
+                    span = self.find_entity_span(
+                        entity_mention,
+                        self.tokenizer(f"{ent}{desinence}", add_special_tokens=False, return_tensors="pt").to(self.dev).input_ids,
+                        False
+                    )
+                    if span is not None:
+                        return span
+    
+        

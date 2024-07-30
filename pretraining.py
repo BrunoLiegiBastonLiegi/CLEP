@@ -1,6 +1,7 @@
+from sklearn.utils import validation
 import torch, argparse, json, random, time, pickle, numpy, os
 from dataset import CLIPDataset, LinkPredictionDataset
-from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, BertCaptionEncoder, RGCN, CompGCNWrapper
+from model import CLIP_KB, PretrainedGraphEncoder, GPT2CaptionEncoder, CaptionEncoder, RGCN, CompGCNWrapper
 from transformers import GPT2Tokenizer, BertTokenizer, AutoTokenizer, DistilBertTokenizerFast
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
@@ -29,6 +30,12 @@ parser.add_argument('--save_model', help='Save model to.')
 parser.add_argument('--graph_encoder', default='RGCN')
 parser.add_argument('--epochs', help='Epochs.', default=32, type=int)
 parser.add_argument('--text_encoder', default='gpt2')
+parser.add_argument('--use_valid_data', action='store_true')
+parser.add_argument('--initial_node_embeddings', help='path to intial embeddings')
+parser.add_argument('--add_label_to_caption', action='store_true')
+
+
+
 
 args = parser.parse_args()
 
@@ -37,6 +44,7 @@ if args.dataset is not None:
     args.rel_index = 'data/{}/rel2idx.json'.format(args.dataset)
     args.entities = 'data/{}/entities.json'.format(args.dataset)
     args.graph = 'data/{}/link-prediction/train.txt'.format(args.dataset)
+    args.initial_node_embeddings = 'data/{}/pretrained_entity_embeddings.json'.format(args.dataset)
     if args.head_to_tail:
         args.train_data = 'data/{}/link-prediction/train.txt'.format(args.dataset)
         args.test_data = 'data/{}/link-prediction/test.txt'.format(args.dataset)
@@ -44,13 +52,14 @@ if args.dataset is not None:
     else:
         args.train_data = 'data/{}/pretraining/train.json'.format(args.dataset)
         args.test_data = 'data/{}/pretraining/test.json'.format(args.dataset)
+        args.dev_data = 'data/{}/pretraining/dev.json'.format(args.dataset)
 
 if args.save_model is None:
     args.save_model = 'saved/models/{}/pretraining/{}/{}-{}_{}bs_{}e_{}'.format(
         args.dataset,
         args.graph_encoder,
         args.graph_encoder,
-        args.text_encoder,
+        args.text_encoder.replace("/", "-"),
         args.batchsize,
         args.epochs,
         args.dataset
@@ -66,17 +75,18 @@ if torch.cuda.is_available():
     dev = torch.device('cuda:0')
 else:
     dev = torch.device('cpu')
-#print(f'\n> Setting device {dev} for computation.')
+print(f'\n> Setting device {dev} for computation.')
+
 
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
-#if 'gpt2' in args.text_encoder:
-#    tokenizer.padding_side, tokenizer.pad_token = 'left', tokenizer.bos_token
+if "gpt" in args.text_encoder:
+    tokenizer.padding_side = 'left'
+tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 #tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
-tokenizer.pad_token = tokenizer.eos_token
 
 print('> Preparing the data.')
 # Load index mapping
@@ -130,14 +140,29 @@ else:
         datafile = args.train_data,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        device = dev
+        device = dev,
+        concatenate_labels = args.add_label_to_caption,
     )
     test_data = CLIPDataset(
         datafile = args.test_data,
         tokenizer = tokenizer,
         entity2idx = wid2idx,
-        device = dev
+        device = dev,
+        concatenate_labels = args.add_label_to_caption,
     )
+    try:
+        valid_data = CLIPDataset(
+            datafile = args.test_data,
+            tokenizer = tokenizer,
+            entity2idx = wid2idx,
+            device = dev,
+            concatenate_labels = args.add_label_to_caption,
+        )
+    except:
+        print("> No valid data found, skipping it.")
+    if args.use_valid_data:
+        train_data.data += valid_data.data
+    
 
 print('> Initializing the model.')
 # Graph encoder
@@ -156,6 +181,14 @@ else:
         assert False, 'No data provided for building the graph, try using the --graph argument.'
 
 #graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
+
+if args.initial_node_embeddings is not None:
+    try:
+        with open(args.initial_node_embeddings, 'r') as f:
+            initial_node_embeddings = json.load(f)
+        initial_node_embeddings = [initial_node_embeddings[e] for e,i in sorted(wid2idx.items(), key=lambda x: x[1])]
+    except FileNotFoundError:
+        initial_node_embeddings = None
 
 graph_model = args.graph_encoder
 if graph_model == 'CompGCN':
@@ -178,24 +211,26 @@ elif graph_model == 'RGCN':
         'hdim': 200,
         'rel_regularizer': 'basis',
         #'rel_regularizer': 'bdd',
-        'num_bases': 64
+        'num_bases': 64,
+        'initial_embeddings': initial_node_embeddings,
     }
     graph_encoder = RGCN(**conf)
 
 if args.head_to_tail:
     assert graph_model == 'CompGCN' and graph_encoder.return_rel_embs, "Head-to-Tail pretraining is only supported for CompGCN models with return_rel_embs=True"
 # Caption encoder
-if 'gpt2' in args.text_encoder:
+if "gpt2" in args.text_encoder:
     text_encoder = GPT2CaptionEncoder(pretrained_model=args.text_encoder)
 else:
-    text_encoder = BertCaptionEncoder(pretrained_model=args.text_encoder)
+    text_encoder = CaptionEncoder(pretrained_model=args.text_encoder)
+
 # CLIP
 model = CLIP_KB(
     graph_encoder=graph_encoder,
     text_encoder=text_encoder,
     hdim=200,
     head_to_tail=args.head_to_tail
-).cuda()
+).to(dev)
 #model = DDP(model, device_ids=rank)
 
 #original_node_feat = graph_encoder.model.n_embds.clone().cpu()
@@ -211,10 +246,6 @@ def step_f(model, batch, label, dev):
     del text_out
     torch.cuda.empty_cache()
     loss = 0.5 * ( torch.nn.functional.cross_entropy(logits, label) + torch.nn.functional.cross_entropy(logits.T, label) )
-    #loss = 0.5 * (
-        #torch.nn.functional.binary_cross_entropy_with_logits(logits, label)
-        #+ torch.nn.functional.binary_cross_entropy_with_logits(logits.T, label)
-        #)
     del logits
     torch.cuda.empty_cache()
     return loss
@@ -302,7 +333,10 @@ def eval_f(model, data):
         'hits@10': len((ranks <= 10).nonzero()) / len(ranks)
     }
     return metrics
-    
+
+def unfreezing_f(model, epoch):
+    if epoch > 1:
+        model.t_encoder.unfreeze_layers(4)
 
 if args.load_model == None:
     epochs = args.epochs
@@ -312,6 +346,7 @@ if args.load_model == None:
         model = model,
         step_f = step_f,
         eval_f = eval_f if args.head_to_tail else None,
+        unfreezing_f=unfreezing_f,
         eval_each = 1,
         train_data = train_data,
         test_data = test_data,
@@ -426,3 +461,32 @@ with torch.no_grad():
     print(f'> {acc} correct out of {tot} ({acc/tot*100:.2f}%).')
 
 
+# These are some of the entities that are poorly mapped in the wikidata-disambig dataset
+
+#'[CLS] bill kitchen : ice hockey player [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] llanelli : parliamentary constituency in the united kingdom, 1918 onwards [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] weedon : family name [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] rampur : human settlement in india [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] moses : none [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] john goodman : welsh jesuit [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] st. james : former federal electoral district in quebec, canada [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] bourke : town in new south wales, australia [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] deck : part of a bridge [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] ymir : primeval being born of primordial elemental poison and the ancestor of all jotnar [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] naked eye viewing : practice of engaging in visual perception unaided by a magnifying or light - collecting optical device, such as a telescope or microscope. vision corrected to normal acuity using corrective lenses is considered " naked " [SEP]'
+
+#'[CLS] bowling : cricket delivery [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] ministry of culture : cultural ministry of egypt [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]'
+
+#'[CLS] louisville colonels : former american major league baseball team [SEP] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]']

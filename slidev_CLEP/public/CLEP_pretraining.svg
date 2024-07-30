@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="2.1997092"
-     inkscape:cx="449.37758"
-     inkscape:cy="236.39488"
+     inkscape:zoom="3.1108586"
+     inkscape:cx="459.68017"
+     inkscape:cy="237.23354"
      inkscape:window-width="3440"
      inkscape:window-height="1371"
      inkscape:window-x="1080"
@@ -247,7 +247,10 @@
        cx="578.42383"
        cy="218.13924"
        rx="20.680969"
-       ry="16.043888" />
+       ry="16.043888"
+       inkscape:export-filename="col-wise_CE.svg"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
     <ellipse
        style="fill:#ffcc00;fill-opacity:0.910615;stroke:none;stroke-width:0.931218;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.792267"
        id="path85177-7"
@@ -298,7 +301,7 @@
        y="117.09477"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
+       inkscape:export-filename="head_rel_composition.svg" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:19.5533px;line-height:0%;font-family:sans-serif;text-align:center;text-anchor:middle;opacity:0.96;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.4665"
@@ -328,7 +331,7 @@
        y="118.14839"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
+       inkscape:export-filename="mlp.svg" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:17.598px;line-height:0%;font-family:sans-serif;opacity:0.96;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.4665"
@@ -415,7 +418,7 @@
        r="9.5541563"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png" />
+       inkscape:export-filename="text_encoder.svg" />
     <path
        style="opacity:0.96;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.76951;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 95.894044,177.88997 42.234916,-0.3147"
@@ -519,7 +522,7 @@
        style="fill:none;stroke:#000000;stroke-width:0.914542;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Mend)"
        d="m 255.9048,403.34208 h 33.25606"
        id="path1120"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-filename="text_encoder.svg"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
@@ -1287,7 +1290,7 @@
        height="13.320741"
        x="390.30759"
        y="158.4897"
-       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-filename="head_rel_composition.svg"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <rect

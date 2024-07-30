@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="87.461548"
+   height="106.04287"
+   viewBox="0 0 87.461548 106.04287"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="CLEP_pretraining.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview41290"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="2.1997092"
+     inkscape:cx="449.37758"
+     inkscape:cy="236.39488"
+     inkscape:window-width="3440"
+     inkscape:window-height="1371"
+     inkscape:window-x="1080"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:snap-global="false"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:lockguides="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid41375" />
+  </sodipodi:namedview>
+  <defs
+     id="defs41285">
+    <marker
+       style="overflow:visible"
+       id="Arrow2Mend-3-9"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Mend"
+       inkscape:isstock="true">
+      <path
+         transform="scale(-0.6)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path1065-6-2" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Livello 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-368.34534,-117.18308)">
+    <rect
+       style="fill:#2a2aff;fill-opacity:0.910615;stroke:#000000;stroke-width:1.09896;stroke-linejoin:bevel"
+       id="rect17695-0"
+       width="13.320741"
+       height="13.320741"
+       x="390.30759"
+       y="158.4897"
+       inkscape:export-filename="head_rel_composition.svg"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#2a2aff;fill-opacity:0.910615;stroke:#000000;stroke-width:1.09896;stroke-linejoin:bevel"
+       id="rect17695-6-2"
+       width="13.320741"
+       height="13.320741"
+       x="430.26978"
+       y="158.4897"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#2a2aff;fill-opacity:0.910615;stroke:#000000;stroke-width:1.09896;stroke-linejoin:bevel"
+       id="rect17695-3-3"
+       width="13.320741"
+       height="13.320741"
+       x="390.30759"
+       y="184.4519"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.0978px;line-height:0.95;font-family:Padauk;-inkscape-font-specification:Padauk;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.76222"
+       x="396.039"
+       y="134.8215"
+       id="text22814-7"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan22812-5"
+         x="396.039"
+         y="134.8215"
+         style="stroke-width:1.76222">Barack</tspan><tspan
+         sodipodi:role="line"
+         x="396.039"
+         y="148.21442"
+         id="tspan24400-9"
+         style="stroke-width:1.76222">Obama</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.0978px;line-height:1.25;font-family:Padauk;-inkscape-font-specification:Padauk;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.76222"
+       x="377.61084"
+       y="213.86049"
+       id="text28706-2"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan28704-2"
+         x="377.61084"
+         y="213.86049"
+         style="stroke-width:1.76222">born_in</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.1467px;line-height:1.25;font-family:Padauk;-inkscape-font-specification:Padauk;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.76222"
+       x="411.97"
+       y="170.40196"
+       id="text39381-8"
+       inkscape:export-filename="/home/andrea/Immagini/clip_kb_pretraining_ht.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan39379-9"
+         x="411.97"
+         y="170.40196"
+         style="stroke-width:1.76222">+</tspan></text>
+    <rect
+       style="fill:none;fill-opacity:0.910615;stroke:#000000;stroke-width:0.749584;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.792267"
+       id="rect225288-7"
+       width="86.711967"
+       height="105.2933"
+       x="368.72012"
+       y="117.55788" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:4, 2;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#Arrow2Mend-3-9)"
+       d="m 409.16509,191.05157 c 0,0 27.49315,4.21514 27.79248,-16.0859"
+       id="path2406-3" />
+  </g>
+</svg>

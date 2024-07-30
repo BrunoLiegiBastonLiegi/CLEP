@@ -9,7 +9,7 @@ from dgl.sampling import global_uniform_negative_sampling
 
 class CLIPDataset(Dataset):
 
-    def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, filter_triples = None, device: torch.device = torch.device('cpu')):
+    def __init__(self, datafile: str, tokenizer, entity2idx: dict, triples = None, filter_triples = None, device: torch.device = torch.device('cpu'), concatenate_labels=False):
         self.h_to_t = False
         if triples == None:
             if datafile[-4:] == '.pkl': 
@@ -40,6 +40,7 @@ class CLIPDataset(Dataset):
         self.tok = tokenizer
         self.e2idx = entity2idx
         self.dev = device
+        self.concatenate_labels = concatenate_labels
         
     def __len__(self):
         return len(self.data)
@@ -51,10 +52,15 @@ class CLIPDataset(Dataset):
         inputs = {'captions':[], 'entities':[]}
         for item in batch:
             if self.h_to_t:
+                if self.concatenate_labels:
+                    raise NotImplementedError
                 inputs['captions'].append(item[1])
                 inputs['entities'].append(item[0])
             else:
-                inputs['captions'].append(item['caption'])
+                caption = item['caption']
+                if self.concatenate_labels:
+                    caption = f"{item['label']}: {caption}"
+                inputs['captions'].append(caption)
                 eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
                 inputs['entities'].append(self.e2idx[eid])
         inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
