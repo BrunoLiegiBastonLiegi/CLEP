@@ -84,7 +84,10 @@ tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
 if "gpt" in args.text_encoder:
     tokenizer.padding_side = 'left'
-tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    global_identifier_index = -1
+elif "minilm" in args.text_encoder.lower():
+    global_identifier_index = 0
 #tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
 #tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
 
