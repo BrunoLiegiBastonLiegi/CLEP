@@ -18,7 +18,6 @@ parser = argparse.ArgumentParser(description='Caption prediction pretraining.')
 parser.add_argument('--dataset', default=None)
 parser.add_argument('--train_data', default=None, help='Path to train data file.')
 parser.add_argument('--test_data', default=None, help='Path to test data file.')
-parser.add_argument('--graph_embeddings', default=None, help='Path to the pretrained graph embedding file.')
 parser.add_argument('--entity_index', default=None, help='Path to relations index file.')
 parser.add_argument('--rel_index', default=None, help='Path to relations index file.')
 parser.add_argument('--load_model', default=None, help='Path to caption pretrained model.')
@@ -81,15 +80,13 @@ print(f'\n> Setting device {dev} for computation.')
 # Choose the tokenizer
 print(f'> Loading Pretrained tokenizer.')
 tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
-#tokenizer = GPT2Tokenizer.from_pretrained(args.text_encoder)
 if "gpt" in args.text_encoder:
     tokenizer.padding_side = 'left'
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
     global_identifier_index = -1
 elif "minilm" in args.text_encoder.lower():
+    tokenizer.model_max_length = 512
     global_identifier_index = 0
-#tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
-#tokenizer = DistilBertTokenizerFast.from_pretrained(args.text_encoder)
 
 print('> Preparing the data.')
 # Load index mapping
@@ -169,9 +166,6 @@ else:
 
 print('> Initializing the model.')
 # Graph encoder
-if  args.graph_embeddings != None:
-    with open(args.graph_embeddings, 'rb') as f:
-        node_embeddings = pickle.load(f)
         
 inverse_edges = True
 if args.graph != None:
@@ -183,14 +177,14 @@ else:
     except:
         assert False, 'No data provided for building the graph, try using the --graph argument.'
 
-#graph_encoder = PretrainedGraphEncoder(node_embeddings=node_embeddings, index=wid2idx, device=dev)
-
 if args.initial_node_embeddings is not None:
+    print(f"> Trying to load the initial node embeddings `{args.initial_node_embeddings}.`")
     try:
         with open(args.initial_node_embeddings, 'r') as f:
             initial_node_embeddings = json.load(f)
         initial_node_embeddings = [initial_node_embeddings[e] for e,i in sorted(wid2idx.items(), key=lambda x: x[1])]
     except FileNotFoundError:
+        print(">> file not found.")
         initial_node_embeddings = None
 
 graph_model = args.graph_encoder

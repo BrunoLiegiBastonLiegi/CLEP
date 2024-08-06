@@ -63,7 +63,7 @@ class CLIPDataset(Dataset):
                 inputs['captions'].append(caption)
                 eid = item['wikidata_id'] if 'wikidata_id' in item.keys() else item['entity_id']
                 inputs['entities'].append(self.e2idx[eid])
-        inputs['captions'] = self.tok(text=inputs['captions'], padding=True, return_tensors='pt')#.to(self.dev)
+        inputs['captions'] = self.tok(text=inputs['captions'], padding=True, truncation=True, return_tensors='pt')#.to(self.dev)
         inputs['entities'] = torch.vstack(inputs['entities']) if self.h_to_t else torch.as_tensor(inputs['entities'])
         if self.h_to_t:
             head_mask = (inputs['entities'][:,[0,1]].view(-1,1,2).to(self.dev) == self.filter_triples[:,[0,1]]).all(-1)
