@@ -127,7 +127,8 @@ class CaptionEncoder(torch.nn.Module):
     def __init__(self, pretrained_model, unfrozen_layers=4, cls_token=0):
         super().__init__()
         self.model = AutoModel.from_pretrained(pretrained_model)
-        for param in list(self.model.parameters())[:-unfrozen_layers]: # freezing every layer but the last n
+        frozen_layers = self.model.parameters() if unfrozen_layers == 0 else list(self.model.parameters())[:-unfrozen_layers]
+        for param in frozen_layers: # freezing every layer but the last n
             param.requires_grad = False
         self.cls_token = cls_token
         

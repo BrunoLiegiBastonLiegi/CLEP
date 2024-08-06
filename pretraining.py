@@ -184,7 +184,7 @@ if args.initial_node_embeddings is not None:
             initial_node_embeddings = json.load(f)
         initial_node_embeddings = [initial_node_embeddings[e] for e,i in sorted(wid2idx.items(), key=lambda x: x[1])]
     except FileNotFoundError:
-        print(">> file not found.")
+        print(">> file not found, randomly initializing node embeddings.")
         initial_node_embeddings = None
 
 graph_model = args.graph_encoder
