@@ -1,15 +1,29 @@
 # CLEP: Constrastive Language-Entity Pretraining
 
-Implementation of what presented in the paper [...](...)
+Implementation of what presented in the paper [Contrastive Language-Entity Pre-training for Richer Knowledge Graph Embedding](https://link.springer.com/chapter/10.1007/978-981-97-8702-9_16#citeas)
 
 ## Citation
 
 If you find our work useful please consider citing us:
 
 ```
-.
-.
-.
+@InProceedings{10.1007/978-981-97-8702-9_16,
+author="Papaluca, Andrea
+and Krefl, Daniel
+and Lensky, Artem
+and Suominen, Hanna",
+editor="Wallraven, Christian
+and Liu, Cheng-Lin
+and Ross, Arun",
+title="Contrastive Language-Entity Pre-training for Richer Knowledge Graph Embedding",
+booktitle="Pattern Recognition and Artificial Intelligence",
+year="2025",
+publisher="Springer Nature Singapore",
+address="Singapore",
+pages="233--246",
+abstract="In this work we propose a pretraining procedure that aligns a graph encoder and a text encoder to learn a common multi-modal graph-text embedding space. The alignment is obtained by training a model to predict the correct associations between Knowledge Graph nodes and their corresponding descriptions. We test the procedure with two popular Knowledge Bases: Wikidata (formerly Freebase) and YAGO. Our results indicate that such a pretraining method allows for link prediction without the need for additional fine-tuning. Furthermore, we demonstrate that a graph encoder pretrained on the description matching task allows for improved link prediction performance after fine-tuning, without the need for providing node descriptions as additional inputs. We make available the code used in the experiments on GitHub(https://github.com/BrunoLiegiBastonLiegi/CLEP) under the MIT license to encourage further work.",
+isbn="978-981-97-8702-9"
+}
 ```
 
 ## Requirements
