@@ -1,6 +1,6 @@
 # CLEP: Constrastive Language-Entity Pretraining
 
-Implementation of what presented in the paper [Contrastive Language-Entity Pre-training for Richer Knowledge Graph Embedding](https://link.springer.com/chapter/10.1007/978-981-97-8702-9_16#citeas)
+Implementation of what presented in the paper [Contrastive Language-Entity Pre-training for Richer Knowledge Graph Embedding](https://link.springer.com/chapter/10.1007/978-981-97-8702-9_16)
 
 ## Citation
 
